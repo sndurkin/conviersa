@@ -1,0 +1,106 @@
+#ifndef IRCSERVERINFOSERVICE_H
+#define IRCSERVERINFOSERVICE_H
+
+#include <QString>
+#include <QSharedData>
+
+// this class specifies various properties about a specific IRC server
+// and provides an interface to them; it is maintained and used by an
+// IrcStatusWindow, but used by the other connected IRC windows as well
+class IrcServerInfoService : public QSharedData
+{
+	// tells whether the service is attached to a
+	// specific server or not
+	bool			m_attached;
+	
+	// stores the user's nickname
+	QString		m_nick;
+	
+	// stores the name of the host that we are connected to
+	QString		m_host;
+	
+	// stores the port number of the server we're connected to
+	int			m_port;
+	
+	// format: <mode1><prefix1><mode2><prefix2>[<mode3><prefix3>] ...
+	// default value: o@v+
+	QString		m_prefixRules;
+	
+	// this comes from the 005 numeric, CHANMODES, which specifies
+	// which channel modes the server supports, and which ones take
+	// a parameter and which don't
+	//
+	// format: typeA,typeB,typeC,typeD
+	QString		m_chanModes;
+	
+	// this comes from the 005 numeric, MODES, which dictates
+	// the maximum number of modes with parameters that may be set with
+	// one message
+	int			m_modeNum;
+
+public:
+	IrcServerInfoService();
+	
+	// attaches the service to a specific server (essentially
+	// reconstructs it
+	void AttachToServer(const QString &host, int port);
+	
+	// detaches itself from a server (it can no longer
+	// be safely used)
+	void DetachFromServer();
+	
+	// returns whether it's attached or not
+	bool IsAttached() { return m_attached; }
+	
+	// sets the user's nickname
+	void SetNick(const QString &nick) { m_nick = nick; }
+	
+	// returns the user's nickname
+	QString GetNick() { return m_nick; }
+	
+	// sets the host's name
+	void SetHost(const QString &host) { m_host = host; }
+	
+	// returns the host's name
+	QString GetHost() { return m_host; }
+	
+	// returns the port number
+	int GetPort() { return m_port; }
+	
+	// sets the prefix rules
+	void SetPrefixRules(const QString &prefixRules);
+	
+	// sets the channel modes supported by the server
+	void SetChanModes(const QString &chanModes);
+	
+	// returns the string of channel modes
+	QString GetChanModes() { return m_chanModes; }
+	
+	// sets the mode num
+	void SetModeNum(int modeNum) { m_modeNum = modeNum; }
+	
+	// retrieves the mode num
+	int GetModeNum() { return m_modeNum; }
+	
+	// compares two prefix characters in a nickname as per
+	// the server's specification
+	//
+	// returns -1 if prefix1 is less in value than prefix2
+	// returns 0 if prefix1 is equal to prefix2
+	// returns 1 if prefix1 is greater in value than prefix2
+	int CompareNickPrefixes(const QChar &prefix1, const QChar &prefix2);
+	
+	// returns the corresponding prefix rule to the character
+	// provided by match
+	//
+	// match can either be a nick prefix or the corresponding mode
+	QChar GetPrefixRule(const QChar &match);
+	
+	// returns true if the character is a set prefix for the server,
+	// returns false otherwise
+	//
+	// example prefixes: @, %, +
+	bool IsNickPrefix(const QChar &prefix);
+};
+
+#endif

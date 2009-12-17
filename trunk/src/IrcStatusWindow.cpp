@@ -45,7 +45,7 @@ int IrcStatusWindow::GetIrcWindowType()
 // handles the data received from the Connection class
 void IrcStatusWindow::HandleData(QString &data)
 {
-#if 0
+#if 1
 	QString blah = data;
 	blah.remove(blah.size()-2,2);
 	PrintDebug(blah);
@@ -349,6 +349,15 @@ void IrcStatusWindow::Handle001Numeric(const IrcMessage &msg)
 {
 	// msg.m_params[0]: my nick
 	// msg.m_params[1]: "Welcome to the <server name> IRC Network, <nick>[!user@host]"
+	//
+	// check to make sure nickname hasn't changed; some or all servers apparently don't
+	// send you a NICK message when your nickname conflicts with another user upon
+	// first entering the server, and you try to change it
+	if(m_pSharedService->GetNick().compare(msg.m_params[0], Qt::CaseInsensitive) != 0)
+	{
+		m_pSharedService->SetNick(msg.m_params[0]);
+	}
+
 	QString header = "Welcome to the ";
 	if(msg.m_params[1].startsWith(header, Qt::CaseInsensitive))
 	{
@@ -754,7 +763,10 @@ void IrcStatusWindow::HandleJoinMsg(const IrcMessage &msg)
 		}
 	}
 	
+	if(pChanWin)
 		pChanWin->PrintOutput(textToPrint, QColor(g_pCfgManager->GetOptionValue("colors.ini", "join")));
+	else
+		PrintError("Pointer to channel window is invalid. This path should not have been reached.");
 }
 
 void IrcStatusWindow::HandleKickMsg(const IrcMessage &msg)

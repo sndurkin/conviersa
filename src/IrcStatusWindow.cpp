@@ -14,6 +14,8 @@
 
 using namespace IrcParser;
 
+#define DEBUG_MESSAGES 0
+
 IrcStatusWindow::IrcStatusWindow(const QString &title/* = tr("Server Window")*/,
 				const QSize &size/* = QSize(500, 300)*/)
 	: IIrcWindow(title, size),
@@ -45,7 +47,7 @@ int IrcStatusWindow::GetIrcWindowType()
 // handles the data received from the Connection class
 void IrcStatusWindow::HandleData(QString &data)
 {
-#if 1
+#if DEBUG_MESSAGES
 	QString blah = data;
 	blah.remove(blah.size()-2,2);
 	PrintDebug(blah);

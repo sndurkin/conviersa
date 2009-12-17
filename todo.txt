@@ -1,0 +1,40 @@
+ToDo: things to be implemented are basically separated based on the class or part of the project they belong in
+
+IWindow
+	- make sure there aren't any functions in IWindow that will cause a crash if m_pManager is NULL
+
+IIrcWindow
+	- get rid of the top empty line when an IIrcWindow is first printed to (or the bottom empty line when there’s a scrollbar)
+		- this may have already been completed, i can't remember
+	- add an option for automatically scrolling to the end of the document if it isn't already (and it's past some given time of inactivity)
+		- or, at the very least, a notification that it isn't scrolled all the way to the bottom
+	- multi-line support for the input control (m_pInput)
+	- when text starts displaying in the output box, it starts at the bottom, not the top
+	- CREATE CUSTOM OUTPUT CONTROL
+		- specific features for this will be outlined later
+	- add support for encodings, a little research will be needed for this
+
+IrcStatusWindow
+	- finish CTCP support
+	- add the rest of the control codes functionality
+	- make sure support for channel modes is completely finished
+	- decide how to display NOTICEs and WALLOPS and fully implement that
+	- add support for URL clicking
+		- need to make it intelligent (in other words, it doesn't include trailing parentheses or periods or etc in addresses)
+	- redo nickname comparisons
+		- use insensitive comparison and make sure {}| and []\ are covered based on casemapping etc.
+
+IrcChanListWindow
+	- fix the bug with the QheaderView (resets the sizes when we re-add the view)
+	- fix the painting for highlighting a channel; under vista it looks crappy and inconsistent
+		- this will probably involve creating a custom view control for the channel list that is (hopefully) faster
+	- running <10000 on freenode is extremely slow (also eats the crap out of memory)
+		- maybe do some research, could make a custom view control that is lightweight and fast
+	- maybe add a “Join Channel” button?
+
+IrcDebugWindow
+	- will be quite useful for development, i think i might work on this very soon
+	- currently using a preprocessor define inside IrcStatusWindow called DEBUG_MESSAGES
+
+POSSIBLE FEATURE (can be added to wiki later)
+	- switching focus between windows with ctrl+tab (and possibly with a window dialog similar to Windows' alt+tab dialog)

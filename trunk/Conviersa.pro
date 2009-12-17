@@ -1,4 +1,13 @@
+QT += webkit network
+
+CONFIG += qt windows embed_manifest_exe
+
+INCLUDEPATH = inc/
+
+DESTDIR = bin/
+
 OTHER_FILES += 
+
 HEADERS += inc/WindowManager.h \
     inc/WindowContainer.h \
     inc/SearchBar.h \
@@ -24,6 +33,7 @@ HEADERS += inc/WindowManager.h \
     inc/CLineEdit.h \
     inc/Client.h \
     inc/AltWindowContainer.h
+
 SOURCES += src/WindowManager.cpp \
     src/WindowContainer.cpp \
     src/SearchBar.cpp \

@@ -20,11 +20,12 @@ public:
         : m_isNumeric(isNumeric),
           m_command(command)
     { }
-	virtual ~IrcTextBlockData();
 
-	// no substantial overhead, because QTextBlockUserData
-	// already makes use of a virtual destructor
-	virtual IrcTextBlockType GetTextBlockType() { return TextBlockWithoutColors; }
+    virtual ~IrcTextBlockData() {}
+
+    // no substantial overhead, because QTextBlockUserData
+    // already makes use of a virtual destructor
+    virtual IrcTextBlockType GetTextBlockType() { return TextBlockWithoutColors; }
 };
 
 class IrcColoredTextBlockData : public IrcTextBlockData
@@ -34,12 +35,12 @@ class IrcColoredTextBlockData : public IrcTextBlockData
 
 public:
     IrcColoredTextBlockData(bool isNumeric, int command);
-	~IrcColoredTextBlockData();
+    ~IrcColoredTextBlockData();
 
     IrcTextBlockType GetTextBlockType() { return TextBlockWithColors; }
 
-	void SetForegroundRange(int *pForeground);
-	void SetReversedRange(int *pReversed);
+    void SetForegroundRange(int *pForeground);
+    void SetReversedRange(int *pReversed);
 };
 
 #endif

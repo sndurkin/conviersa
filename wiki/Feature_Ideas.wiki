@@ -11,3 +11,6 @@ We'll use this page to document any ideas for features we have. We can use a lis
     * links also need to be clickable, obviously
   * nick highlighting
     * nicknames can be assigned random colors, and then they will also be highlighted when someone uses their name in chat
+  * smart tabbing
+    * it basically assigns higher precedence to nicks that have spoken recently, so when performing nick completion with the tab button, you're more likely to get a nickname that you want; after the precedence, it is still ordered alphabetically
+    * I'd also prefer an option for old-school tabbing, which is the way all other clients are now (just alphabetically)

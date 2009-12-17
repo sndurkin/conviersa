@@ -1,0 +1,13 @@
+#summary list of features
+
+= Feature Ideas =
+
+We'll use this page to document any ideas for features we have. We can use a list format for now; if feature descriptions grow too large we can use something else.
+
+  * search bar
+    * similar to firefox's in that it searches while the user types
+    * similar to chrome's in that it marks all the found results in the scrollbar (with small lines)
+  * URL highlighting
+    * links also need to be clickable, obviously
+  * nick highlighting
+    * nicknames can be assigned random colors, and then they will also be highlighted when someone uses their name in chat

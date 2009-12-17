@@ -388,6 +388,7 @@ namespace IrcParser
 			}
 		}
 		*/
+            return text;
 	}
 #endif
 	// uses data received from the server, complete

@@ -73,8 +73,8 @@ namespace IrcParser
 	{
 		QString 		m_prefix;
 		bool			m_isNumeric;
-		int			m_command;
-		int			m_paramsNum;
+		int				m_command;
+		int				m_paramsNum;
 		QStringList		m_params;
 	};
 	

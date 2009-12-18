@@ -6,6 +6,7 @@
 *
 ************************************************************************/
 
+#include <QApplication>
 #include <QTimer>
 #include <QTextCursor>
 #include <QTextBlock>
@@ -74,6 +75,26 @@ void IIrcWindow::PrintOutput(const QString &text, const QColor &color/* = QColor
 	if(!m_pOutput->document()->isEmpty())
 		cursor.insertBlock();
 	QString textToPrint = escapeEx(IrcParser::StripCodes(text));
+
+	if(text.contains(m_pSharedService->GetNick()))
+	{
+		textToPrint.prepend("<b>");
+		textToPrint.append("</b>");
+		QApplication::beep();
+	}
+
+
+	QRegExp URL("lol(([\\w:]+)[/]{2})?(\\w|.)+");
+
+	if(URL.exactMatch("http://www.google.com"))
+		cursor.insertText("match/n");
+	else
+		cursor.insertText("nawt\n");
+	if(URL.exactMatch("www.google.com"))
+		cursor.insertText("match\n");
+	if(URL.exactMatch("lolm"))
+		cursor.insertText("match\n");
+
 	cursor.insertHtml(m_pCodec->toUnicode(textToPrint.toAscii()));
 
 	// sets the correct position of the cursor so that color
@@ -211,6 +232,15 @@ void IIrcWindow::ChangeCodec(const QString &codecStr)
 
 //-----------------------------------//
 
+void IIrcWindow::moveCursorEnd()
+{
+	QTextCursor cursor = m_pInput->textCursor();
+	cursor.setPosition(QTextCursor::End);
+	m_pInput->setTextCursor(cursor);
+}
+
+//-----------------------------------//
+
 // handles child widget events
 bool IIrcWindow::eventFilter(QObject *obj, QEvent *event)
 {
@@ -245,6 +275,8 @@ bool IIrcWindow::eventFilter(QObject *obj, QEvent *event)
 
 				m_pastCommands.prepend(GetInputText());
 				m_pInput->setPlainText(m_pastCommands.takeLast());
+
+				moveCursorEnd();
 			}
 			else if(keyEvent->key() == Qt::Key_Down)
 			{
@@ -257,6 +289,7 @@ bool IIrcWindow::eventFilter(QObject *obj, QEvent *event)
 				m_pastCommands.append(GetInputText());
 				m_pInput->setPlainText(m_pastCommands.takeFirst());
 
+				moveCursorEnd();
 			}
 		}
 		

@@ -69,6 +69,9 @@ public:
 	void PrintDebug(const QString &text);
 
 protected:
+	// moves the input cursor to the end of the line
+	void moveCursorEnd();
+
 	// gets the text from the input control
 	QString GetInputText();
 	

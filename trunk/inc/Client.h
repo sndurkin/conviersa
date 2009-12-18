@@ -16,13 +16,13 @@ class Client : public QMainWindow
 	Q_OBJECT
 	
 private:
-        WindowContainer *	m_pMainContainer;
+	WindowContainer *	m_pMainContainer;
 	WindowManager *		m_pManager;
 	
-	QMenu *			m_pFileMenu;
+	QMenu *				m_pFileMenu;
 	QDockWidget *		m_pDock;
 	
-        QTreeWidgetItem *	m_irc;
+	QTreeWidgetItem *	m_irc;
 	
 public:
 	Client(const QString &title);
@@ -32,7 +32,7 @@ protected:
 
 private:
 	void SetupMenu();
-        void SetupColorConfig();
+	void SetupColorConfig();
 
 public slots:
 	// creates a blank IRC server window

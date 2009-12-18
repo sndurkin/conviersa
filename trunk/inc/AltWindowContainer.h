@@ -8,6 +8,7 @@ class QDockWidget;
 class QListWidget;
 class WindowManager;
 class QCloseEvent;
+class QMenuBar;
 
 // AltWindowContainer is implemented a little differently than a
 // WindowContainer, although it is derived from it so we can use

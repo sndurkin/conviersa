@@ -1,5 +1,12 @@
-#ifndef IIRCWINDOW_H
-#define IIRCWINDOW_H
+/************************************************************************
+*
+* The MIT License
+*
+* Copyright (c) 2007-2009 Conviersa Project
+*
+************************************************************************/
+
+#pragma once
 
 #include <QVBoxLayout>
 #include <QPlainTextEdit>
@@ -10,7 +17,17 @@ class QTextEdit;
 class QMutex;
 class QTimer;
 class QTextTable;
-class IrcWindowScrollBar;	
+class IrcWindowScrollBar;
+
+//-----------------------------------//
+
+/**
+ * IRC window interface. Windows can be divided into different types:
+ *		- Status windows
+ *		- Channel windows
+ *		- Private windows
+ * TODO: this needs a redisign. Looks messy to me. -- triton
+ */
 
 class IIrcWindow : public IChatWindow
 {
@@ -19,15 +36,17 @@ class IIrcWindow : public IChatWindow
 protected:
 	QVBoxLayout	*		m_pVLayout;
 	
-	int				m_startOfText;
-        QTextEdit *			m_pOutput;
+	int					m_startOfText;
+	QTextEdit *			m_pOutput;
 	QTimer *			m_pResizeMarginTimer;
-	QPlainTextEdit *		m_pInput;
+	QPlainTextEdit *	m_pInput;
 	
 	QExplicitlySharedDataPointer<IrcServerInfoService>
 					m_pSharedService;
 	
 	QTextCodec *		m_pCodec;
+
+	QList< QString >	m_pastCommands;
 	
 	// custom scroll bar for searching within an IRC window;
 	// lines on which items are found will be draw inside
@@ -55,13 +74,13 @@ protected:
 	
 	// imitates Google Chrome's search, with lines drawn in the scrollbar
 	// and keywords highlighted in the document
-        void Search(const QString &textToFind);
+	void Search(const QString &textToFind);
 	
 	// changes the codec for the m_pOutput control
-        void ChangeCodec(const QString &codecStr);
+	void ChangeCodec(const QString &codecStr);
 	
 	// handles child widget events
-        bool eventFilter(QObject *obj, QEvent *event);
+	bool eventFilter(QObject *obj, QEvent *event);
 	
 	// handles the input for the window
 	void HandleInput(const QString &inputText);
@@ -75,4 +94,4 @@ public slots:
         //void ResizeTopMargin();
 };
 
-#endif
+//-----------------------------------//

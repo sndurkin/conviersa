@@ -1,3 +1,11 @@
+/************************************************************************
+*
+* The MIT License
+*
+* Copyright (c) 2007-2009 Conviersa Project
+*
+************************************************************************/
+
 #include <QTimer>
 #include <QTextCursor>
 #include <QTextBlock>
@@ -13,11 +21,15 @@
 #include "IrcServerInfoService.h"
 #include "ConfigManager.h"
 
+//-----------------------------------//
+
 IIrcWindow::IIrcWindow(const QString &title/* = tr("Untitled")*/,
 				const QSize &size/* = QSize(500, 300)*/)
 	: IChatWindow(title, size)
 {
-	QFont defFont("Fixedsys", 9);
+	// TODO: Choose an appropriate system default font...
+
+	QFont defFont("Dina", 8);
 	setFont(defFont);
 	
 	m_pCodec = QTextCodec::codecForLocale();
@@ -43,10 +55,14 @@ IIrcWindow::IIrcWindow(const QString &title/* = tr("Untitled")*/,
 	m_pOutput->setVerticalScrollBar(m_pScrollBar);
 }
 
+//-----------------------------------//
+
 void IIrcWindow::GiveFocus()
 {
 	m_pInput->setFocus();
 }
+
+//-----------------------------------//
 
 void IIrcWindow::PrintOutput(const QString &text, const QColor &color/* = QColor(0, 0, 0)*/)
 {
@@ -72,6 +88,9 @@ void IIrcWindow::PrintOutput(const QString &text, const QColor &color/* = QColor
 		m_pOutput->ensureCursorVisible();
 	}
 }
+
+//-----------------------------------//
+
 #if 0
 void IIrcWindow::PrintOutput(const QString &text, const QColor &color/* = QColor(0, 0, 0)*/)
 {
@@ -91,12 +110,17 @@ void IIrcWindow::PrintOutput(const QString &text, const QColor &color/* = QColor
 	}
 }
 #endif
+
+//-----------------------------------//
+
 void IIrcWindow::PrintError(const QString &text)
 {
 	QString error = "[ERROR] ";
 	error += text;
 	PrintOutput(error);
 }
+
+//-----------------------------------//
 
 void IIrcWindow::PrintDebug(const QString &text)
 {
@@ -105,11 +129,15 @@ void IIrcWindow::PrintDebug(const QString &text)
 	PrintOutput(debug);
 }
 
+//-----------------------------------//
+
 // gets the text from the input control
 QString IIrcWindow::GetInputText()
 {
 	return m_pInput->toPlainText();
 }
+
+//-----------------------------------//
 
 // imitates Google Chrome's search, with lines drawn in the scrollbar
 // and keywords highlighted in the document
@@ -164,6 +192,8 @@ void IIrcWindow::Search(const QString &textToFind)
 	m_pOutput->setExtraSelections(list);
 }
 
+//-----------------------------------//
+
 // changes the codec for the m_pOutput control
 void IIrcWindow::ChangeCodec(const QString &codecStr)
 {
@@ -178,6 +208,8 @@ void IIrcWindow::ChangeCodec(const QString &codecStr)
 		PrintOutput(msg);
 	}
 }
+
+//-----------------------------------//
 
 // handles child widget events
 bool IIrcWindow::eventFilter(QObject *obj, QEvent *event)
@@ -194,12 +226,37 @@ bool IIrcWindow::eventFilter(QObject *obj, QEvent *event)
 				HandleTab();
 				return true;
 			}
-			else if(keyEvent->key() == Qt::Key_Return || keyEvent->key() == Qt::Key_Enter)
+			else if(keyEvent->key() == Qt::Key_Return 
+					|| keyEvent->key() == Qt::Key_Enter)
 			{
 				QString text = GetInputText();
+				m_pastCommands.append(text);
 				m_pInput->clear();
 				HandleInput(text);
 				return true;
+			}
+			else if(keyEvent->key() == Qt::Key_Up)
+			{
+				if(m_pastCommands.empty())
+				{
+					QApplication::beep();
+					goto done;
+				}
+
+				m_pastCommands.prepend(GetInputText());
+				m_pInput->setPlainText(m_pastCommands.takeLast());
+			}
+			else if(keyEvent->key() == Qt::Key_Down)
+			{
+				if(m_pastCommands.empty())
+				{
+					QApplication::beep();
+					goto done;
+				}
+
+				m_pastCommands.append(GetInputText());
+				m_pInput->setPlainText(m_pastCommands.takeFirst());
+
 			}
 		}
 		
@@ -227,8 +284,12 @@ bool IIrcWindow::eventFilter(QObject *obj, QEvent *event)
 		}
         }*/
 
+done:
+
 	return IChatWindow::eventFilter(obj, event);
 }
+
+//-----------------------------------//
 
 // handles the input for the window
 //
@@ -389,6 +450,9 @@ send_text:
 	// send it
 	m_pSharedConn->Send(textToSend);
 }
+
+//-----------------------------------//
+
 /*
 // changes the vertical offset that ensures that the
 // text always starts at the bottom of the screen

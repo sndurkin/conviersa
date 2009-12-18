@@ -5,7 +5,8 @@ CONFIG += qt \
     embed_manifest_exe
 INCLUDEPATH = inc/
 DESTDIR = ../bin/
-OTHER_FILES += todo.txt
+OTHER_FILES += todo.txt \
+    doc/License.txt
 HEADERS += inc/WindowManager.h \
     inc/WindowContainer.h \
     inc/SearchBar.h \

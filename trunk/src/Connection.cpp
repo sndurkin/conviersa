@@ -4,6 +4,8 @@
 #include "Connection.h"
 #include "IChatWindow.h"
 
+//-----------------------------------//
+
 Connection::Connection(IChatWindow *pWindow, QTextCodec *pCodec)
 	: QObject(),
 	  QSharedData(),
@@ -12,11 +14,15 @@ Connection::Connection(IChatWindow *pWindow, QTextCodec *pCodec)
 	  m_pCodec(pCodec)
 { }
 
+//-----------------------------------//
+
 Connection::~Connection()
 {
 	if(IsConnected())
 		m_pSocket->close();
 }
+
+//-----------------------------------//
 
 bool Connection::Connect(const char *pServer, quint16 port)
 {
@@ -54,6 +60,8 @@ bool Connection::Connect(const char *pServer, quint16 port)
 	return true;
 }
 
+//-----------------------------------//
+
 bool Connection::Send(const QString &data)
 {
 	if(!m_pSocket)
@@ -64,6 +72,8 @@ bool Connection::Send(const QString &data)
 	return true;
 }
 
+//-----------------------------------//
+
 void Connection::Disconnect()
 {
 	if(IsConnected())
@@ -71,6 +81,8 @@ void Connection::Disconnect()
 		m_pSocket->close();
 	}
 }
+
+//-----------------------------------//
 
 // is called when the socket connects to the server;
 void Connection::OnConnect()
@@ -82,12 +94,16 @@ void Connection::OnConnect()
 	m_pSocket->write(buf, strlen(buf));
 }
 
+//-----------------------------------//
+
 // is called when the socket is disconnected
 void Connection::OnDisconnect()
 {
 	m_pSocket = NULL;
 	emit Disconnected();
 }
+
+//-----------------------------------//
 
 // is called when there is data to be read from the socket;
 // reads the available data and fires the "OnReceiveData" event
@@ -125,3 +141,5 @@ void Connection::OnReceiveData()
 		}
 	}
 }
+
+//-----------------------------------//

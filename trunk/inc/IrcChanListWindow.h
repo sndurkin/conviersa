@@ -1,5 +1,12 @@
-#ifndef IRCCHANLISTWINDOW_H
-#define IRCCHANLISTWINDOW_H
+/************************************************************************
+*
+* The MIT License
+*
+* Copyright (c) 2007-2009 Conviersa Project
+*
+************************************************************************/
+
+#pragma once
 
 #include "IChatWindow.h"
 
@@ -17,6 +24,10 @@ class QSpinBox;
 class IrcChanTopicDelegate;
 class SearchBar;
 class CLineEdit;
+
+/**
+ * Document what, why and how.
+ */
 
 class IrcChanListWindow : public IChatWindow
 {
@@ -41,16 +52,16 @@ class IrcChanListWindow : public IChatWindow
 	QPushButton *		m_pStopDownloadButton;
 	
 	QLabel *			m_pChannelsLabel;
-	int				m_currChannel;
-	int				m_numVisible;
+	int					m_currChannel;
+	int					m_numVisible;
 	
 	QPushButton *		m_pSaveButton;
 	
 	QGroupBox *			m_pFilteringGroup;
 	SearchBar *			m_pSearchBar;
 	QTimer *			m_pSearchTimer;
-	QString			m_searchStr;
-	QRegExp			m_searchRegex;	
+	QString				m_searchStr;
+	QRegExp				m_searchRegex;
 	QCheckBox *			m_pCheckChanNames;
 	QCheckBox *			m_pCheckChanTopics;
 	QCheckBox *			m_pUseRegExp;
@@ -61,8 +72,8 @@ class IrcChanListWindow : public IChatWindow
 	QPushButton *		m_pApplyFilterButton;
 	QPushButton *		m_pStopFilterButton;
 	
-	int				m_savedMinUsers;
-	int				m_savedMaxUsers;
+	int					m_savedMinUsers;
+	int					m_savedMaxUsers;
 	bool				m_savedTopicDisplay;
 
 public:
@@ -118,5 +129,3 @@ public slots:
 	// saves the entire list to a file
 	void SaveList();
 };
-
-#endif

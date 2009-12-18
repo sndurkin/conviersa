@@ -1,3 +1,13 @@
+/************************************************************************
+*
+* The MIT License
+*
+* Copyright (c) 2007-2009 Conviersa Project
+*
+************************************************************************/
+
+#pragma once
+
 #include "Client.h"
 #include "WindowManager.h"
 #include "ConfigManager.h"
@@ -7,6 +17,10 @@
 #include "IrcPrivWindow.h"
 
 ConfigManager *g_pCfgManager;
+
+namespace cv {
+
+//-----------------------------------//
 
 Client::Client(const QString &title)
 {
@@ -32,12 +46,16 @@ Client::Client(const QString &title)
 	SetupColorConfig();
 }
 
+//-----------------------------------//
+
 void Client::closeEvent(QCloseEvent *event)
 {
 	delete m_pManager;
 	delete m_pDock;
 	deleteLater();
 }
+
+//-----------------------------------//
 
 void Client::SetupMenu()
 {
@@ -50,8 +68,10 @@ void Client::SetupMenu()
 	QObject::connect(pNewIrcWinAct, SIGNAL(triggered(bool)), this, SLOT(OnNewIrcServerWindow()));
 	
 	m_pFileMenu->addSeparator();
-	m_pFileMenu->addAction(tr("&hi"));
+//	m_pFileMenu->addAction(tr("&hi"));
 }
+
+//-----------------------------------//
 
 void Client::SetupColorConfig()
 {
@@ -72,6 +92,8 @@ void Client::SetupColorConfig()
     g_pCfgManager->SetupConfigFile("colors.ini", defOptions);
 }
 
+//-----------------------------------//
+
 // creates a blank IRC server window
 void Client::OnNewIrcServerWindow()
 {
@@ -79,3 +101,7 @@ void Client::OnNewIrcServerWindow()
 	m_pManager->AddWindow(pWin, m_irc);
 	pWin->showMaximized();
 }
+
+//-----------------------------------//
+
+} // end namespace

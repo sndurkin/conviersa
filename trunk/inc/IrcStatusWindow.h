@@ -17,8 +17,8 @@ protected:
 	bool					m_sentListStopMsg;
 	
 	IrcChanListWindow *		m_pChanListWin;
-	QList<IrcChanWindow *>		m_chanList;
-	QList<IrcPrivWindow *>		m_privList;
+	QList<IrcChanWindow *>	m_chanList;
+	QList<IrcPrivWindow *>	m_privList;
 	
 public:
 	IrcStatusWindow(const QString &title = tr("Server Window"),

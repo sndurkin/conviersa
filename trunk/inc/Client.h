@@ -1,5 +1,12 @@
-#ifndef CLIENT_H
-#define CLIENT_H
+/************************************************************************
+*
+* The MIT License
+*
+* Copyright (c) 2007-2009 Conviersa Project
+*
+************************************************************************/
+
+#pragma once
 
 #include <QMainWindow>
 #include <QString>
@@ -10,6 +17,16 @@
 class QTreeWidgetItem;
 class WindowManager;
 class WindowContainer;
+
+namespace cv {
+
+//-----------------------------------//
+
+/**
+ * Main class of the IRC client. This manages the menus, toolbars and
+ * docked main widgets. It holds a Window Container and also a Window Manager (wtf?)
+ *
+ */
 
 class Client : public QMainWindow
 {
@@ -39,4 +56,6 @@ public slots:
 	void OnNewIrcServerWindow();
 };
 
-#endif
+//-----------------------------------//
+
+} // end namespace

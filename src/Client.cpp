@@ -11,7 +11,7 @@ ConfigManager *g_pCfgManager;
 Client::Client(const QString &title)
 {
 	setWindowTitle(title);
-	resize(1000, 600);
+	resize(700, 500);
 	
 	SetupMenu();
 	
@@ -26,11 +26,10 @@ Client::Client(const QString &title)
 	addDockWidget(Qt::LeftDockWidgetArea, m_pDock);
 	
 	m_irc = m_pManager->AddTreeGroup("IRC");
-	IrcStatusWindow *pWin = new IrcStatusWindow();
-	m_pManager->AddWindow(pWin, m_irc);
+	OnNewIrcServerWindow();
 
-        g_pCfgManager = new ConfigManager;
-        SetupColorConfig();
+	g_pCfgManager = new ConfigManager;
+	SetupColorConfig();
 }
 
 void Client::closeEvent(QCloseEvent *event)
@@ -78,4 +77,5 @@ void Client::OnNewIrcServerWindow()
 {
 	IrcStatusWindow *pWin = new IrcStatusWindow();
 	m_pManager->AddWindow(pWin, m_irc);
+	pWin->showMaximized();
 }

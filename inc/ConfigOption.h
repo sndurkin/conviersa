@@ -3,7 +3,7 @@
 
 class ConfigOption
 {
-    QString 	name;
+	QString name;
     QString	value;
 	
 public:

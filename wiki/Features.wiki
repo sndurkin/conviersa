@@ -1,7 +1,5 @@
 #summary list of features
 
-= Features =
-
 We'll use this page to document all the features that will be put into the client. We can sort them into three groups: Beta, Release, Post-Release. We can use the strike-through tag (`<s></s>`) to indicate finished features as they are implemented.
 
 === Beta ===

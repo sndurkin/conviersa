@@ -1,0 +1,62 @@
+#summary list of features
+
+= Features =
+
+We'll use this page to document all the features that will be put into the client. We can sort them into three groups: Beta, Release, Post-Release. We can use the strike-through tag (`<s></s>`) to indicate finished features as they are implemented.
+
+=== Beta ===
+
+This will hold the core features that are typical of an IRC client. There won't be many features that distinguish this client from other IRC clients.
+
+  * basic UI to connect to a server (with SSL capability) by specifying server and port
+  * basic UI to manage configuration settings (a list of settings is needed)
+  * UI to access channel settings, such as topic, modes, bans, excepts, invites
+  * full implementation of the IRC protocol (including CTCP)
+  * debug messages window, which prints out all raw messages to/from server
+  * chat output control
+    * needs to be custom-made, and we'll try to use [http://qt.nokia.com/doc/4.6/qtwebkit.html QtWebKit] for the implementation
+    * dynamic color changes
+      * when the user changes color options, all existing text is changed
+    * old chat text is clipped after a certain number of lines of chat
+    * URL highlighting (or clickable URLs)
+    * channel-specific chat output
+      * nick highlighting
+        * your nick appears in bold or the entire line is a certain color
+        * other nicks can be right-clicked, and a menu UI will be available with some options
+          * msg/notice
+          * whois
+          * ctcp options
+      * nick completion
+        * press tab and the client tries to auto-complete the nickname you are typing
+  * chat logging
+
+
+=== Release ===
+
+This is the set of features that will distinguish the client from other IRC clients (well, a basic IRC client anyway).
+
+  * aliases
+    * basic implementation of defining shorthand commands to execute a set of much longer commands
+    * might want to include some basic error checking for invalid commands (ie too few parameters specified)
+  * search bar
+    * similar to firefox's in that it searches while the user types
+    * similar to chrome's in that it marks all the found results in the scrollbar (with small lines)
+  * smart nick completion
+    * it assigns higher precedence to nicks that have spoken recently, so when performing nick completion with the tab button, you're more likely to get a nickname that you want; after the precedence, it is still ordered alphabetically
+  * plugin API and scripting language integration (will need to be defined in much more detail later)
+    * event system, and hooking mechanism where plugins can have their functions called when a certain event takes place (either before or after the event)
+    * capability to manipulate any windows and containers (size and position)
+    * capability to execute any commands that are possible via the input control (both general client commands and IRC commands)
+      * we can probably just create functions that are exposed to the plugin API and which are also used by the chat input control for commands
+  * channel list window
+    * mostly completed already; it just needs a redesign of the actual list control so it can support faster display (for lists on large networks, like freenode)
+  * shape the UI for config settings and server connection to make it more user-friendly
+
+=== Post-Release ===
+
+These are features that are nice to have, but aren't necessarily vital to release. In fact, they may be implemented through the plugin API instead of becoming a part of the core client.
+
+  * some form of indication for the user that the chat output scrollbar is not scrolled down all the way
+  * proxy tunneling
+    * zstars requested this, and I don't know much about it, but we can [http://es.wikipedia.org/wiki/SOCKS do some research]
+  * capability to apply custom skins

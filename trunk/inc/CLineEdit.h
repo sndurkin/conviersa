@@ -1,5 +1,12 @@
-#ifndef CLINEEDIT_H
-#define CLINEEDIT_H
+/************************************************************************
+*
+* The MIT License
+*
+* Copyright (c) 2007-2009 Conviersa Project
+*
+************************************************************************/
+
+#pragma once
 
 #include <QLineEdit>
 
@@ -39,5 +46,3 @@ protected:
 	// called when the line edit needs to be repainted
 	void paintEvent(QPaintEvent *event);
 };
-
-#endif

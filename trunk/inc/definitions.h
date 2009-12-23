@@ -1,11 +1,17 @@
-#ifndef DEFINITIONS_H
-#define DEFINITIONS_H
+/************************************************************************
+*
+* The MIT License
+*
+* Copyright (c) 2007-2009 Conviersa Project
+*
+************************************************************************/
+
+#pragma once
 
 class QTreeWidgetItem;
 class IWindow;
 
 // IWindow types
-
 enum
 {
 	TYPE_IWINDOW,
@@ -21,5 +27,3 @@ struct win_info_t
 	QTreeWidgetItem *	m_pTreeItem;
 	IWindow *		m_pWindow;
 };
-
-#endif

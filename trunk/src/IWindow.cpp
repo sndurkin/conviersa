@@ -1,3 +1,11 @@
+/************************************************************************
+*
+* The MIT License
+*
+* Copyright (c) 2007-2009 Conviersa Project
+*
+************************************************************************/
+
 #include <QTreeWidgetItem>
 #include "IWindow.h"
 #include "WindowManager.h"

@@ -1,5 +1,12 @@
-#ifndef IRCSTATUSWINDOW_H
-#define IRCSTATUSWINDOW_H
+/************************************************************************
+*
+* The MIT License
+*
+* Copyright (c) 2007-2009 Conviersa Project
+*
+************************************************************************/
+
+#pragma once
 
 #include "IIrcWindow.h"
 #include "IrcParser.h"
@@ -100,5 +107,3 @@ public slots:
 	// removes a PM window from the list
 	void RemovePrivWindow(IrcPrivWindow *pChanWin);
 };
-
-#endif

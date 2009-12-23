@@ -1,5 +1,12 @@
-#ifndef ICHATWINDOW_H
-#define ICHATWINDOW_H
+/************************************************************************
+*
+* The MIT License
+*
+* Copyright (c) 2007-2009 Conviersa Project
+*
+************************************************************************/
+
+#pragma once
 
 #include <QString>
 #include <QExplicitlySharedDataPointer>
@@ -18,5 +25,3 @@ public:
 	virtual void HandleData(QString &data) { }
 	//virtual void PrintOutput(const QString &text) = 0;
 };
-
-#endif

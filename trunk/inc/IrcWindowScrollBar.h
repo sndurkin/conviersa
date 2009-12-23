@@ -1,5 +1,12 @@
-#ifndef IRCWINDOWSCROLLBAR_H
-#define IRCWINDOWSCROLLBAR_H
+/************************************************************************
+*
+* The MIT License
+*
+* Copyright (c) 2007-2009 Conviersa Project
+*
+************************************************************************/
+
+#pragma once
 
 #include <QScrollBar>
 #include <QStyle>
@@ -42,5 +49,3 @@ public slots:
 	// the bottom of the viewport doesn't move
 	void UpdateScrollBar(int min, int max);
 };
-
-#endif

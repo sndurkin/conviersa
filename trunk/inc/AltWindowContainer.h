@@ -1,5 +1,12 @@
-#ifndef ALTWINDOWCONTAINER_H
-#define ALTWINDOWCONTAINER_H
+/************************************************************************
+*
+* The MIT License
+*
+* Copyright (c) 2007-2009 Conviersa Project
+*
+************************************************************************/
+
+#pragma once
 
 #include "WindowContainer.h"
 
@@ -32,5 +39,3 @@ public:
 protected:
 	void closeEvent(QCloseEvent *event);
 };
-
-#endif

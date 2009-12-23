@@ -1,5 +1,12 @@
-#ifndef IRCTEXTBLOCKDATA_H
-#define IRCTEXTBLOCKDATA_H
+/************************************************************************
+*
+* The MIT License
+*
+* Copyright (c) 2007-2009 Conviersa Project
+*
+************************************************************************/
+
+#pragma once
 
 #include <QTextBlockUserData>
 
@@ -42,5 +49,3 @@ public:
     void SetForegroundRange(int *pForeground);
     void SetReversedRange(int *pReversed);
 };
-
-#endif

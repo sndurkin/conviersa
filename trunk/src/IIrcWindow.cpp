@@ -26,12 +26,11 @@
 
 IIrcWindow::IIrcWindow(const QString &title/* = tr("Untitled")*/,
 				const QSize &size/* = QSize(500, 300)*/)
-	: IChatWindow(title, size)
+	: IChatWindow(title, size),
+	  m_defaultFont("Arial", 10)
 {
 	// TODO: Choose an appropriate system default font...
-
-	QFont defFont("Dina", 8);
-	setFont(defFont);
+	setFont(m_defaultFont);
 	
 	m_pCodec = QTextCodec::codecForLocale();
 	
@@ -384,13 +383,13 @@ void IIrcWindow::HandleInput(const QString &inputText)
 		else if(text.startsWith("search ", Qt::CaseInsensitive))
 		{
 			text.remove(0, 7);
-                        Search(text);
+			Search(text);
 			return;
 		}
 		else if(text.startsWith("codec ", Qt::CaseInsensitive))
 		{
 			text.remove(0, 6);
-                        ChangeCodec(text);
+			ChangeCodec(text);
 			return;
 		}
 		else if(text.startsWith("codecs", Qt::CaseInsensitive))

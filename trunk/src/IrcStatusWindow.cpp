@@ -1,3 +1,11 @@
+/************************************************************************
+*
+* The MIT License
+*
+* Copyright (c) 2007-2009 Conviersa Project
+*
+************************************************************************/
+
 #include <QWebView>
 #include <QMutex>
 #include <QDateTime>
@@ -28,7 +36,7 @@ IrcStatusWindow::IrcStatusWindow(const QString &title/* = tr("Server Window")*/,
 	m_pVLayout->setContentsMargins(2, 2, 2, 2);
 	setLayout(m_pVLayout);
 	
-	m_pSharedService = new IrcServerInfoService();
+	m_pSharedService = new IrcServerInfoService;
 	m_pSharedConn = new Connection(this, m_pCodec);
 	
 	QObject::connect(m_pSharedConn.data(), SIGNAL(Disconnected()), this, SLOT(HandleDisconnect()));

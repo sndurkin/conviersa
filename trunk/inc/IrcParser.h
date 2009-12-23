@@ -1,5 +1,12 @@
-#ifndef IRCPARSER_H
-#define IRCPARSER_H
+/************************************************************************
+*
+* The MIT License
+*
+* Copyright (c) 2007-2009 Conviersa Project
+*
+************************************************************************/
+
+#pragma once
 
 #include <QColor>
 #include <QString>
@@ -141,5 +148,3 @@ namespace IrcParser
 	// returns false otherwise
 	bool IsChannel(const QString &str);
 }
-
-#endif

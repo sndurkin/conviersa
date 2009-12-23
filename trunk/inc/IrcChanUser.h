@@ -1,5 +1,12 @@
-#ifndef IRCCHANUSER_H
-#define IRCCHANUSER_H
+/************************************************************************
+*
+* The MIT License
+*
+* Copyright (c) 2007-2009 Conviersa Project
+*
+************************************************************************/
+
+#pragma once
 
 #include <QString>
 #include "IrcServerInfoService.h"
@@ -52,5 +59,3 @@ public:
 	
 	int GetPriority() { return m_priority; }
 };
-
-#endif

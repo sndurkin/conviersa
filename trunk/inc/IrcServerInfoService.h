@@ -1,5 +1,12 @@
-#ifndef IRCSERVERINFOSERVICE_H
-#define IRCSERVERINFOSERVICE_H
+/************************************************************************
+*
+* The MIT License
+*
+* Copyright (c) 2007-2009 Conviersa Project
+*
+************************************************************************/
+
+#pragma once
 
 #include <QString>
 #include <QSharedData>
@@ -102,5 +109,3 @@ public:
 	// example prefixes: @, %, +
 	bool IsNickPrefix(const QChar &prefix);
 };
-
-#endif

@@ -1,16 +1,26 @@
+/************************************************************************
+*
+* The MIT License
+*
+* Copyright (c) 2007-2009 Conviersa Project
+*
+************************************************************************/
+
 #include <QFile>
 #include <QTemporaryFile>
-#include <QRegExp>
 #include "ConfigManager.h"
 
-// if the file with the given name exists, it checks for the setup
-// provided by the array of ConfigOptions
+// this function puts options (and their values) into memory under
+// a specific filename
 //
-// if they do not match, or no file with the given name exists,
-// a default file is created with the given array of ConfigOptions
+// if the file with the given name exists, it overwrites any of the
+// provided default options with the values from the file
+//	- options within the file that are not found in the list of
+//		default options are ignored; this allows options to be
+//		easily deprecated without replacing the file
 //
-// once the file has been setup, the data it holds can be requested to
-// be put into memory
+// if the file does not exist, it also creates a new file with
+// the given array of default ConfigOptions
 bool ConfigManager::SetupConfigFile(const QString &filename, const QList<ConfigOption> &defOptions)
 {
     QFile file(filename);
@@ -26,13 +36,15 @@ bool ConfigManager::SetupConfigFile(const QString &filename, const QList<ConfigO
 
     if(file.exists())
     {
+		// for each line in the file, find the corresponding option;
+		// if the option exists in memory, overwrite it with
+		// the value in the file
         while(!file.atEnd())
         {
             QString line = file.readLine();
 
-            // ignore comments (which start with '#')
-            QRegExp regex("^\\s*#");
-            if(line.contains(regex))
+			// comments are ignored
+			if(line.contains(m_commentRegex))
                 continue;
 
             // if the line doesn't contain at least
@@ -80,10 +92,17 @@ bool ConfigManager::SetupConfigFile(const QString &filename, const QList<ConfigO
     return true;
 }
 
-// writes currently cached data to the file specified by filename
+// this writes all the data in memory to the provided file
 //
-// returns true upon success,
-// returns false otherwise
+// if the file already exists, then for each line it tries to find
+// the corresponding option in memory
+//	- if the option is found, then it writes the value in memory
+//	- if the option is unknown, then it just writes the line from the file
+//
+// finally, it writes any options that aren't in the file but are
+// existing in memory
+//	- this allows for adding new options to a file by modifying the default
+//		options that are put into memory using SetupConfigFile()
 bool ConfigManager::WriteToFile(const QString &filename)
 {
     QHash<QString, QMap<QString, QString> >::iterator i = m_files.find(filename);
@@ -121,8 +140,7 @@ bool ConfigManager::WriteToFile(const QString &filename)
 
                 // automatically write everything that isn't
                 // of the correct format
-                QRegExp regex("^\\s*#");
-                if(line.contains(regex))
+				if(line.contains(m_commentRegex))
                 {
                     newFile.write(line.toAscii());
                 }
@@ -131,7 +149,7 @@ bool ConfigManager::WriteToFile(const QString &filename)
                     // also makes it a comment, to show it was ignored
                     newFile.write("#" + line.toAscii());
                 }
-                else    // otherwise, we check the cached data
+				else    // otherwise, we check the data in memory
                 {
                     QString optName = line.section('=', 0, 0);
                     QMap<QString, QString>::iterator j = i.value().find(optName);
@@ -158,7 +176,7 @@ bool ConfigManager::WriteToFile(const QString &filename)
             file.remove();
         }
 
-        // write any cached data that wasn't already in the file
+		// write any data in memory that wasn't already in the file
         // (in other words, any data that isn't found in the
         // alreadyWritten hash table)
         QMap<QString, QString>::iterator j = i.value().begin();
@@ -206,9 +224,6 @@ QString ConfigManager::GetOptionValue(const QString &filename, const QString &op
 }
 
 // sets the provided option's value to optValue
-//
-// returns true upon success,
-// returns false otherwise
 bool ConfigManager::SetOptionValue(const QString &filename, const QString &optName, const QString &optValue)
 {
     QHash<QString, QMap<QString, QString> >::iterator i = m_files.find(filename);

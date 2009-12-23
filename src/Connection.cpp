@@ -1,3 +1,11 @@
+/************************************************************************
+*
+* The MIT License
+*
+* Copyright (c) 2007-2009 Conviersa Project
+*
+************************************************************************/
+
 #include <QTextCodec>
 #include <QTcpSocket>
 #include <QSslSocket>
@@ -7,9 +15,7 @@
 //-----------------------------------//
 
 Connection::Connection(IChatWindow *pWindow, QTextCodec *pCodec)
-	: QObject(),
-	  QSharedData(),
-	  m_pWindow(pWindow),
+	: m_pWindow(pWindow),
 	  m_pSocket(NULL),
 	  m_pCodec(pCodec)
 { }

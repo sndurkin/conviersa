@@ -1,3 +1,11 @@
+/************************************************************************
+*
+* The MIT License
+*
+* Copyright (c) 2007-2009 Conviersa Project
+*
+************************************************************************/
+
 #include <QPaintEvent>
 #include <QPainter>
 #include <QBrush>

@@ -1,5 +1,12 @@
-#ifndef WINDOWMANAGER_H
-#define WINDOWMANAGER_H
+/************************************************************************
+*
+* The MIT License
+*
+* Copyright (c) 2007-2009 Conviersa Project
+*
+************************************************************************/
+
+#pragma once
 
 #include <QTreeWidget>
 #include <QMouseEvent>
@@ -48,7 +55,7 @@ public:
 	// manages an IWindow under the WindowManager; it
 	// will handle its deallocation upon closing
 	//
-	// pWin: 	pointer to the IWindow, which should point
+	// pWin: pointer to the IWindow, which should point
 	//		to a valid IWindow
 	// pParent: pointer to the parent tree item to be added
 	//		under, should also be valid
@@ -64,12 +71,7 @@ public:
 	// moves the window to a window container, or to the desktop
 	// if the pointer to the container provided is NULL
 	void MoveWindow(IWindow *pWin, WindowContainer *pCont);
-	/*
-	// moves the window's node in the treeview from wherever
-	// it is currently located to under the "Orphaned Windows"
-	// treeview node
-	void DisownWindow(IWindow *pWin);
-	*/
+
 	// returns a pointer to the window based on the title
 	// returns NULL if not found
 	IWindow *FindWindow(const QString &title);
@@ -108,5 +110,3 @@ protected:
 	void mousePressEvent(QMouseEvent *event);
 	void contextMenuEvent(QContextMenuEvent *event);
 };
-
-#endif

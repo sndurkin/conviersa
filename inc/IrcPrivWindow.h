@@ -1,5 +1,12 @@
-#ifndef IRCPRIVWINDOW_H
-#define IRCPRIVWINDOW_H
+/************************************************************************
+*
+* The MIT License
+*
+* Copyright (c) 2007-2009 Conviersa Project
+*
+************************************************************************/
+
+#pragma once
 
 #include "IIrcWindow.h"
 
@@ -38,5 +45,3 @@ public slots:
 	// handles a disconnection fired from the Connection object
 	void HandleDisconnect();
 };
-
-#endif

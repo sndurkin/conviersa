@@ -40,6 +40,7 @@ protected:
 	QTextEdit *			m_pOutput;
 	QTimer *			m_pResizeMarginTimer;
 	QPlainTextEdit *	m_pInput;
+	QFont				m_defaultFont;
 	
 	QExplicitlySharedDataPointer<IrcServerInfoService>
 					m_pSharedService;

@@ -1,5 +1,12 @@
-#ifndef WINDOWCONTAINER_H
-#define WINDOWCONTAINER_H
+/************************************************************************
+*
+* The MIT License
+*
+* Copyright (c) 2007-2009 Conviersa Project
+*
+************************************************************************/
+
+#pragma once
 
 #include <QMdiArea>
 #include <QMdiSubWindow>
@@ -19,5 +26,3 @@ public:
 	
 	int Size() const { return m_windows.size(); }
 };
-
-#endif

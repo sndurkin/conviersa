@@ -1,3 +1,11 @@
+/************************************************************************
+*
+* The MIT License
+*
+* Copyright (c) 2007-2009 Conviersa Project
+*
+************************************************************************/
+
 #include <QWebView>
 #include <QAction>
 #include <QListWidget>
@@ -24,12 +32,10 @@ IrcChanWindow::IrcChanWindow(QExplicitlySharedDataPointer<IrcServerInfoService> 
 	m_pSharedConn = pSharedConn;
 	m_pSharedService = pSharedService;
 	
-	QFont defFont("Fixedsys", 9);
-	
 	m_pSplitter = new QSplitter(this);
 	m_pUserList = new QListWidget;
-	m_pUserList->setFont(defFont);
-	
+	m_pUserList->setFont(m_defaultFont);
+
 	m_pSplitter->addWidget(m_pOutput);
 	m_pSplitter->addWidget(m_pUserList);
 	

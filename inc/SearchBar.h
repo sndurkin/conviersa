@@ -1,5 +1,12 @@
-#ifndef SEARCHBAR_H
-#define SEARCHBAR_H
+/************************************************************************
+*
+* The MIT License
+*
+* Copyright (c) 2007-2009 Conviersa Project
+*
+************************************************************************/
+
+#pragma once
 
 #include "CLineEdit.h"
 
@@ -30,5 +37,3 @@ protected:
 	// called when the search bar needs to be repainted
 	void paintEvent(QPaintEvent *event);
 };
-
-#endif

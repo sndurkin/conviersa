@@ -6,8 +6,6 @@
 *
 ************************************************************************/
 
-#pragma once
-
 #include "Client.h"
 #include "WindowManager.h"
 #include "ConfigManager.h"
@@ -60,6 +58,7 @@ void Client::closeEvent(QCloseEvent *event)
 void Client::SetupMenu()
 {
 	m_pFileMenu = menuBar()->addMenu(tr("&File"));
+
 	QAction *pNewIrcWinAct = m_pFileMenu->addAction(tr("&New IRC Server"));
 	QList<QKeySequence> list;
 	QKeySequence keysq("Ctrl+T");
@@ -68,7 +67,6 @@ void Client::SetupMenu()
 	QObject::connect(pNewIrcWinAct, SIGNAL(triggered(bool)), this, SLOT(OnNewIrcServerWindow()));
 	
 	m_pFileMenu->addSeparator();
-//	m_pFileMenu->addAction(tr("&hi"));
 }
 
 //-----------------------------------//

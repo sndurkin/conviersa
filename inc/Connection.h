@@ -1,5 +1,12 @@
-#ifndef CONNECTION_H
-#define CONNECTION_H
+/************************************************************************
+*
+* The MIT License
+*
+* Copyright (c) 2007-2009 Conviersa Project
+*
+************************************************************************/
+
+#pragma once
 
 #include <QObject>
 #include <QMessageBox>
@@ -48,5 +55,3 @@ public slots:
 	// reads the available data and fires the "OnReceiveData" event
 	void OnReceiveData();
 };
-
-#endif

@@ -1,5 +1,12 @@
-#ifndef IRCCHANTOPICDELEGATE_H
-#define IRCCHANTOPICDELEGATE_H
+/************************************************************************
+*
+* The MIT License
+*
+* Copyright (c) 2007-2009 Conviersa Project
+*
+************************************************************************/
+
+#pragma once
 
 #include <QAbstractItemDelegate>
 #include <QFont>
@@ -20,5 +27,3 @@ public:
 	
 	void setFont(const QFont &font) { m_font = font; }
 };
-
-#endif

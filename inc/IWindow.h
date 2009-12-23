@@ -1,5 +1,12 @@
-#ifndef IWINDOW_H
-#define IWINDOW_H
+/************************************************************************
+*
+* The MIT License
+*
+* Copyright (c) 2007-2009 Conviersa Project
+*
+************************************************************************/
+
+#pragma once
 
 #include <QMdiSubWindow>
 
@@ -64,5 +71,3 @@ protected:
 	virtual void closeEvent(QCloseEvent *event);
 	void resizeEvent(QResizeEvent *event);
 };
-
-#endif

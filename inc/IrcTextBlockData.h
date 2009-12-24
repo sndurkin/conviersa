@@ -32,7 +32,7 @@ public:
 
     // no substantial overhead, because QTextBlockUserData
     // already makes use of a virtual destructor
-    virtual IrcTextBlockType GetTextBlockType() { return TextBlockWithoutColors; }
+    virtual IrcTextBlockType getTextBlockType() { return TextBlockWithoutColors; }
 };
 
 class IrcColoredTextBlockData : public IrcTextBlockData
@@ -44,8 +44,8 @@ public:
     IrcColoredTextBlockData(bool isNumeric, int command);
     ~IrcColoredTextBlockData();
 
-    IrcTextBlockType GetTextBlockType() { return TextBlockWithColors; }
+    IrcTextBlockType getTextBlockType() { return TextBlockWithColors; }
 
-    void SetForegroundRange(int *pForeground);
-    void SetReversedRange(int *pReversed);
+    void setForegroundRange(int *pForeground);
+    void setReversedRange(int *pReversed);
 };

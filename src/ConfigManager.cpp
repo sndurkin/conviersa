@@ -15,13 +15,13 @@
 //
 // if the file with the given name exists, it overwrites any of the
 // provided default options with the values from the file
-//	- options within the file that are not found in the list of
-//		default options are ignored; this allows options to be
-//		easily deprecated without replacing the file
+//  - options within the file that are not found in the list of
+//      default options are ignored; this allows options to be
+//      easily deprecated without replacing the file
 //
 // if the file does not exist, it also creates a new file with
 // the given array of default ConfigOptions
-bool ConfigManager::SetupConfigFile(const QString &filename, const QList<ConfigOption> &defOptions)
+bool ConfigManager::setupConfigFile(const QString &filename, const QList<ConfigOption> &defOptions)
 {
     QFile file(filename);
     if(file.exists() && !file.open(QIODevice::ReadOnly | QIODevice::Text))
@@ -31,20 +31,20 @@ bool ConfigManager::SetupConfigFile(const QString &filename, const QList<ConfigO
     QMap<QString, QString>  options;
     for(int i = 0; i < defOptions.size(); ++i)
     {
-        options.insert(defOptions[i].GetName(), defOptions[i].GetValue());
+        options.insert(defOptions[i].getName(), defOptions[i].getValue());
     }
 
     if(file.exists())
     {
-		// for each line in the file, find the corresponding option;
-		// if the option exists in memory, overwrite it with
-		// the value in the file
+        // for each line in the file, find the corresponding option;
+        // if the option exists in memory, overwrite it with
+        // the value in the file
         while(!file.atEnd())
         {
             QString line = file.readLine();
 
-			// comments are ignored
-			if(line.contains(m_commentRegex))
+            // comments are ignored
+            if(line.contains(m_commentRegex))
                 continue;
 
             // if the line doesn't contain at least
@@ -79,9 +79,9 @@ bool ConfigManager::SetupConfigFile(const QString &filename, const QList<ConfigO
         for(int i = 0; i < defOptions.size(); ++i)
         {
             QByteArray str;
-            str.append(defOptions[i].GetName());
+            str.append(defOptions[i].getName());
             str.append('=');
-            str.append(defOptions[i].GetValue());
+            str.append(defOptions[i].getValue());
             str.append('\n');
             file.write(str);
         }
@@ -96,14 +96,14 @@ bool ConfigManager::SetupConfigFile(const QString &filename, const QList<ConfigO
 //
 // if the file already exists, then for each line it tries to find
 // the corresponding option in memory
-//	- if the option is found, then it writes the value in memory
-//	- if the option is unknown, then it just writes the line from the file
+//  - if the option is found, then it writes the value in memory
+//  - if the option is unknown, then it just writes the line from the file
 //
 // finally, it writes any options that aren't in the file but are
 // existing in memory
-//	- this allows for adding new options to a file by modifying the default
-//		options that are put into memory using SetupConfigFile()
-bool ConfigManager::WriteToFile(const QString &filename)
+//  - this allows for adding new options to a file by modifying the default
+//      options that are put into memory using SetupConfigFile()
+bool ConfigManager::writeToFile(const QString &filename)
 {
     QHash<QString, QMap<QString, QString> >::iterator i = m_files.find(filename);
 
@@ -140,7 +140,7 @@ bool ConfigManager::WriteToFile(const QString &filename)
 
                 // automatically write everything that isn't
                 // of the correct format
-				if(line.contains(m_commentRegex))
+                if(line.contains(m_commentRegex))
                 {
                     newFile.write(line.toAscii());
                 }
@@ -149,7 +149,7 @@ bool ConfigManager::WriteToFile(const QString &filename)
                     // also makes it a comment, to show it was ignored
                     newFile.write("#" + line.toAscii());
                 }
-				else    // otherwise, we check the data in memory
+                else    // otherwise, we check the data in memory
                 {
                     QString optName = line.section('=', 0, 0);
                     QMap<QString, QString>::iterator j = i.value().find(optName);
@@ -176,7 +176,7 @@ bool ConfigManager::WriteToFile(const QString &filename)
             file.remove();
         }
 
-		// write any data in memory that wasn't already in the file
+        // write any data in memory that wasn't already in the file
         // (in other words, any data that isn't found in the
         // alreadyWritten hash table)
         QMap<QString, QString>::iterator j = i.value().begin();
@@ -208,7 +208,7 @@ bool ConfigManager::WriteToFile(const QString &filename)
 
 // returns the value of the provided option inside the provided file,
 // returns an empty string upon error
-QString ConfigManager::GetOptionValue(const QString &filename, const QString &optName)
+QString ConfigManager::getOptionValue(const QString &filename, const QString &optName)
 {
     QHash<QString, QMap<QString, QString> >::iterator i = m_files.find(filename);
     if(i != m_files.end())
@@ -224,7 +224,7 @@ QString ConfigManager::GetOptionValue(const QString &filename, const QString &op
 }
 
 // sets the provided option's value to optValue
-bool ConfigManager::SetOptionValue(const QString &filename, const QString &optName, const QString &optValue)
+bool ConfigManager::setOptionValue(const QString &filename, const QString &optName, const QString &optValue)
 {
     QHash<QString, QMap<QString, QString> >::iterator i = m_files.find(filename);
     if(i != m_files.end())
@@ -241,7 +241,7 @@ bool ConfigManager::SetOptionValue(const QString &filename, const QString &optNa
 }
 
 // test function to produce contents of file
-void ConfigManager::PrintFile(const QString &filename)
+void ConfigManager::printFile(const QString &filename)
 {
     QHash<QString, QMap<QString, QString> >::iterator i = m_files.find(filename);
     if(i != m_files.end())

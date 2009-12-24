@@ -18,11 +18,11 @@ class IWindow;
 class WindowContainer : public QMdiArea
 {
 protected:
-	QList<IWindow *>		m_windows;
-	
+    QList<IWindow *> m_windows;
+
 public:
-	WindowContainer(QWidget* pParent);
-	virtual ~WindowContainer() { }
-	
-	int Size() const { return m_windows.size(); }
+    WindowContainer(QWidget* pParent);
+    virtual ~WindowContainer() { }
+
+    int size() const { return m_windows.size(); }
 };

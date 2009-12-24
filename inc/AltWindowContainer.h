@@ -25,17 +25,17 @@ class QMenuBar;
 // and it uses an event filter to maintain its parent
 class AltWindowContainer : public WindowContainer
 {
-	QMainWindow *	m_pParent;
-	
-	QDockWidget *	m_pDock;
-	QListWidget *	m_pList;
-	QMenuBar *		m_pMenuBar;
-	
-	WindowManager *	m_pManager;
+    QMainWindow *   m_pParent;
+
+    QDockWidget *   m_pDock;
+    QListWidget *   m_pList;
+    QMenuBar *      m_pMenuBar;
+
+    WindowManager * m_pManager;
 
 public:
-	AltWindowContainer(WindowManager *pManager);
+    AltWindowContainer(WindowManager *pManager);
 
 protected:
-	void closeEvent(QCloseEvent *event);
+    void closeEvent(QCloseEvent *event);
 };

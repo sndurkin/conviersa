@@ -55,7 +55,7 @@ IrcChanWindow::IrcChanWindow(QExplicitlySharedDataPointer<IrcServerInfoService> 
 
     setLayout(m_pVLayout);
 
-    QObject::connect(m_pSharedConn.data(), SIGNAL(Disconnected()), this, SLOT(HandleDisconnect()));
+    QObject::connect(m_pSharedConn.data(), SIGNAL(disconnected()), this, SLOT(handleDisconnect()));
 }
 
 int IrcChanWindow::getIrcWindowType()

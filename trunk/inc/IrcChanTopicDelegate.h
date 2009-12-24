@@ -15,7 +15,7 @@ class IrcChanTopicDelegate : public QAbstractItemDelegate
 {
 	Q_OBJECT
 	
-	QFont		m_font;
+    QFont m_font;
 	
 public:
 	IrcChanTopicDelegate(QObject *parent = NULL);

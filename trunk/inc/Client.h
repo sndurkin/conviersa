@@ -30,30 +30,30 @@ namespace cv {
 
 class Client : public QMainWindow
 {
-	Q_OBJECT
-	
+    Q_OBJECT
+
 private:
-	WindowContainer *	m_pMainContainer;
-	WindowManager *		m_pManager;
-	
-	QMenu *				m_pFileMenu;
-	QDockWidget *		m_pDock;
-	
-	QTreeWidgetItem *	m_irc;
-	
+    WindowContainer *   m_pMainContainer;
+    WindowManager *     m_pManager;
+
+    QMenu *             m_pFileMenu;
+    QDockWidget *       m_pDock;
+
+    QTreeWidgetItem *   m_irc;
+
 public:
-	Client(const QString &title);
+    Client(const QString &title);
 
 protected:
-	void closeEvent(QCloseEvent *event);
+    void closeEvent(QCloseEvent *event);
 
 private:
-	void SetupMenu();
-	void SetupColorConfig();
+    void setupMenu();
+    void setupColorConfig();
 
 public slots:
-	// creates a blank IRC server window
-	void OnNewIrcServerWindow();
+    // creates a blank IRC server window
+    void onNewIrcServerWindow();
 };
 
 //-----------------------------------//

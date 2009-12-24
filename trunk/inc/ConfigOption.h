@@ -12,17 +12,17 @@
 
 class ConfigOption
 {
-	QString name;
-    QString	value;
-	
+    QString name;
+    QString value;
+
 public:
-	ConfigOption(const QString &n, const QString &v)
-		: name(n),
-          value(v)
+    ConfigOption(const QString &n, const QString &v)
+     : name(n),
+       value(v)
     { }
 
-	void SetName(const QString &n) { name = n; }
-	QString GetName() const { return name; }
-	void SetValue(const QString &v) { value = v; }
-	QString GetValue() const { return value; }
+    void setName(const QString &n) { name = n; }
+    QString getName() const { return name; }
+    void setValue(const QString &v) { value = v; }
+    QString getValue() const { return value; }
 };

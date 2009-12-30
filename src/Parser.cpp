@@ -8,15 +8,15 @@
 
 #include <QtGui>
 #include "qext.h"
-#include "IrcParser.h"
+#include "Parser.h"
 
 namespace cv { namespace irc {
 
 // parses the data into a structure that holds all information
 // necessary to print the message
-IrcMessage parseData(const QString &data)
+Message parseData(const QString &data)
 {
-    IrcMessage msg;
+    Message msg;
 
     // make an index for the sections, start at 0
     int sectionIndex = 0;
@@ -777,7 +777,7 @@ QString getPrefixRules(const QString &param)
 }
 
 // returns the specific CtcpRequestType of the message
-CtcpRequestType getCtcpRequestType(const IrcMessage &msg)
+CtcpRequestType getCtcpRequestType(const Message &msg)
 {
     // it has to be a private message
     if(msg.m_command != IRC_COMMAND_PRIVMSG)
@@ -813,7 +813,7 @@ CtcpRequestType getCtcpRequestType(const IrcMessage &msg)
 }
 
 // forms the text that can be printed to the output for all numeric commands
-QString getNumericText(const IrcMessage &msg)
+QString getNumericText(const Message &msg)
 {
     QString text;
 
@@ -874,3 +874,4 @@ bool isChannel(const QString &str)
 }
 
 } } // end namespaces
+

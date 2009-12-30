@@ -7,20 +7,20 @@
 ************************************************************************/
 
 #include "IrcChanUser.h"
-#include "IrcParser.h"
+#include "Parser.h"
 
 namespace cv { namespace irc {
 
 // parses the input nick into nickname, and
 // prefixes and user/host (if applicable)
-IrcChanUser::IrcChanUser(QExplicitlySharedDataPointer<IrcServerInfoService> pSharedService, const QString &nick)
-    : m_pSharedService(pSharedService)
+IrcChanUser::IrcChanUser(QExplicitlySharedDataPointer<Session> pSharedSession, const QString &nick)
+    : m_pSharedSession(pSharedSession)
 {
     m_nickname = nick.section('!', 0, 0);
 
     // get the prefixes from the nickname (if any)
     int numPrefixes = 0;
-    for(int i = 0; i < m_nickname.size() && m_pSharedService->isNickPrefix(m_nickname[i]); ++i)
+    for(int i = 0; i < m_nickname.size() && m_pSharedSession->isNickPrefix(m_nickname[i]); ++i)
     {
         m_prefixes += m_nickname[i];
         ++numPrefixes;
@@ -45,13 +45,13 @@ IrcChanUser::IrcChanUser(QExplicitlySharedDataPointer<IrcServerInfoService> pSha
 // already there or it isn't a valid prefix
 void IrcChanUser::addPrefix(const QChar &prefixToAdd)
 {
-    if(!m_pSharedService->isNickPrefix(prefixToAdd))
+    if(!m_pSharedSession->isNickPrefix(prefixToAdd))
         return;
 
     // insert the prefix in the right spot
     for(int i = 0; i < m_prefixes.size(); ++i)
     {
-        int compareVal = m_pSharedService->compareNickPrefixes(m_prefixes[i], prefixToAdd);
+        int compareVal = m_pSharedSession->compareNickPrefixes(m_prefixes[i], prefixToAdd);
         if(compareVal > 0)
         {
             m_prefixes.insert(i, prefixToAdd);

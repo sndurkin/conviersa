@@ -6,14 +6,14 @@
 *
 ************************************************************************/
 
-#include "IrcWindowScrollBar.h"
+#include "OutputWindowScrollBar.h"
 #include <QMouseEvent>
 #include <QStyleOptionSlider>
 #include <QPainter>
 
 namespace cv { namespace irc {
 
-IrcWindowScrollBar::IrcWindowScrollBar(QWidget *pParent/* = NULL*/)
+OutputWindowScrollBar::OutputWindowScrollBar(QWidget *pParent/* = NULL*/)
     : QScrollBar(pParent),
       m_defaultBehavior(false)
 {
@@ -21,7 +21,7 @@ IrcWindowScrollBar::IrcWindowScrollBar(QWidget *pParent/* = NULL*/)
     QObject::connect(this, SIGNAL(rangeChanged(int, int)), this, SLOT(updateScrollBar(int, int)));
 }
 
-int IrcWindowScrollBar::getSliderHeight()
+int OutputWindowScrollBar::getSliderHeight()
 {
     QStyleOptionSlider opt;
     initStyleOption(&opt);
@@ -33,7 +33,7 @@ int IrcWindowScrollBar::getSliderHeight()
 
 // adds a line to be painted, located at sliderVal,
 // and repaints with the new line
-void IrcWindowScrollBar::addLine(qreal posRatio)
+void OutputWindowScrollBar::addLine(qreal posRatio)
 {
     QStyleOptionSlider opt;
     initStyleOption(&opt);
@@ -51,13 +51,13 @@ void IrcWindowScrollBar::addLine(qreal posRatio)
 }
 
 // clears all the lines, and repaints
-void IrcWindowScrollBar::clearLines()
+void OutputWindowScrollBar::clearLines()
 {
     m_searchLines.clear();
     update();
 }
 
-void IrcWindowScrollBar::mousePressEvent(QMouseEvent *event)
+void OutputWindowScrollBar::mousePressEvent(QMouseEvent *event)
 {
     if(!m_defaultBehavior && event->button() == Qt::LeftButton)
     {
@@ -94,7 +94,7 @@ void IrcWindowScrollBar::mousePressEvent(QMouseEvent *event)
     }
 }
 
-void IrcWindowScrollBar::paintEvent(QPaintEvent *event)
+void OutputWindowScrollBar::paintEvent(QPaintEvent *event)
 {
     // paint the default scrollbar first
     QScrollBar::paintEvent(event);
@@ -117,7 +117,7 @@ void IrcWindowScrollBar::paintEvent(QPaintEvent *event)
 
 // ensures that the area holding the scrollbar moves it so that
 // the bottom of the viewport doesn't move
-void IrcWindowScrollBar::updateScrollBar(int min, int max)
+void OutputWindowScrollBar::updateScrollBar(int min, int max)
 {
     setSliderPosition(max - (m_currMax - value()));
     m_currMax = max;

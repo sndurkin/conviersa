@@ -16,9 +16,9 @@ namespace cv { namespace irc {
 // this class specifies various properties about a specific IRC server
 // and provides an interface to them; it is maintained and used by an
 // IrcStatusWindow, but used by the other connected IRC windows as well
-class IrcServerInfoService : public QSharedData
+class Session : public QSharedData
 {
-    // tells whether the service is attached to a
+    // tells whether the session is attached to a
     // specific server or not
     bool    m_attached;
 
@@ -48,9 +48,9 @@ class IrcServerInfoService : public QSharedData
     int     m_modeNum;
 
 public:
-    IrcServerInfoService();
+    Session();
 
-    // attaches the service to a specific server (essentially
+    // attaches the session to a specific server (essentially
     // reconstructs it
     void attachToServer(const QString &host, int port);
 

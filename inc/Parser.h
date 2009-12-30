@@ -76,7 +76,7 @@ enum
     IRC_COMMAND_WALLOPS
 };
 
-struct IrcMessage
+struct Message
 {
     QString     m_prefix;
     bool        m_isNumeric;
@@ -87,7 +87,7 @@ struct IrcMessage
 
 // parses the data into a structure that holds all information
 // necessary to print the message
-IrcMessage parseData(const QString &data);
+Message parseData(const QString &data);
 
 // converts data received from the server, complete
 // with any control codes, to HTML-formatted text
@@ -130,10 +130,10 @@ ChanModeType getChanModeType(const QString &chanModes, const QChar &letter);
 QString getPrefixRules(const QString &param);
 
 // returns the specific CtcpRequestType of the message
-CtcpRequestType getCtcpRequestType(const IrcMessage &msg);
+CtcpRequestType getCtcpRequestType(const Message &msg);
 
 // returns the text for all numeric commands
-QString getNumericText(const IrcMessage &msg);
+QString getNumericText(const Message &msg);
 
 // used to parse a part of the msg prefix
 QString parseMsgPrefix(const QString &prefix, MsgPrefixPart part);

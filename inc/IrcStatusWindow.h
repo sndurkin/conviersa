@@ -9,7 +9,7 @@
 #pragma once
 
 #include "IIrcWindow.h"
-#include "IrcParser.h"
+#include "Parser.h"
 
 namespace cv { namespace irc {
 
@@ -70,34 +70,34 @@ protected:
 
 private:
     // numeric messages
-    void handle001Numeric(const IrcMessage &msg);
-    void handle002Numeric(const IrcMessage &msg);
-    void handle005Numeric(const IrcMessage &msg);
-    void handle301Numeric(const IrcMessage &msg);
-    void handle317Numeric(const IrcMessage &msg);
-    void handle321Numeric(const IrcMessage &msg);
-    void handle322Numeric(const IrcMessage &msg);
-    void handle323Numeric(const IrcMessage &msg);
-    void handle330Numeric(const IrcMessage &msg);
-    void handle332Numeric(const IrcMessage &msg);
-    void handle333Numeric(const IrcMessage &msg);
-    void handle353Numeric(const IrcMessage &msg);
-    void handle366Numeric(const IrcMessage &msg);
-    void handle401Numeric(const IrcMessage &msg);
+    void handle001Numeric(const Message &msg);
+    void handle002Numeric(const Message &msg);
+    void handle005Numeric(const Message &msg);
+    void handle301Numeric(const Message &msg);
+    void handle317Numeric(const Message &msg);
+    void handle321Numeric(const Message &msg);
+    void handle322Numeric(const Message &msg);
+    void handle323Numeric(const Message &msg);
+    void handle330Numeric(const Message &msg);
+    void handle332Numeric(const Message &msg);
+    void handle333Numeric(const Message &msg);
+    void handle353Numeric(const Message &msg);
+    void handle366Numeric(const Message &msg);
+    void handle401Numeric(const Message &msg);
 
     // other messages
-    void handleInviteMsg(const IrcMessage &msg);
-    void handleJoinMsg(const IrcMessage &msg);
-    void handleKickMsg(const IrcMessage &msg);
-    void handleModeMsg(const IrcMessage &msg);
-    void handleNickMsg(const IrcMessage &msg);
-    void handleNoticeMsg(const IrcMessage &msg);
-    void handlePartMsg(const IrcMessage &msg);
-    void handlePongMsg(const IrcMessage &msg);
-    void handlePrivMsg(const IrcMessage &msg);
-    void handleQuitMsg(const IrcMessage &msg);
-    void handleTopicMsg(const IrcMessage &msg);
-    void handleWallopsMsg(const IrcMessage &msg);
+    void handleInviteMsg(const Message &msg);
+    void handleJoinMsg(const Message &msg);
+    void handleKickMsg(const Message &msg);
+    void handleModeMsg(const Message &msg);
+    void handleNickMsg(const Message &msg);
+    void handleNoticeMsg(const Message &msg);
+    void handlePartMsg(const Message &msg);
+    void handlePongMsg(const Message &msg);
+    void handlePrivMsg(const Message &msg);
+    void handleQuitMsg(const Message &msg);
+    void handleTopicMsg(const Message &msg);
+    void handleWallopsMsg(const Message &msg);
 
 public slots:
     // handles a disconnection fired from the Connection object

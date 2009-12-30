@@ -13,7 +13,7 @@
 
 namespace cv { namespace irc {
 
-class IrcWindowScrollBar : public QScrollBar
+class OutputWindowScrollBar : public QScrollBar
 {
     Q_OBJECT
 
@@ -27,7 +27,7 @@ class IrcWindowScrollBar : public QScrollBar
     QList<QLineF>   m_searchLines;
 
 public:
-    IrcWindowScrollBar(QWidget *pParent = NULL);
+    OutputWindowScrollBar(QWidget *pParent = NULL);
 
     int getSliderHeight();
 

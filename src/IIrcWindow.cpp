@@ -17,9 +17,9 @@
 #include "qext.h"
 #include "IrcTypes.h"
 #include "IIrcWindow.h"
-#include "IrcParser.h"
-#include "IrcWindowScrollBar.h"
-#include "IrcServerInfoService.h"
+#include "Parser.h"
+#include "OutputWindowScrollBar.h"
+#include "Session.h"
 #include "ConfigManager.h"
 
 namespace cv { namespace irc {
@@ -53,7 +53,7 @@ IIrcWindow::IIrcWindow(const QString &title/* = tr("Untitled")*/,
     m_pOutput->setReadOnly(true);
     m_pOutput->installEventFilter(this);
 
-    m_pScrollBar = new IrcWindowScrollBar(this);
+    m_pScrollBar = new OutputWindowScrollBar(this);
     m_pOutput->setVerticalScrollBar(m_pScrollBar);
 }
 
@@ -77,7 +77,7 @@ void IIrcWindow::printOutput(const QString &text, const QColor &color/* = QColor
         cursor.insertBlock();
     QString textToPrint = escapeEx(stripCodes(text));
 
-    if(text.contains(m_pSharedService->getNick()))
+    if(text.contains(m_pSharedSession->getNick()))
     {
         textToPrint.prepend("<b>");
         textToPrint.append("</b>");
@@ -345,9 +345,9 @@ void IIrcWindow::handleInput(const QString &inputText)
                 if(m_pSharedConn->isConnected())
                     m_pSharedConn->disconnect();
 
-                // detach the service from the server
-                if(m_pSharedService->isAttached())
-                    m_pSharedService->detachFromServer();
+                // detach the session from the server
+                if(m_pSharedSession->isAttached())
+                    m_pSharedSession->detachFromServer();
 
                 if(!m_pSharedConn->connect(host.toAscii().data(), port))
                 {
@@ -355,7 +355,7 @@ void IIrcWindow::handleInput(const QString &inputText)
                     return;
                 }
 
-                m_pSharedService->attachToServer(host, port);
+                m_pSharedSession->attachToServer(host, port);
             }
 
             return;
@@ -399,7 +399,7 @@ void IIrcWindow::handleInput(const QString &inputText)
 
                 text.remove(0, 3);
                 textToPrint = "* ";
-                textToPrint += m_pSharedService->getNick();
+                textToPrint += m_pSharedSession->getNick();
                 textToPrint += " ";
                 textToPrint += text;
                 color.setNamedColor(g_pCfgManager->getOptionValue("colors.ini", "action"));
@@ -444,7 +444,7 @@ void IIrcWindow::handleInput(const QString &inputText)
     }
 
     textToPrint = "<";
-    textToPrint += m_pSharedService->getNick();
+    textToPrint += m_pSharedSession->getNick();
     textToPrint += "> ";
     textToPrint += text;
     color.setNamedColor(g_pCfgManager->getOptionValue("colors.ini", "say"));

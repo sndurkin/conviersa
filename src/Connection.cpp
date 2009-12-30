@@ -9,8 +9,8 @@
 #include <QTextCodec>
 #include <QTcpSocket>
 #include <QSslSocket>
+
 #include "Connection.h"
-#include "IChatWindow.h"
 
 namespace cv {
 
@@ -49,17 +49,14 @@ bool Connection::connect(const char *pServer, quint16 port)
     QObject::connect(m_pSocket, SIGNAL(disconnected()), this, SLOT(onDisconnect()));
     QObject::connect(m_pSocket, SIGNAL(readyRead()), this, SLOT(onReceiveData()));
 
-    // QString evtStr = "onReceiveData:";
-    // evtStr += m_pWindow->windowTitle();
-    // CreateEvent(evtStr);
-
-    // todo: stateChanged(), etc. --> status bar
     m_pSocket->connectToHost(pServer, port);
     if(!m_pSocket->waitForConnected(10000))
     {
-        // todo: error messages on output
-        QMessageBox errMsg(QMessageBox::NoIcon, "Connection Error", m_pSocket->errorString());
-        errMsg.exec();
+        // TODO: log this
+
+        //QMessageBox errMsg(QMessageBox::NoIcon, "Connection Error", m_pSocket->errorString());
+        //errMsg.exec();
+
         delete m_pSocket;
         m_pSocket = NULL;
         return false;
@@ -115,12 +112,15 @@ void Connection::onDisconnect()
 
 // is called when there is data to be read from the socket;
 // reads the available data and fires the "OnReceiveData" event
+
+const int SOCKET_BUFFER_SIZE = 1024;
+
 void Connection::onReceiveData()
 {
     while(true)
     {
-        char tempBuf[1024];
-        qint64 size = m_pSocket->read(tempBuf, 1023);
+        char tempBuf[SOCKET_BUFFER_SIZE];
+        qint64 size = m_pSocket->read(tempBuf, SOCKET_BUFFER_SIZE-1);
 
         if(size > 0)
         {
@@ -142,8 +142,10 @@ void Connection::onReceiveData()
         {
             if(size < 0)
             {
-                QMessageBox msg(QMessageBox::NoIcon, "Error", "There was an error in reading from the socket.");
-                msg.exec();
+                // TODO: log this
+
+                //QMessageBox msg(QMessageBox::NoIcon, "Error", "There was an error in reading from the socket.");
+                //msg.exec();
             }
             break;
         }

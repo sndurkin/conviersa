@@ -12,13 +12,16 @@
 #include <QMessageBox>
 #include <QSharedData>
 
-class QTcpSocket;
-class QTextCodec;
-
 namespace cv {
 
 class IChatWindow;
+class QTcpSocket;
+class QTextCodec;
 
+// provides connection services to the rest of the irc classes.
+// this class deals only with raw bytes and should use the parser
+// interface to decode and get any meaningful information about
+// the received data.
 class Connection : public QObject, public QSharedData
 {
     Q_OBJECT
@@ -29,22 +32,25 @@ class Connection : public QObject, public QSharedData
     QString         m_prevBuffer;
 
 public:
+
     Connection(IChatWindow *pWindow, QTextCodec *pCodec);
     virtual ~Connection();
+
     bool connect(const char *pServer, quint16 port);
     bool connectSSL() { return true; }
-    bool isConnected() { return m_pSocket != NULL; }
-    bool send(const QString &data);
-    void setCodec(QTextCodec *pCodec) { m_pCodec = pCodec; }
+
     void disconnect();
 
+    bool isConnected() { return m_pSocket != NULL; }
+
+    bool send(const QString &data);
+    void setCodec(QTextCodec *pCodec) { m_pCodec = pCodec; }
+
 signals:
-    // signal emitted when we are disconnected from
-    // the connection to the socket
+    // signal emitted when we get a connection to the server
     void connected();
 
-    // signal emitted when we are disconnected from
-    // the connection to the socket
+    // signal emitted when we are disconnected from the server
     void disconnected();
 
 public slots:

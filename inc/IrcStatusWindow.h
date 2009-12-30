@@ -9,6 +9,7 @@
 #pragma once
 
 #include "IIrcWindow.h"
+#include "IChatWindow.h"
 #include "IrcParser.h"
 
 namespace cv { namespace irc {
@@ -17,7 +18,7 @@ class IrcChanListWindow;
 class IrcChanWindow;
 class IrcPrivWindow;
 
-class IrcStatusWindow : public IIrcWindow
+class IrcStatusWindow : public IChatWindow
 {
     Q_OBJECT
 

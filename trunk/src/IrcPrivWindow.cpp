@@ -64,7 +64,7 @@ void IrcPrivWindow::handleTab()
 void IrcPrivWindow::closeEvent(QCloseEvent *event)
 {
     emit privWindowClosing(this);
-    return IWindow::closeEvent(event);
+    return Window::closeEvent(event);
 }
 
 void IrcPrivWindow::handleDisconnect()

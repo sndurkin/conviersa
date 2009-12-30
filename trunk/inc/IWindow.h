@@ -15,7 +15,7 @@ namespace cv {
 class WindowManager;
 class WindowContainer;
 
-class IWindow : public QWidget
+class Window : public QWidget
 {
     friend class WindowManager;
     friend class WindowContainer;
@@ -38,9 +38,9 @@ protected:
     QMdiSubWindow *     m_pSubWindow;
 
 public:
-    IWindow(const QString &title = tr("Untitled"),
+    Window(const QString &title = tr("Untitled"),
             const QSize &size = QSize(500, 300));
-    virtual ~IWindow() { }
+    virtual ~Window() { }
 
     QSize sizeHint() const;
 

@@ -15,7 +15,7 @@
 
 namespace cv {
 
-class IChatWindow : public IWindow
+class IChatWindow : public Window
 {
 protected:
     QExplicitlySharedDataPointer<Connection> m_pSharedConn;

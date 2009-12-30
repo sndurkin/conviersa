@@ -21,6 +21,7 @@
 #include <QFileDialog>
 #include <QTextStream>
 #include <QTextCursor>
+#include <QMessageBox>
 #include "IrcChanListWindow.h"
 #include "IrcChanTopicDelegate.h"
 #include "IrcParser.h"
@@ -59,9 +60,9 @@ IrcChanListWindow::IrcChanListWindow(QExplicitlySharedDataPointer<Connection> pS
     m_pView->setRootIsDecorated(false);
     m_pView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
-    QObject::connect(m_pSharedConn.data(), SIGNAL(Disconnected()), this, SLOT(HandleDisconnect()));
-    QObject::connect(m_pSharedConn.data(), SIGNAL(Connected()), this, SLOT(HandleConnect()));
-    QObject::connect(m_pView, SIGNAL(doubleClicked(const QModelIndex &)), this, SLOT(JoinChannel(const QModelIndex &)));
+    QObject::connect(m_pSharedConn.data(), SIGNAL(disconnected()), this, SLOT(handleDisconnect()));
+    QObject::connect(m_pSharedConn.data(), SIGNAL(connected()), this, SLOT(handleConnect()));
+    QObject::connect(m_pView, SIGNAL(doubleClicked(const QModelIndex &)), this, SLOT(joinChannel(const QModelIndex &)));
 
     setupControls();
     setLayout(m_pVLayout);
@@ -204,7 +205,7 @@ void IrcChanListWindow::setupControls()
 
     m_pCustomParameters = new CLineEdit("List Parameters (optional)", m_pDownloadingGroup);
     m_pCustomParameters->setGeometry(QRect(10, 20, 281, 21));
-    QObject::connect(m_pCustomParameters, SIGNAL(returnPressed()), this, SLOT(DownloadList()));
+    QObject::connect(m_pCustomParameters, SIGNAL(returnPressed()), this, SLOT(downloadList()));
 
     m_pTopicDisplay = new QCheckBox("Display control codes in topics", m_pDownloadingGroup);
     m_pTopicDisplay->setGeometry(QRect(20, 50, 171, 16));
@@ -213,12 +214,12 @@ void IrcChanListWindow::setupControls()
 
     m_pDownloadListButton = new QPushButton("Download List", m_pDownloadingGroup);
     m_pDownloadListButton->setGeometry(QRect(120, 70, 101, 31));
-    QObject::connect(m_pDownloadListButton, SIGNAL(clicked()), this, SLOT(DownloadList()));
+    QObject::connect(m_pDownloadListButton, SIGNAL(clicked()), this, SLOT(downloadList()));
 
     m_pStopDownloadButton = new QPushButton("Stop", m_pDownloadingGroup);
     m_pStopDownloadButton->setGeometry(QRect(230, 70, 61, 31));
     m_pStopDownloadButton->setEnabled(false);
-    QObject::connect(m_pStopDownloadButton, SIGNAL(clicked()), this, SLOT(StopDownload()));
+    QObject::connect(m_pStopDownloadButton, SIGNAL(clicked()), this, SLOT(stopDownload()));
 
     m_pChannelsLabel = new QLabel("0 / 0 Channels", m_pControlsSection);
     m_pChannelsLabel->setGeometry(QRect(0, 135, 201, 20));
@@ -229,7 +230,7 @@ void IrcChanListWindow::setupControls()
     m_pSaveButton = new QPushButton("Save List...", m_pControlsSection);
     m_pSaveButton->setGeometry(QRect(210, 120, 91, 31));
     m_pSaveButton->setEnabled(false);
-    QObject::connect(m_pSaveButton, SIGNAL(clicked()), this, SLOT(SaveList()));
+    QObject::connect(m_pSaveButton, SIGNAL(clicked()), this, SLOT(saveList()));
 
     m_pFilteringGroup = new QGroupBox("Filtering Channels", m_pControlsSection);
     m_pFilteringGroup->setGeometry(QRect(316, 0, 381, 151));
@@ -237,11 +238,11 @@ void IrcChanListWindow::setupControls()
 
     m_pSearchBar = new SearchBar(m_pFilteringGroup);
     m_pSearchBar->setGeometry(QRect(10, 20, 361, 20));
-    QObject::connect(m_pSearchBar, SIGNAL(returnPressed()), this, SLOT(StartFilter()));
+    QObject::connect(m_pSearchBar, SIGNAL(returnPressed()), this, SLOT(startFilter()));
 
     m_pSearchTimer = new QTimer;
     m_pSearchTimer->setSingleShot(false);
-    QObject::connect(m_pSearchTimer, SIGNAL(timeout()), this, SLOT(PerformSearchIteration()));
+    QObject::connect(m_pSearchTimer, SIGNAL(timeout()), this, SLOT(performSearchIteration()));
 
     m_pCheckChanNames = new QCheckBox("Check channel names", m_pFilteringGroup);
     m_pCheckChanNames->setGeometry(QRect(10, 40, 131, 21));
@@ -269,12 +270,12 @@ void IrcChanListWindow::setupControls()
 
     m_pApplyFilterButton = new QPushButton("Apply Filter", m_pFilteringGroup);
     m_pApplyFilterButton->setGeometry(QRect(220, 110, 81, 31));
-    QObject::connect(m_pApplyFilterButton, SIGNAL(clicked()), this, SLOT(StartFilter()));
+    QObject::connect(m_pApplyFilterButton, SIGNAL(clicked()), this, SLOT(startFilter()));
 
     m_pStopFilterButton = new QPushButton("Stop", m_pFilteringGroup);
     m_pStopFilterButton->setGeometry(QRect(310, 110, 61, 31));
     m_pStopFilterButton->setEnabled(false);
-    QObject::connect(m_pStopFilterButton, SIGNAL(clicked()), this, SLOT(StopFilter()));
+    QObject::connect(m_pStopFilterButton, SIGNAL(clicked()), this, SLOT(stopFilter()));
 }
 
 // handles a connection fired from the Connection object

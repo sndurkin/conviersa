@@ -9,14 +9,15 @@
 #pragma once
 
 #include <QObject>
-#include <QMessageBox>
 #include <QSharedData>
+#include <QTimer>
+
+class QTcpSocket;
+class QTextCodec;
 
 namespace cv {
 
 class IChatWindow;
-class QTcpSocket;
-class QTextCodec;
 
 // provides connection services to the rest of the irc classes.
 // this class deals only with raw bytes and should use the parser
@@ -30,6 +31,7 @@ class Connection : public QObject, public QSharedData
     QTcpSocket *    m_pSocket;
     QTextCodec *    m_pCodec;
     QString         m_prevBuffer;
+    QTimer          m_connectionTimer;
 
 public:
 
@@ -53,12 +55,18 @@ signals:
     // signal emitted when we are disconnected from the server
     void disconnected();
 
+    // signal emitted when it cannot connect to the server within the specified time
+    void connectionFailed();
+
 public slots:
     // is called when the socket connects to the server;
     void onConnect();
 
     // is called when the socket is disconnected
     void onDisconnect();
+
+    // is called when the timer times out before the socket can connect
+    void onFailedConnect();
 
     // is called when there is data to be read from the socket;
     // reads the available data and fires the "OnReceiveData" event

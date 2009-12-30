@@ -239,7 +239,7 @@ void IrcChanWindow::closeEvent(QCloseEvent *event)
         m_pSharedConn->send(textToSend);
     }
 
-    return IWindow::closeEvent(event);
+    return Window::closeEvent(event);
 }
 
 // adds a user by pointer to IrcChanUser

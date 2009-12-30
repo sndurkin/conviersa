@@ -12,6 +12,8 @@
 #include <QLinearGradient>
 #include "SearchBar.h"
 
+namespace cv {
+
 SearchBar::SearchBar(QWidget *pParent/* = NULL*/)
     : CLineEdit("Search", pParent),
       m_searchProgress(0.0)
@@ -53,3 +55,5 @@ void SearchBar::paintEvent(QPaintEvent *event)
         painter.fillRect(currRect, *m_pBrush);
     }
 }
+
+} // end namespace

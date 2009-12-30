@@ -8,10 +8,14 @@
 
 #include "qext.h"
 
+namespace cv {
+
 QString escapeEx(const QString &text)
 {
-	QString textToReturn = Qt::escape(text);
-	textToReturn.prepend("<span style=\"white-space:pre-wrap\">");
-	textToReturn.append("</span>");
-	return textToReturn;
+    QString textToReturn = Qt::escape(text);
+    textToReturn.prepend("<span style=\"white-space:pre-wrap\">");
+    textToReturn.append("</span>");
+    return textToReturn;
 }
+
+} // end namespace

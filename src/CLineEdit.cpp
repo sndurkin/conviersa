@@ -11,6 +11,8 @@
 #include <QPainter>
 #include "CLineEdit.h"
 
+namespace cv {
+
 CLineEdit::CLineEdit(const QString &textToPrint, QWidget *pParent/* = NULL*/)
     : QLineEdit(pParent),
       m_textToPrint(textToPrint),
@@ -102,3 +104,5 @@ void CLineEdit::paintEvent(QPaintEvent *event)
         painter.drawText(QPointF(5, height()-6), m_textToPrint);
     }
 }
+
+} // end namespace

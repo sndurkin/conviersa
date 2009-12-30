@@ -13,6 +13,8 @@
 #include "IWindow.h"
 #include "Connection.h"
 
+namespace cv {
+
 class IChatWindow : public IWindow
 {
 protected:
@@ -24,3 +26,5 @@ public:
 
     virtual void handleData(QString &data) { }
 };
+
+} // end namespace

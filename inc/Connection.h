@@ -12,9 +12,12 @@
 #include <QMessageBox>
 #include <QSharedData>
 
-class IChatWindow;
 class QTcpSocket;
 class QTextCodec;
+
+namespace cv {
+
+class IChatWindow;
 
 class Connection : public QObject, public QSharedData
 {
@@ -55,3 +58,5 @@ public slots:
     // reads the available data and fires the "OnReceiveData" event
     void onReceiveData();
 };
+
+} // end namespace

@@ -22,6 +22,8 @@
 #include <QScrollBar>
 #include <QTextEdit>
 
+namespace cv { namespace irc {
+
 IrcChanWindow::IrcChanWindow(QExplicitlySharedDataPointer<IrcServerInfoService> pSharedService,
                              QExplicitlySharedDataPointer<Connection> pSharedConn,
                              const QString &title/* = tr("Untitled")*/,
@@ -316,3 +318,5 @@ void IrcChanWindow::handleDisconnect()
     printOutput("* Disconnected");
     m_pUserList->setEnabled(false);
 }
+
+} } // end namespaces

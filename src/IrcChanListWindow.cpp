@@ -27,6 +27,8 @@
 #include "WindowManager.h"
 #include "SearchBar.h"
 
+namespace cv { namespace irc {
+
 IrcChanListWindow::IrcChanListWindow(QExplicitlySharedDataPointer<Connection> pSharedConn,
                                      const QSize &size/* = QSize(715, 300)*/)
     : IChatWindow("Channel List", size),
@@ -102,10 +104,10 @@ void IrcChanListWindow::addChannel(const QString &channel, const QString &numUse
 
         QStandardItem *pItem = new QStandardItem;
 
-        QString strippedTopic = IrcParser::stripCodes(topic);
+        QString strippedTopic = stripCodes(topic);
         if(m_pTopicDisplay->checkState() == Qt::Checked)
         {
-            pItem->setData(IrcParser::convertDataToHtml(topic), Qt::DisplayRole);
+            pItem->setData(convertDataToHtml(topic), Qt::DisplayRole);
         }
         else
         {
@@ -597,3 +599,5 @@ void IrcChanListWindow::saveList()
 
     out.flush();
 }
+
+} } // end namespaces

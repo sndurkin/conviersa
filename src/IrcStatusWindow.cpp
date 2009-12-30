@@ -20,9 +20,9 @@
 #include "WindowManager.h"
 #include "ConfigManager.h"
 
-using namespace IrcParser;
-
 #define DEBUG_MESSAGES 0
+
+namespace cv { namespace irc {
 
 IrcStatusWindow::IrcStatusWindow(const QString &title/* = tr("Server Window")*/,
                 const QSize &size/* = QSize(500, 300)*/)
@@ -1205,3 +1205,5 @@ void IrcStatusWindow::handleDisconnect()
     setTitle("Server Window");
     setWindowName("Server Window");
 }
+
+} } // end namespaces

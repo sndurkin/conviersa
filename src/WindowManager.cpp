@@ -11,6 +11,8 @@
 #include "AltWindowContainer.h"
 #include "IWindow.h"
 
+namespace cv {
+
 WindowManager::WindowManager(QWidget *pParent, WindowContainer *pMainContainer)
     : QTreeWidget(pParent),
       m_pMainContainer(pMainContainer)
@@ -420,3 +422,5 @@ void WindowManager::contextMenuEvent(QContextMenuEvent *event)
         }
     }
 }
+
+} // end namespace

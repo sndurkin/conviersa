@@ -15,6 +15,8 @@
 #include "AltWindowContainer.h"
 #include "WindowManager.h"
 
+namespace cv {
+
 AltWindowContainer::AltWindowContainer(WindowManager *pManager)
     : WindowContainer(NULL),
       m_pManager(pManager)
@@ -50,3 +52,5 @@ void AltWindowContainer::closeEvent(QCloseEvent *event)
 
     event->accept();
 }
+
+} // end namespace

@@ -10,6 +10,8 @@
 
 #include "IIrcWindow.h"
 
+namespace cv { namespace irc {
+
 class IrcPrivWindow : public IIrcWindow
 {
     Q_OBJECT
@@ -45,3 +47,5 @@ public slots:
     // handles a disconnection fired from the Connection object
     void handleDisconnect();
 };
+
+} } // end namespaces

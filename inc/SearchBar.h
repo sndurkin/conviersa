@@ -14,6 +14,8 @@ class QFocusEvent;
 class QPaintEvent;
 class QBrush;
 
+namespace cv {
+
 class SearchBar : public CLineEdit
 {
     bool        m_printText;
@@ -37,3 +39,5 @@ protected:
     // called when the search bar needs to be repainted
     void paintEvent(QPaintEvent *event);
 };
+
+} // end namespace

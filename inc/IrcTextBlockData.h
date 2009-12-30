@@ -10,6 +10,8 @@
 
 #include <QTextBlockUserData>
 
+namespace cv { namespace irc {
+
 enum IrcTextBlockType
 {
     TextBlockWithoutColors,
@@ -49,3 +51,5 @@ public:
     void setForegroundRange(int *pForeground);
     void setReversedRange(int *pReversed);
 };
+
+} } // end namespaces

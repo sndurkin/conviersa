@@ -14,9 +14,11 @@
 #include "IrcChanWindow.h"
 #include "IrcPrivWindow.h"
 
-ConfigManager *g_pCfgManager;
-
 namespace cv {
+
+using namespace irc;
+
+ConfigManager *g_pCfgManager;
 
 //-----------------------------------//
 

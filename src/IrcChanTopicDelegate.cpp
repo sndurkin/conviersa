@@ -14,6 +14,8 @@
 #include "IrcChanTopicDelegate.h"
 #include "IrcParser.h"
 
+namespace cv { namespace irc {
+
 IrcChanTopicDelegate::IrcChanTopicDelegate(QObject *parent/* = NULL*/)
     : QAbstractItemDelegate(parent)
 { }
@@ -54,3 +56,5 @@ QSize IrcChanTopicDelegate::sizeHint(const QStyleOptionViewItem &option, const Q
     size.setHeight(size.height() + 5);
     return size;
 }
+
+} } // end namespaces

@@ -9,6 +9,10 @@
 #include "WindowContainer.h"
 #include "IWindow.h"
 
+namespace cv {
+
 WindowContainer::WindowContainer(QWidget* pParent)
-	: QMdiArea(pParent)
+    : QMdiArea(pParent)
 { }
+
+} // end namespace

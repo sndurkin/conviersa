@@ -11,6 +11,8 @@
 #include "WindowManager.h"
 #include "WindowContainer.h"
 
+namespace cv {
+
 IWindow::IWindow(const QString &title/* = tr("Untitled")*/,
                  const QSize &size/* = QSize(500, 300)*/)
     : QWidget(),
@@ -123,3 +125,5 @@ void IWindow::resizeEvent(QResizeEvent *event)
 {
     m_defSize = event->size();
 }
+
+} // end namespace

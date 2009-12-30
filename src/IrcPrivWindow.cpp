@@ -14,6 +14,8 @@
 #include "IrcServerInfoService.h"
 #include "WindowManager.h"
 
+namespace cv { namespace irc {
+
 IrcPrivWindow::IrcPrivWindow(QExplicitlySharedDataPointer<IrcServerInfoService> pSharedService,
                 QExplicitlySharedDataPointer<Connection> pSharedConn,
                 const QString &title/* = tr("Untitled")*/,
@@ -69,3 +71,5 @@ void IrcPrivWindow::handleDisconnect()
 {
     printOutput("* Disconnected");
 }
+
+} } // end namespaces

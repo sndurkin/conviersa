@@ -15,6 +15,9 @@
 #include "definitions.h"
 
 class QMdiSubWindow;
+
+namespace cv {
+
 class WindowContainer;
 class IWindow;
 
@@ -106,3 +109,5 @@ protected:
     void mousePressEvent(QMouseEvent *event);
     void contextMenuEvent(QContextMenuEvent *event);
 };
+
+} // end namespace

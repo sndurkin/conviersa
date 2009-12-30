@@ -7,7 +7,7 @@
 ************************************************************************/
 
 #include "WindowContainer.h"
-#include "IWindow.h"
+#include "Window.h"
 
 namespace cv {
 

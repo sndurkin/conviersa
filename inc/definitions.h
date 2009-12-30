@@ -14,10 +14,10 @@ namespace cv {
 
 class Window;
 
-// IWindow types
+// Window types
 enum
 {
-    TYPE_IWINDOW,
+    TYPE_WINDOW,
     TYPE_IRCWINDOW,
     TYPE_IRCCHANWINDOW,
     TYPE_IRCPRIVWINDOW
@@ -28,7 +28,7 @@ enum
 struct win_info_t
 {
     QTreeWidgetItem *   m_pTreeItem;
-    Window *           m_pWindow;
+    Window *            m_pWindow;
 };
 
 } // end namespace

@@ -10,7 +10,7 @@
 
 #include <QString>
 #include <QExplicitlySharedDataPointer>
-#include "IWindow.h"
+#include "Window.h"
 #include "Connection.h"
 
 namespace cv {

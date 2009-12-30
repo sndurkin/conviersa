@@ -8,7 +8,7 @@
 
 #include <QtGui>
 #include "qext.h"
-#include "Parser.h"
+#include "irc/Parser.h"
 
 namespace cv { namespace irc {
 
@@ -297,7 +297,7 @@ QString convertDataToHtml(const QString &text, const QColor &defaultFg/* = QColo
                 QString firstNum, secondNum;
 
                 int tempIdx = i + 1;
-                for(int j = 0; j < 2 && tempIdx < textToReturn.size(); ++j, ++tempIdx)
+                for(int j = 0; j < 2; ++j, ++tempIdx)
                 {
                     if(!textToReturn[tempIdx].isDigit())
                     {
@@ -309,14 +309,14 @@ QString convertDataToHtml(const QString &text, const QColor &defaultFg/* = QColo
                     firstNum += textToReturn[tempIdx];
                 }
 
-                if(tempIdx < textToReturn.size() && textToReturn[tempIdx] != ',')
+                if(textToReturn[tempIdx] != ',')
                 {
                     goto end_color_spec;
                 }
 
                 ++tempIdx;
                 ++charsToReplace;
-                for(int j = 0; j < 2 && tempIdx < textToReturn.size(); ++j, ++tempIdx)
+                for(int j = 0; j < 2; ++j, ++tempIdx)
                 {
                     if(!textToReturn[tempIdx].isDigit())
                     {
@@ -505,7 +505,7 @@ void addColorsToText(const QString &text, QTextCursor &cursor,
                 QString firstNum, secondNum;
 
                 ++i;
-                for(int j = 0; j < 2 && i < text.size(); ++j, ++i)
+                for(int j = 0; j < 2; ++j, ++i)
                 {
                     if(!text[i].isDigit())
                     {
@@ -516,13 +516,13 @@ void addColorsToText(const QString &text, QTextCursor &cursor,
                     firstNum += text[i];
                 }
 
-                if(i < text.size() && text[i] != ',')
+                if(text[i] != ',')
                 {
                     goto end_color_spec;
                 }
 
                 ++i;
-                for(int j = 0; j < 2 && i < text.size(); ++j, ++i)
+                for(int j = 0; j < 2; ++j, ++i)
                 {
                     if(!text[i].isDigit())
                     {
@@ -607,7 +607,7 @@ QString stripCodes(const QString &text)
                 // max length of color specification is 5
                 // (four numbers and one comma)
                 ++i;
-                for(int j = 0; j < 2 && i < text.size(); ++j, ++i)
+                for(int j = 0; j < 2; ++j, ++i)
                 {
                     if(!text[i].isDigit())
                     {
@@ -617,13 +617,13 @@ QString stripCodes(const QString &text)
                     }
                 }
 
-                if(i < text.size() && text[i] != ',')
+                if(text[i] != ',')
                 {
                     goto end_color_spec;
                 }
 
                 ++i;
-                for(int j = 0; j < 2 && i < text.size(); ++j, ++i)
+                for(int j = 0; j < 2; ++j, ++i)
                 {
                     if(!text[i].isDigit())
                     {
@@ -874,4 +874,3 @@ bool isChannel(const QString &str)
 }
 
 } } // end namespaces
-

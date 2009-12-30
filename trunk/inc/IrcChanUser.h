@@ -9,7 +9,7 @@
 #pragma once
 
 #include <QString>
-#include "Session.h"
+#include "irc/Session.h"
 
 namespace cv { namespace irc {
 

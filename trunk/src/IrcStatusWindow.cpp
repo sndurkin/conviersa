@@ -15,7 +15,7 @@
 #include "IrcChanListWindow.h"
 #include "IrcChanWindow.h"
 #include "IrcPrivWindow.h"
-#include "Session.h"
+#include "irc/Session.h"
 #include "OutputWindowScrollBar.h"
 #include "WindowManager.h"
 #include "ConfigManager.h"

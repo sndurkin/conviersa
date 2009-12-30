@@ -9,7 +9,7 @@
 #pragma once
 
 #include "IIrcWindow.h"
-#include "Parser.h"
+#include "irc/Parser.h"
 
 namespace cv { namespace irc {
 

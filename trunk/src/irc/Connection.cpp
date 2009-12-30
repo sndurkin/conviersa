@@ -11,7 +11,7 @@
 #include <QSslSocket>
 
 #include "IChatWindow.h"
-#include "Connection.h"
+#include "irc/Connection.h"
 
 const int CONFIG_CONNECTION_TIMEOUT_MSEC = 10000;
 

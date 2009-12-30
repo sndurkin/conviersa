@@ -11,7 +11,7 @@
 #include <QString>
 #include <QExplicitlySharedDataPointer>
 #include "Window.h"
-#include "Connection.h"
+#include "irc/Connection.h"
 
 namespace cv {
 

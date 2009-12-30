@@ -24,7 +24,7 @@
 #include <QMessageBox>
 #include "IrcChanListWindow.h"
 #include "IrcChanTopicDelegate.h"
-#include "Parser.h"
+#include "irc/Parser.h"
 #include "WindowManager.h"
 #include "SearchBar.h"
 

@@ -7,7 +7,7 @@
 ************************************************************************/
 
 #include "IrcChanUser.h"
-#include "Parser.h"
+#include "irc/Parser.h"
 
 namespace cv { namespace irc {
 

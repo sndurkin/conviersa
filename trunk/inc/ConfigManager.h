@@ -15,6 +15,8 @@
 #include <QRegExp>
 #include "ConfigOption.h"
 
+namespace cv {
+
 class ConfigManager
 {
     QHash<QString, QMap<QString, QString> > m_files;
@@ -24,7 +26,7 @@ class ConfigManager
 
 public:
     ConfigManager()
-     : m_commentRegex("^\\s*#")
+      : m_commentRegex("^\\s*#")
     { }
 
     // this function puts options (and their values) into memory under
@@ -65,3 +67,5 @@ public:
 };
 
 extern ConfigManager *g_pCfgManager;
+
+} // end namespace

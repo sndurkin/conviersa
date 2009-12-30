@@ -10,4 +10,8 @@
 
 #include <QtGui>
 
+namespace cv {
+
 QString escapeEx(const QString &text);
+
+} // end namespace

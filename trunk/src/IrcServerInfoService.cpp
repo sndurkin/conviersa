@@ -8,6 +8,8 @@
 
 #include "IrcServerInfoService.h"
 
+namespace cv { namespace irc {
+
 IrcServerInfoService::IrcServerInfoService()
     : QSharedData(),
       m_attached(false),
@@ -120,3 +122,5 @@ bool IrcServerInfoService::isNickPrefix(const QChar &prefix)
 
     return false;
 }
+
+} } // end namespaces

@@ -21,9 +21,15 @@ class QLabel;
 class QGroupBox;
 class QRadioButton;
 class QSpinBox;
-class IrcChanTopicDelegate;
+
+namespace cv {
+
 class SearchBar;
 class CLineEdit;
+
+namespace irc {
+
+class IrcChanTopicDelegate;
 
 /**
  * Document what, why and how.
@@ -129,3 +135,5 @@ public slots:
     // saves the entire list to a file
     void saveList();
 };
+
+} } // end namespaces

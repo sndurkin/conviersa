@@ -11,6 +11,8 @@
 #include <QString>
 #include "IrcServerInfoService.h"
 
+namespace cv { namespace irc {
+
 class IrcChanUser
 {
     QExplicitlySharedDataPointer<IrcServerInfoService>
@@ -59,3 +61,5 @@ public:
 
     int getPriority() { return m_priority; }
 };
+
+} } // end namespaces

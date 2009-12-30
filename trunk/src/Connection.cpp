@@ -12,6 +12,8 @@
 #include "Connection.h"
 #include "IChatWindow.h"
 
+namespace cv {
+
 //-----------------------------------//
 
 Connection::Connection(IChatWindow *pWindow, QTextCodec *pCodec)
@@ -149,3 +151,5 @@ void Connection::onReceiveData()
 }
 
 //-----------------------------------//
+
+} // end namespace

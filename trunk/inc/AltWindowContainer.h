@@ -13,9 +13,12 @@
 class QMainWindow;
 class QDockWidget;
 class QListWidget;
-class WindowManager;
 class QCloseEvent;
 class QMenuBar;
+
+namespace cv {
+
+class WindowManager;
 
 // AltWindowContainer is implemented a little differently than a
 // WindowContainer, although it is derived from it so we can use
@@ -39,3 +42,5 @@ public:
 protected:
     void closeEvent(QCloseEvent *event);
 };
+
+} // end namespace

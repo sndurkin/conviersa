@@ -10,6 +10,8 @@
 
 #include <QMdiSubWindow>
 
+namespace cv {
+
 class WindowManager;
 class WindowContainer;
 
@@ -64,3 +66,5 @@ protected:
     virtual void closeEvent(QCloseEvent *event);
     void resizeEvent(QResizeEvent *event);
 };
+
+} // end namespace

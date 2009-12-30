@@ -10,6 +10,8 @@
 
 #include <QLineEdit>
 
+namespace cv {
+
 // defines a custom line edit class that is basically a QLineEdit
 // with some additional features:
 //  - custom text is displayed in the lineedit when it does
@@ -46,3 +48,5 @@ protected:
     // called when the line edit needs to be repainted
     void paintEvent(QPaintEvent *event);
 };
+
+} // end namespace

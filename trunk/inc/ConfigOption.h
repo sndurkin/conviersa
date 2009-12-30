@@ -10,6 +10,8 @@
 
 #include <QString>
 
+namespace cv {
+
 class ConfigOption
 {
     QString name;
@@ -26,3 +28,5 @@ public:
     void setValue(const QString &v) { value = v; }
     QString getValue() const { return value; }
 };
+
+} // end namespace

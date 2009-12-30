@@ -9,6 +9,9 @@
 #pragma once
 
 class QTreeWidgetItem;
+
+namespace cv {
+
 class IWindow;
 
 // IWindow types
@@ -27,3 +30,5 @@ struct win_info_t
     QTreeWidgetItem *   m_pTreeItem;
     IWindow *           m_pWindow;
 };
+
+} // end namespace

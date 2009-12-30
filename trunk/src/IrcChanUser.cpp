@@ -9,6 +9,8 @@
 #include "IrcChanUser.h"
 #include "IrcParser.h"
 
+namespace cv { namespace irc {
+
 // parses the input nick into nickname, and
 // prefixes and user/host (if applicable)
 IrcChanUser::IrcChanUser(QExplicitlySharedDataPointer<IrcServerInfoService> pSharedService, const QString &nick)
@@ -117,3 +119,5 @@ QChar IrcChanUser::getPrefix()
 
     return '\0';
 }
+
+} } // end namespaces

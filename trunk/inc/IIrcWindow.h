@@ -17,6 +17,9 @@ class QTextEdit;
 class QMutex;
 class QTimer;
 class QTextTable;
+
+namespace cv { namespace irc {
+
 class IrcWindowScrollBar;
 
 //-----------------------------------//
@@ -99,3 +102,5 @@ public slots:
 };
 
 //-----------------------------------//
+
+} } // end namespaces

@@ -11,6 +11,8 @@
 #include <QMdiArea>
 #include <QMdiSubWindow>
 
+namespace cv {
+
 class IWindow;
 
 // custom QMdiArea that i'm using as a container
@@ -26,3 +28,5 @@ public:
 
     int size() const { return m_windows.size(); }
 };
+
+} // end namespace

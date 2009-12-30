@@ -11,6 +11,8 @@
 #include <QStyleOptionSlider>
 #include <QPainter>
 
+namespace cv { namespace irc {
+
 IrcWindowScrollBar::IrcWindowScrollBar(QWidget *pParent/* = NULL*/)
     : QScrollBar(pParent),
       m_defaultBehavior(false)
@@ -120,3 +122,5 @@ void IrcWindowScrollBar::updateScrollBar(int min, int max)
     setSliderPosition(max - (m_currMax - value()));
     m_currMax = max;
 }
+
+} } // end namespaces

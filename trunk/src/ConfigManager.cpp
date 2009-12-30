@@ -10,6 +10,8 @@
 #include <QTemporaryFile>
 #include "ConfigManager.h"
 
+namespace cv {
+
 // this function puts options (and their values) into memory under
 // a specific filename
 //
@@ -254,3 +256,5 @@ void ConfigManager::printFile(const QString &filename)
         }
     }
 }
+
+} // end namespace

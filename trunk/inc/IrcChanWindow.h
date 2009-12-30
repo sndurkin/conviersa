@@ -14,6 +14,9 @@
 class QListWidget;
 class QSplitter;
 class QMutex;
+
+namespace cv { namespace irc {
+
 class IrcChanUser;
 
 // subject to change
@@ -110,3 +113,5 @@ public slots:
     // handles a disconnection fired from the Connection object
     void handleDisconnect();
 };
+
+} } // end namespaces

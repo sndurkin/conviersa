@@ -11,6 +11,8 @@
 #include <QScrollBar>
 #include <QStyle>
 
+namespace cv { namespace irc {
+
 class IrcWindowScrollBar : public QScrollBar
 {
     Q_OBJECT
@@ -49,3 +51,5 @@ public slots:
     // the bottom of the viewport doesn't move
     void updateScrollBar(int min, int max);
 };
+
+} } // end namespaces

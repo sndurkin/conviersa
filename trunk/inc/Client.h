@@ -15,10 +15,11 @@
 #include <QDockWidget>
 
 class QTreeWidgetItem;
-class WindowManager;
-class WindowContainer;
 
 namespace cv {
+
+class WindowManager;
+class WindowContainer;
 
 //-----------------------------------//
 
@@ -51,7 +52,7 @@ private:
     void setupMenu();
     void setupColorConfig();
 
-public slots:
+    public slots:
     // creates a blank IRC server window
     void onNewIrcServerWindow();
 };

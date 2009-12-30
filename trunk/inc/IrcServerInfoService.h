@@ -11,6 +11,8 @@
 #include <QString>
 #include <QSharedData>
 
+namespace cv { namespace irc {
+
 // this class specifies various properties about a specific IRC server
 // and provides an interface to them; it is maintained and used by an
 // IrcStatusWindow, but used by the other connected IRC windows as well
@@ -109,3 +111,5 @@ public:
     // example prefixes: @, %, +
     bool isNickPrefix(const QChar &prefix);
 };
+
+} } // end namespaces

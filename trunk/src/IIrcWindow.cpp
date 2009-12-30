@@ -22,6 +22,8 @@
 #include "IrcServerInfoService.h"
 #include "ConfigManager.h"
 
+namespace cv { namespace irc {
+
 //-----------------------------------//
 
 IIrcWindow::IIrcWindow(const QString &title/* = tr("Untitled")*/,
@@ -73,7 +75,7 @@ void IIrcWindow::printOutput(const QString &text, const QColor &color/* = QColor
 
     if(!m_pOutput->document()->isEmpty())
         cursor.insertBlock();
-    QString textToPrint = escapeEx(IrcParser::stripCodes(text));
+    QString textToPrint = escapeEx(stripCodes(text));
 
     if(text.contains(m_pSharedService->getNick()))
     {
@@ -99,7 +101,7 @@ void IIrcWindow::printOutput(const QString &text, const QColor &color/* = QColor
     // sets the correct position of the cursor so that color
     // can be applied to the text just inserted
     cursor.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
-    IrcParser::addColorsToText(text, cursor, color);
+    addColorsToText(text, cursor, color);
 
     if(atDocumentEnd && !m_pOutput->textCursor().hasSelection())
     {
@@ -475,3 +477,5 @@ void IIrcWindow::resizeTopMargin()
     m_pOutput->document()->rootFrame()->setFrameFormat(format);
 }
 */
+
+} } // end namespaces

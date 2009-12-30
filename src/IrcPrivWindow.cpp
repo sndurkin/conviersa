@@ -11,7 +11,7 @@
 #include "IrcTypes.h"
 #include "IrcPrivWindow.h"
 #include "IrcStatusWindow.h"
-#include "Session.h"
+#include "irc/Session.h"
 #include "WindowManager.h"
 
 namespace cv { namespace irc {

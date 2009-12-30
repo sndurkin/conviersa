@@ -17,9 +17,9 @@
 #include "qext.h"
 #include "IrcTypes.h"
 #include "IIrcWindow.h"
-#include "Parser.h"
+#include "irc/Parser.h"
 #include "OutputWindowScrollBar.h"
-#include "Session.h"
+#include "irc/Session.h"
 #include "ConfigManager.h"
 
 namespace cv { namespace irc {

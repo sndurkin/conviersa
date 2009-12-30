@@ -15,9 +15,9 @@
 #include "IrcChanWindow.h"
 #include "IrcChanUser.h"
 #include "IrcStatusWindow.h"
-#include "Session.h"
+#include "irc/Session.h"
 #include "WindowManager.h"
-#include "Connection.h"
+#include "irc/Connection.h"
 
 #include <QScrollBar>
 #include <QTextEdit>

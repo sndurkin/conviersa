@@ -6,7 +6,7 @@
 *
 ************************************************************************/
 
-#include "Session.h"
+#include "irc/Session.h"
 
 namespace cv { namespace irc {
 
@@ -14,7 +14,9 @@ Session::Session()
     : QSharedData(),
       m_attached(false),
       m_nick("seand`")
-{ }
+{
+    // TODO: dont hardcode nicks
+}
 
 void Session::attachToServer(const QString &host, int port)
 {
@@ -124,4 +126,3 @@ bool Session::isNickPrefix(const QChar &prefix)
 }
 
 } } // end namespaces
-

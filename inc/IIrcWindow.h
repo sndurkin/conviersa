@@ -11,7 +11,7 @@
 #include <QVBoxLayout>
 #include <QPlainTextEdit>
 #include "IChatWindow.h"
-#include "Session.h"
+#include "irc/Session.h"
 
 class QTextEdit;
 class QMutex;

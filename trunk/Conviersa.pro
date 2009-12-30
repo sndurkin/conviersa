@@ -7,11 +7,11 @@ INCLUDEPATH = inc/
 DESTDIR = ../bin/
 OTHER_FILES += todo.txt \
     doc/License.txt
-HEADERS += inc/WindowManager.h \
+HEADERS += inc/Window.h \
+    inc/WindowManager.h \
     inc/WindowContainer.h \
     inc/SearchBar.h \
     inc/qext.h \
-    inc/IWindow.h \
     inc/IrcWindowScrollBar.h \
     inc/IrcTypes.h \
     inc/IrcTextBlockData.h \
@@ -32,12 +32,12 @@ HEADERS += inc/WindowManager.h \
     inc/CLineEdit.h \
     inc/Client.h \
     inc/AltWindowContainer.h
-SOURCES += src/WindowManager.cpp \
+SOURCES += src/Window.cpp \
+    src/WindowManager.cpp \
     src/WindowContainer.cpp \
     src/SearchBar.cpp \
     src/qext.cpp \
     src/main.cpp \
-    src/IWindow.cpp \
     src/IrcWindowScrollBar.cpp \
     src/IrcTextBlockData.cpp \
     src/IrcStatusWindow.cpp \

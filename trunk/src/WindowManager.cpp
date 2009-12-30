@@ -9,7 +9,7 @@
 #include <new>
 #include "WindowManager.h"
 #include "AltWindowContainer.h"
-#include "IWindow.h"
+#include "Window.h"
 
 namespace cv {
 

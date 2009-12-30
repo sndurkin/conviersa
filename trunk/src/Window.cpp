@@ -7,7 +7,7 @@
 ************************************************************************/
 
 #include <QTreeWidgetItem>
-#include "IWindow.h"
+#include "Window.h"
 #include "WindowManager.h"
 #include "WindowContainer.h"
 
@@ -127,3 +127,4 @@ void Window::resizeEvent(QResizeEvent *event)
 }
 
 } // end namespace
+

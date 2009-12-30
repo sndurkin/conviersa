@@ -12,7 +12,7 @@ class QTreeWidgetItem;
 
 namespace cv {
 
-class IWindow;
+class Window;
 
 // IWindow types
 enum
@@ -28,7 +28,7 @@ enum
 struct win_info_t
 {
     QTreeWidgetItem *   m_pTreeItem;
-    IWindow *           m_pWindow;
+    Window *           m_pWindow;
 };
 
 } // end namespace

@@ -39,7 +39,7 @@ WindowManager::~WindowManager()
     // destroy the windows
     while(!m_winList.empty())
     {
-        IWindow *pWin = m_winList.front().m_pWindow;
+        Window *pWin = m_winList.front().m_pWindow;
         if(pWin->hasContainer())
         {
             // separate the window from the container
@@ -104,7 +104,7 @@ void WindowManager::removeContainer(WindowContainer *pCont)
 //
 // returns: true if successful,
 //		false otherwise
-bool WindowManager::addWindow(IWindow *pWin, QTreeWidgetItem *pParent)
+bool WindowManager::addWindow(Window *pWin, QTreeWidgetItem *pParent)
 {
     // rudimentary checking to make sure parameters are valid
     if(!pWin || !pParent)
@@ -142,7 +142,7 @@ bool WindowManager::addWindow(IWindow *pWin, QTreeWidgetItem *pParent)
 // be sent to their respective IWindows as well
 //
 // todo: optimize
-void WindowManager::removeWindow(IWindow *pWin)
+void WindowManager::removeWindow(Window *pWin)
 {
     if(!pWin)
         return;
@@ -164,7 +164,7 @@ void WindowManager::removeWindow(IWindow *pWin)
 
 // moves the window to a window container, or to the desktop
 // if the pointer to the container provided is NULL
-void WindowManager::moveWindow(IWindow *pWin, WindowContainer *pCont)
+void WindowManager::moveWindow(Window *pWin, WindowContainer *pCont)
 {
     if(pWin->hasContainer())
     {
@@ -197,7 +197,7 @@ void WindowManager::moveWindow(IWindow *pWin, WindowContainer *pCont)
 
 // returns a pointer to the window based on the title
 // returns NULL if not found
-IWindow *WindowManager::findWindow(const QString &title)
+Window *WindowManager::findWindow(const QString &title)
 {
     int size = m_winList.size();
     for(int i = 0; i < size; ++i)
@@ -215,7 +215,7 @@ IWindow *WindowManager::findWindow(const QString &title)
 //	of the given window
 // returns NULL if the window is invalid or if there is no parent
 //	(if it's a top-level window)
-IWindow *WindowManager::getParentWindow(IWindow *pWin)
+Window *WindowManager::getParentWindow(Window *pWin)
 {
     QTreeWidgetItem *pItem = getItemFromWindow(pWin);
     if(!pItem)
@@ -226,9 +226,9 @@ IWindow *WindowManager::getParentWindow(IWindow *pWin)
 
 // returns a QList of pointers to IWindows that are
 // children to the parent provided
-QList<IWindow *> WindowManager::getChildWindows(IWindow *pParent)
+QList<Window *> WindowManager::getChildWindows(Window *pParent)
 {
-    QList<IWindow *> list;
+    QList<Window *> list;
 
     QTreeWidgetItem *pItem = getItemFromWindow(pParent);
     if(pItem)
@@ -253,7 +253,7 @@ QList<IWindow *> WindowManager::getChildWindows(IWindow *pParent)
 }
 
 // retrieves the index in the QList given the pointer to the IWindow
-int WindowManager::getIndexFromWindow(IWindow *pWin)
+int WindowManager::getIndexFromWindow(Window *pWin)
 {
     int size = m_winList.size();
     for(int i = 0; i < size; ++i)
@@ -283,7 +283,7 @@ int WindowManager::getIndexFromItem(QTreeWidgetItem *pItem)
 }
 
 // retrieves the pointer to the treeview item given the pointer to the IWindow
-QTreeWidgetItem *WindowManager::getItemFromWindow(IWindow *pWin)
+QTreeWidgetItem *WindowManager::getItemFromWindow(Window *pWin)
 {
     int size = m_winList.size();
     for(int i = 0; i < size; ++i)
@@ -296,7 +296,7 @@ QTreeWidgetItem *WindowManager::getItemFromWindow(IWindow *pWin)
 }
 
 // retrieves the pointer to the IWindow given the pointer to the treeview item
-IWindow *WindowManager::getWindowFromItem(QTreeWidgetItem *pItem)
+Window *WindowManager::getWindowFromItem(QTreeWidgetItem *pItem)
 {
     int size = m_winList.size();
     for(int i = 0; i < size; ++i)
@@ -364,7 +364,7 @@ void WindowManager::mousePressEvent(QMouseEvent *event)
             int index = getIndexFromItem(pItem);
             if(index >= 0)
             {
-                IWindow *pWin = m_winList[index].m_pWindow;
+                Window *pWin = m_winList[index].m_pWindow;
                 if(pWin->hasContainer())
                 {
                     // todo: fix for multiple containers

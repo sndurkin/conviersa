@@ -26,7 +26,7 @@ namespace cv { namespace irc {
 
 IrcStatusWindow::IrcStatusWindow(const QString &title/* = tr("Server Window")*/,
                 const QSize &size/* = QSize(500, 300)*/)
-    : IChatWindow(title, size),
+    : IIrcWindow(title, size),
       m_populatingUserList(false),
       m_pChanListWin(NULL)
 {

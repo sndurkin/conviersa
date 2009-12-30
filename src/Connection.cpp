@@ -10,7 +10,10 @@
 #include <QTcpSocket>
 #include <QSslSocket>
 
+#include "IChatWindow.h"
 #include "Connection.h"
+
+const int CONFIG_CONNECTION_TIMEOUT_MSEC = 10000;
 
 namespace cv {
 
@@ -20,7 +23,9 @@ Connection::Connection(IChatWindow *pWindow, QTextCodec *pCodec)
     : m_pWindow(pWindow),
       m_pSocket(NULL),
       m_pCodec(pCodec)
-{ }
+{
+    m_connectionTimer.setSingleShot(true);
+}
 
 //-----------------------------------//
 
@@ -44,23 +49,16 @@ bool Connection::connect(const char *pServer, quint16 port)
     if(!m_pSocket)
         return false;
 
-    // connects the signal to the slot so it can start reading from the socket
+    // connects the necessary signals to each corresponding slot
     QObject::connect(m_pSocket, SIGNAL(connected()), this, SLOT(onConnect()));
     QObject::connect(m_pSocket, SIGNAL(disconnected()), this, SLOT(onDisconnect()));
     QObject::connect(m_pSocket, SIGNAL(readyRead()), this, SLOT(onReceiveData()));
+    QObject::connect(&m_connectionTimer, SIGNAL(timeout()), this, SLOT(onFailedConnect()));
 
     m_pSocket->connectToHost(pServer, port);
-    if(!m_pSocket->waitForConnected(10000))
-    {
-        // TODO: log this
+    m_connectionTimer.start(CONFIG_CONNECTION_TIMEOUT_MSEC);
 
-        //QMessageBox errMsg(QMessageBox::NoIcon, "Connection Error", m_pSocket->errorString());
-        //errMsg.exec();
-
-        delete m_pSocket;
-        m_pSocket = NULL;
-        return false;
-    }
+    // TODO: log this
 
     return true;
 }
@@ -92,9 +90,11 @@ void Connection::disconnect()
 // is called when the socket connects to the server;
 void Connection::onConnect()
 {
+    m_connectionTimer.stop();
     emit connected();
 
     // todo: use options
+    // todo: move to irc::Session
     char *buf = "PASS hello\nNICK seand`\nUSER guest tolmoon tolsun :Ronnie Reagan\n";
     m_pSocket->write(buf, strlen(buf));
 }
@@ -109,6 +109,22 @@ void Connection::onDisconnect()
 }
 
 //-----------------------------------//
+
+// is called when the timer times out before the socket can connect
+void Connection::onFailedConnect()
+{
+    // checks to see if it has emitted the connected() signal, to prevent
+    // a possible race condition
+    if(m_pSocket->state() == QAbstractSocket::ConnectedState)
+        return;
+
+    delete m_pSocket;
+    m_pSocket = NULL;
+    emit connectionFailed();
+}
+
+//-----------------------------------//
+
 
 // is called when there is data to be read from the socket;
 // reads the available data and fires the "OnReceiveData" event

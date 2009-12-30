@@ -13,7 +13,7 @@
 
 namespace cv {
 
-IWindow::IWindow(const QString &title/* = tr("Untitled")*/,
+Window::Window(const QString &title/* = tr("Untitled")*/,
                  const QSize &size/* = QSize(500, 300)*/)
     : QWidget(),
       m_pContainer(NULL),
@@ -28,21 +28,21 @@ IWindow::IWindow(const QString &title/* = tr("Untitled")*/,
     hide();
 }
 
-QSize IWindow::sizeHint() const
+QSize Window::sizeHint() const
 {
     return m_defSize;
 }
 
 // returns the title of the window, whether it's
 // in a container or on the desktop
-QString IWindow::getTitle() const
+QString Window::getTitle() const
 {
     return windowTitle();
 }
 
 // sets the title of the window, whether it's
 // in a container or on the desktop
-void IWindow::setTitle(const QString &title)
+void Window::setTitle(const QString &title)
 {
     if(hasContainer())
     {
@@ -53,7 +53,7 @@ void IWindow::setTitle(const QString &title)
 }
 
 // the name returned is the short name displayed in the WindowManager
-QString IWindow::getWindowName()
+QString Window::getWindowName()
 {
     if(m_pManager)
     {
@@ -68,7 +68,7 @@ QString IWindow::getWindowName()
 }
 
 // sets the short name of the window (displayed in the WM)
-void IWindow::setWindowName(const QString &name)
+void Window::setWindowName(const QString &name)
 {
     if(m_pManager)
     {
@@ -83,7 +83,7 @@ void IWindow::setWindowName(const QString &name)
 //
 // Overridden event functions
 //
-void IWindow::closeEvent(QCloseEvent *event)
+void Window::closeEvent(QCloseEvent *event)
 {
     if(m_pManager)
     {
@@ -92,7 +92,7 @@ void IWindow::closeEvent(QCloseEvent *event)
         // {
         //
             // close the child windows first
-            QList<IWindow *> cList = m_pManager->getChildWindows(this);
+            QList<Window *> cList = m_pManager->getChildWindows(this);
 
             // iterate over the children and delete their respective IWindows
             int size = cList.size();
@@ -121,7 +121,7 @@ void IWindow::closeEvent(QCloseEvent *event)
     event->accept();
 }
 
-void IWindow::resizeEvent(QResizeEvent *event)
+void Window::resizeEvent(QResizeEvent *event)
 {
     m_defSize = event->size();
 }

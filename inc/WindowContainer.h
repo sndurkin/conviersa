@@ -13,14 +13,14 @@
 
 namespace cv {
 
-class IWindow;
+class Window;
 
 // custom QMdiArea that i'm using as a container
 // to hold IWindows
 class WindowContainer : public QMdiArea
 {
 protected:
-    QList<IWindow *> m_windows;
+    QList<Window *> m_windows;
 
 public:
     WindowContainer(QWidget* pParent);

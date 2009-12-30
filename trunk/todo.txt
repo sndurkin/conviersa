@@ -1,5 +1,7 @@
 ToDo: things to be implemented are basically separated based on the class or part of the project they belong in
 
+Handle multi-line copy-pasting
+
 IWindow
 	- make sure there aren't any functions in IWindow that will cause a crash if m_pManager is NULL
 

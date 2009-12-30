@@ -35,7 +35,7 @@ protected:
     bool                    m_inChannel;
 
 public:
-    IrcChanWindow(QExplicitlySharedDataPointer<IrcServerInfoService> pSharedService,
+    IrcChanWindow(QExplicitlySharedDataPointer<Session> pSharedSession,
                 QExplicitlySharedDataPointer<Connection> pSharedConn,
                 const QString &title = tr("Untitled"),
                 const QSize &size = QSize(500, 300));

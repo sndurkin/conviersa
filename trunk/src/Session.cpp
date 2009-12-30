@@ -6,17 +6,17 @@
 *
 ************************************************************************/
 
-#include "IrcServerInfoService.h"
+#include "Session.h"
 
 namespace cv { namespace irc {
 
-IrcServerInfoService::IrcServerInfoService()
+Session::Session()
     : QSharedData(),
       m_attached(false),
       m_nick("seand`")
 { }
 
-void IrcServerInfoService::attachToServer(const QString &host, int port)
+void Session::attachToServer(const QString &host, int port)
 {
     m_host = host;
     m_port = port;
@@ -24,13 +24,13 @@ void IrcServerInfoService::attachToServer(const QString &host, int port)
     m_attached = true;
 }
 
-void IrcServerInfoService::detachFromServer()
+void Session::detachFromServer()
 {
     m_attached = false;
 }
 
 // sets the prefix rules
-void IrcServerInfoService::setPrefixRules(const QString &prefixRules)
+void Session::setPrefixRules(const QString &prefixRules)
 {
     m_prefixRules = prefixRules;
 
@@ -47,7 +47,7 @@ void IrcServerInfoService::setPrefixRules(const QString &prefixRules)
 }
 
 // sets the channel modes supported by the server
-void IrcServerInfoService::setChanModes(const QString &chanModes)
+void Session::setChanModes(const QString &chanModes)
 {
     m_chanModes = chanModes;
 
@@ -68,7 +68,7 @@ void IrcServerInfoService::setChanModes(const QString &chanModes)
 // returns -1 if prefix1 is less in value than prefix2
 // returns 0 if prefix1 is equal to prefix2
 // returns 1 if prefix1 is greater in value than prefix2
-int IrcServerInfoService::compareNickPrefixes(const QChar &prefix1, const QChar &prefix2)
+int Session::compareNickPrefixes(const QChar &prefix1, const QChar &prefix2)
 {
     if(prefix1 == prefix2)
         return 0;
@@ -89,7 +89,7 @@ int IrcServerInfoService::compareNickPrefixes(const QChar &prefix1, const QChar 
 // provided by match
 //
 // match can either be a nick prefix or the corresponding mode
-QChar IrcServerInfoService::getPrefixRule(const QChar &match)
+QChar Session::getPrefixRule(const QChar &match)
 {
     for(int i = 0; i < m_prefixRules.size(); ++i)
     {
@@ -111,7 +111,7 @@ QChar IrcServerInfoService::getPrefixRule(const QChar &match)
 // returns false otherwise
 //
 // example prefixes: @, %, +
-bool IrcServerInfoService::isNickPrefix(const QChar &prefix)
+bool Session::isNickPrefix(const QChar &prefix)
 {
     // the first prefix begins at index 1
     for(int i = 1; i < m_prefixRules.size(); i += 2)
@@ -124,3 +124,4 @@ bool IrcServerInfoService::isNickPrefix(const QChar &prefix)
 }
 
 } } // end namespaces
+

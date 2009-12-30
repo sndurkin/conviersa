@@ -15,7 +15,7 @@
 #include "IrcChanWindow.h"
 #include "IrcChanUser.h"
 #include "IrcStatusWindow.h"
-#include "IrcServerInfoService.h"
+#include "Session.h"
 #include "WindowManager.h"
 #include "Connection.h"
 
@@ -24,7 +24,7 @@
 
 namespace cv { namespace irc {
 
-IrcChanWindow::IrcChanWindow(QExplicitlySharedDataPointer<IrcServerInfoService> pSharedService,
+IrcChanWindow::IrcChanWindow(QExplicitlySharedDataPointer<Session> pSharedSession,
                              QExplicitlySharedDataPointer<Connection> pSharedConn,
                              const QString &title/* = tr("Untitled")*/,
                              const QSize &size/* = QSize(500, 300)*/)
@@ -32,7 +32,7 @@ IrcChanWindow::IrcChanWindow(QExplicitlySharedDataPointer<IrcServerInfoService> 
       m_inChannel(false)
 {
     m_pSharedConn = pSharedConn;
-    m_pSharedService = pSharedService;
+    m_pSharedSession = pSharedSession;
 
     m_pSplitter = new QSplitter(this);
     m_pUserList = new QListWidget;
@@ -100,7 +100,7 @@ bool IrcChanWindow::hasUser(const QString &user)
 // returns false otherwise
 bool IrcChanWindow::addUser(const QString &user)
 {
-    IrcChanUser *pNewUser = new (std::nothrow) IrcChanUser(m_pSharedService, user);
+    IrcChanUser *pNewUser = new (std::nothrow) IrcChanUser(m_pSharedSession, user);
     if(!pNewUser)
     {
         printError("Allocation of a new user failed.");
@@ -140,7 +140,7 @@ void IrcChanWindow::changeUserNick(const QString &oldNick, const QString &newNic
     if(!pNewUser)
         return;
 
-    IrcChanUser *pUser = new (std::nothrow) IrcChanUser(m_pSharedService, newNick);
+    IrcChanUser *pUser = new (std::nothrow) IrcChanUser(m_pSharedSession, newNick);
     if(!pUser)
         return;
 
@@ -251,7 +251,7 @@ bool IrcChanWindow::addUser(IrcChanUser *pNewUser)
 
     for(int i = 0; i < m_users.size(); ++i)
     {
-        int compareVal = m_pSharedService->compareNickPrefixes(m_users[i]->getPrefix(), pNewUser->getPrefix());
+        int compareVal = m_pSharedSession->compareNickPrefixes(m_users[i]->getPrefix(), pNewUser->getPrefix());
         if(compareVal > 0)
         {
             m_pUserList->insertItem(i, pListItem);
@@ -301,7 +301,7 @@ void IrcChanWindow::removeUser(IrcChanUser *pUser)
 // returns NULL otherwise
 IrcChanUser *IrcChanWindow::findUser(const QString &user)
 {
-    IrcChanUser ircChanUser(m_pSharedService, user);
+    IrcChanUser ircChanUser(m_pSharedSession, user);
     for(int i = 0; i < m_users.size(); ++i)
     {
         if(QString::compare(m_users[i]->getNickname(), ircChanUser.getNickname(), Qt::CaseInsensitive) == 0)

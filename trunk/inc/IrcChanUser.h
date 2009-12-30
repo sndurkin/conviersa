@@ -9,14 +9,14 @@
 #pragma once
 
 #include <QString>
-#include "IrcServerInfoService.h"
+#include "Session.h"
 
 namespace cv { namespace irc {
 
 class IrcChanUser
 {
-    QExplicitlySharedDataPointer<IrcServerInfoService>
-                m_pSharedService;
+    QExplicitlySharedDataPointer<Session>
+                m_pSharedSession;
 
     // msg prefix: nick!user@host
     QString     m_nickname;
@@ -30,7 +30,7 @@ class IrcChanUser
 public:
     // parses the input nick into nickname, and
     // prefixes and user/host (if applicable)
-    IrcChanUser(QExplicitlySharedDataPointer<IrcServerInfoService> pSharedService, const QString &nick);
+    IrcChanUser(QExplicitlySharedDataPointer<Session> pSharedSession, const QString &nick);
 
     // adds the given prefix to the user, unless it's
     // already there or it isn't a valid prefix

@@ -11,19 +11,19 @@
 #include "IrcTypes.h"
 #include "IrcPrivWindow.h"
 #include "IrcStatusWindow.h"
-#include "IrcServerInfoService.h"
+#include "Session.h"
 #include "WindowManager.h"
 
 namespace cv { namespace irc {
 
-IrcPrivWindow::IrcPrivWindow(QExplicitlySharedDataPointer<IrcServerInfoService> pSharedService,
+IrcPrivWindow::IrcPrivWindow(QExplicitlySharedDataPointer<Session> pSharedSession,
                 QExplicitlySharedDataPointer<Connection> pSharedConn,
                 const QString &title/* = tr("Untitled")*/,
                 const QSize &size/* = QSize(500, 300)*/)
     : IIrcWindow(title, size)
 {
     m_pSharedConn = pSharedConn;
-    m_pSharedService = pSharedService;
+    m_pSharedSession = pSharedSession;
     m_targetNick = title;
 
     m_pVLayout->addWidget(m_pOutput);

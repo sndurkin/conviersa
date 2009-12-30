@@ -12,13 +12,10 @@ HEADERS += inc/Window.h \
     inc/WindowContainer.h \
     inc/SearchBar.h \
     inc/qext.h \
-    inc/IrcWindowScrollBar.h \
     inc/IrcTypes.h \
     inc/IrcTextBlockData.h \
     inc/IrcStatusWindow.h \
-    inc/IrcServerInfoService.h \
     inc/IrcPrivWindow.h \
-    inc/IrcParser.h \
     inc/IrcChanWindow.h \
     inc/IrcChanUser.h \
     inc/IrcChanTopicDelegate.h \
@@ -31,19 +28,19 @@ HEADERS += inc/Window.h \
     inc/ConfigManager.h \
     inc/CLineEdit.h \
     inc/Client.h \
-    inc/AltWindowContainer.h
+    inc/AltWindowContainer.h \
+    inc/OutputWindowScrollBar.h \
+    inc/Parser.h \
+    inc/Session.h
 SOURCES += src/Window.cpp \
     src/WindowManager.cpp \
     src/WindowContainer.cpp \
     src/SearchBar.cpp \
     src/qext.cpp \
     src/main.cpp \
-    src/IrcWindowScrollBar.cpp \
     src/IrcTextBlockData.cpp \
     src/IrcStatusWindow.cpp \
-    src/IrcServerInfoService.cpp \
     src/IrcPrivWindow.cpp \
-    src/IrcParser.cpp \
     src/IrcChanWindow.cpp \
     src/IrcChanUser.cpp \
     src/IrcChanTopicDelegate.cpp \
@@ -54,4 +51,7 @@ SOURCES += src/Window.cpp \
     src/ConfigManager.cpp \
     src/CLineEdit.cpp \
     src/Client.cpp \
-    src/AltWindowContainer.cpp
+    src/AltWindowContainer.cpp \
+    src/OutputWindowScrollBar.cpp \
+    src/Parser.cpp \
+    src/Session.cpp

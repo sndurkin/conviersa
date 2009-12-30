@@ -12,7 +12,7 @@
 #include <QTextDocument>
 #include <QAbstractTextDocumentLayout>
 #include "IrcChanTopicDelegate.h"
-#include "IrcParser.h"
+#include "Parser.h"
 
 namespace cv { namespace irc {
 

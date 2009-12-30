@@ -11,7 +11,7 @@
 #include <QVBoxLayout>
 #include <QPlainTextEdit>
 #include "IChatWindow.h"
-#include "IrcServerInfoService.h"
+#include "Session.h"
 
 class QTextEdit;
 class QMutex;
@@ -20,7 +20,7 @@ class QTextTable;
 
 namespace cv { namespace irc {
 
-class IrcWindowScrollBar;
+class OutputWindowScrollBar;
 
 //-----------------------------------//
 
@@ -45,8 +45,8 @@ protected:
     QPlainTextEdit *        m_pInput;
     QFont                   m_defaultFont;
 
-    QExplicitlySharedDataPointer<IrcServerInfoService>
-                            m_pSharedService;
+    QExplicitlySharedDataPointer<Session>
+                            m_pSharedSession;
 
     QTextCodec *            m_pCodec;
 
@@ -55,7 +55,7 @@ protected:
     // custom scroll bar for searching within an IRC window;
     // lines on which items are found will be draw inside
     // the slider area (proportional to the size of the slider area)
-    IrcWindowScrollBar *    m_pScrollBar;
+    OutputWindowScrollBar *    m_pScrollBar;
 
 public:
     IIrcWindow(const QString &title = tr("Untitled"),

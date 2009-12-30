@@ -15,8 +15,8 @@
 #include "IrcChanListWindow.h"
 #include "IrcChanWindow.h"
 #include "IrcPrivWindow.h"
-#include "IrcServerInfoService.h"
-#include "IrcWindowScrollBar.h"
+#include "Session.h"
+#include "OutputWindowScrollBar.h"
 #include "WindowManager.h"
 #include "ConfigManager.h"
 
@@ -36,7 +36,7 @@ IrcStatusWindow::IrcStatusWindow(const QString &title/* = tr("Server Window")*/,
     m_pVLayout->setContentsMargins(2, 2, 2, 2);
     setLayout(m_pVLayout);
 
-    m_pSharedService = new IrcServerInfoService;
+    m_pSharedSession = new Session;
     m_pSharedConn = new Connection(this, m_pCodec);
 
     QObject::connect(m_pSharedConn.data(), SIGNAL(disconnected()), this, SLOT(handleDisconnect()));
@@ -61,7 +61,7 @@ void IrcStatusWindow::handleData(QString &data)
     printDebug(blah);
 #endif
 
-    IrcMessage msg = parseData(data);
+    Message msg = parseData(data);
 
     if(msg.m_isNumeric)
     {
@@ -355,7 +355,7 @@ bool IrcStatusWindow::eventFilter(QObject *obj, QEvent *event)
     return IIrcWindow::eventFilter(obj, event);
 }
 
-void IrcStatusWindow::handle001Numeric(const IrcMessage &msg)
+void IrcStatusWindow::handle001Numeric(const Message &msg)
 {
     // msg.m_params[0]: my nick
     // msg.m_params[1]: "Welcome to the <server name> IRC Network, <nick>[!user@host]"
@@ -363,9 +363,9 @@ void IrcStatusWindow::handle001Numeric(const IrcMessage &msg)
     // check to make sure nickname hasn't changed; some or all servers apparently don't
     // send you a NICK message when your nickname conflicts with another user upon
     // first entering the server, and you try to change it
-    if(m_pSharedService->getNick().compare(msg.m_params[0], Qt::CaseInsensitive) != 0)
+    if(m_pSharedSession->getNick().compare(msg.m_params[0], Qt::CaseInsensitive) != 0)
     {
-        m_pSharedService->setNick(msg.m_params[0]);
+        m_pSharedSession->setNick(msg.m_params[0]);
     }
 
     QString header = "Welcome to the ";
@@ -382,7 +382,7 @@ void IrcStatusWindow::handle001Numeric(const IrcMessage &msg)
     }
 }
 
-void IrcStatusWindow::handle002Numeric(const IrcMessage &msg)
+void IrcStatusWindow::handle002Numeric(const Message &msg)
 {
     // msg.m_params[0]: my nick
     // msg.m_params[1]: "Your host is ..."
@@ -390,11 +390,11 @@ void IrcStatusWindow::handle002Numeric(const IrcMessage &msg)
     QString hostStr = msg.m_params[1].section(',', 0, 0);
     if(hostStr.startsWith(header))
     {
-        m_pSharedService->setHost(hostStr.mid(header.size()));
+        m_pSharedSession->setHost(hostStr.mid(header.size()));
     }
 }
 
-void IrcStatusWindow::handle005Numeric(const IrcMessage &msg)
+void IrcStatusWindow::handle005Numeric(const Message &msg)
 {
     // we only go to the second-to-last parameter,
     // because the last parameter holds "are supported
@@ -403,7 +403,7 @@ void IrcStatusWindow::handle005Numeric(const IrcMessage &msg)
     {
         if(msg.m_params[i].startsWith("PREFIX=", Qt::CaseInsensitive))
         {
-            m_pSharedService->setPrefixRules(getPrefixRules(msg.m_params[i]));
+            m_pSharedSession->setPrefixRules(getPrefixRules(msg.m_params[i]));
         }
         else if(msg.m_params[i].compare("NAMESX", Qt::CaseInsensitive) == 0)
         {
@@ -414,12 +414,12 @@ void IrcStatusWindow::handle005Numeric(const IrcMessage &msg)
         }
         else if(msg.m_params[i].startsWith("CHANMODES=", Qt::CaseInsensitive))
         {
-            m_pSharedService->setChanModes(msg.m_params[i].section('=', 1));
+            m_pSharedSession->setChanModes(msg.m_params[i].section('=', 1));
         }
     }
 }
 
-void IrcStatusWindow::handle301Numeric(const IrcMessage &msg)
+void IrcStatusWindow::handle301Numeric(const Message &msg)
 {
     // msg.m_params[0]: my nick
     // msg.m_params[1]: nick
@@ -430,7 +430,7 @@ void IrcStatusWindow::handle301Numeric(const IrcMessage &msg)
     printOutput(textToPrint);
 }
 
-void IrcStatusWindow::handle317Numeric(const IrcMessage &msg)
+void IrcStatusWindow::handle317Numeric(const Message &msg)
 {
     // msg.m_params[0]: my nick
     // msg.m_params[1]: nick
@@ -533,7 +533,7 @@ void IrcStatusWindow::handle317Numeric(const IrcMessage &msg)
     }
 }
 
-void IrcStatusWindow::handle321Numeric(const IrcMessage &msg)
+void IrcStatusWindow::handle321Numeric(const Message &msg)
 {
     if(!m_pChanListWin)
     {
@@ -558,7 +558,7 @@ void IrcStatusWindow::handle321Numeric(const IrcMessage &msg)
     m_pChanListWin->beginPopulatingList();
 }
 
-void IrcStatusWindow::handle322Numeric(const IrcMessage &msg)
+void IrcStatusWindow::handle322Numeric(const Message &msg)
 {
     // msg.m_params[0]: my nick
     // msg.m_params[1]: channel
@@ -578,7 +578,7 @@ void IrcStatusWindow::handle322Numeric(const IrcMessage &msg)
     }
 }
 
-void IrcStatusWindow::handle323Numeric(const IrcMessage &msg)
+void IrcStatusWindow::handle323Numeric(const Message &msg)
 {
     if(m_pChanListWin)
     {
@@ -588,7 +588,7 @@ void IrcStatusWindow::handle323Numeric(const IrcMessage &msg)
     m_sentListStopMsg = false;
 }
 
-void IrcStatusWindow::handle330Numeric(const IrcMessage &msg)
+void IrcStatusWindow::handle330Numeric(const Message &msg)
 {
     // msg.m_params[0]: my nick
     // msg.m_params[1]: nick
@@ -600,7 +600,7 @@ void IrcStatusWindow::handle330Numeric(const IrcMessage &msg)
     printOutput(textToPrint);
 }
 
-void IrcStatusWindow::handle332Numeric(const IrcMessage &msg)
+void IrcStatusWindow::handle332Numeric(const Message &msg)
 {
     // msg.m_params[0]: my nick
     // msg.m_params[1]: channel
@@ -622,7 +622,7 @@ void IrcStatusWindow::handle332Numeric(const IrcMessage &msg)
     }
 }
 
-void IrcStatusWindow::handle333Numeric(const IrcMessage &msg)
+void IrcStatusWindow::handle333Numeric(const Message &msg)
 {
     // msg.m_params[0]: my nick
     // msg.m_params[1]: channel
@@ -662,7 +662,7 @@ void IrcStatusWindow::handle333Numeric(const IrcMessage &msg)
     }
 }
 
-void IrcStatusWindow::handle353Numeric(const IrcMessage &msg)
+void IrcStatusWindow::handle353Numeric(const Message &msg)
 {
     // msg.m_params[0]: my nick
     // msg.m_params[1]: "=" | "*" | "@"
@@ -686,7 +686,7 @@ void IrcStatusWindow::handle353Numeric(const IrcMessage &msg)
     }
 }
 
-void IrcStatusWindow::handle366Numeric(const IrcMessage &msg)
+void IrcStatusWindow::handle366Numeric(const Message &msg)
 {
     // msg.m_params[0]: my nick
     // msg.m_params[1]: channel
@@ -707,7 +707,7 @@ void IrcStatusWindow::handle366Numeric(const IrcMessage &msg)
 }
 
 // covers both 401 and 404 numerics
-void IrcStatusWindow::handle401Numeric(const IrcMessage &msg)
+void IrcStatusWindow::handle401Numeric(const Message &msg)
 {
     // msg.m_params[0]: my nick
     // msg.m_params[1]: nick/channel
@@ -723,7 +723,7 @@ void IrcStatusWindow::handle401Numeric(const IrcMessage &msg)
     }
 }
 
-void IrcStatusWindow::handleInviteMsg(const IrcMessage &msg)
+void IrcStatusWindow::handleInviteMsg(const Message &msg)
 {
     QString textToPrint = QString("* %1 has invited you to %2")
                 .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName))
@@ -731,14 +731,14 @@ void IrcStatusWindow::handleInviteMsg(const IrcMessage &msg)
     printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "invite")));
 }
 
-void IrcStatusWindow::handleJoinMsg(const IrcMessage &msg)
+void IrcStatusWindow::handleJoinMsg(const Message &msg)
 {
     IrcChanWindow *pChanWin = dynamic_cast<IrcChanWindow *>(getChildIrcWindow(msg.m_params[0]));
     QString textToPrint = "* ";
 
     // if the JOIN message is of you joining the channel
     QString nickJoined = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
-    if(m_pSharedService->getNick().compare(nickJoined, Qt::CaseInsensitive) == 0)
+    if(m_pSharedSession->getNick().compare(nickJoined, Qt::CaseInsensitive) == 0)
     {
         if(pChanWin)
         {
@@ -747,7 +747,7 @@ void IrcStatusWindow::handleJoinMsg(const IrcMessage &msg)
         else
         {
             // create the channel and post the message to it
-            pChanWin = new (std::nothrow) IrcChanWindow(m_pSharedService, m_pSharedConn, msg.m_params[0]);
+            pChanWin = new (std::nothrow) IrcChanWindow(m_pSharedSession, m_pSharedConn, msg.m_params[0]);
             if(!pChanWin)
             {
                 printError("Allocation of a new channel window failed.");
@@ -779,7 +779,7 @@ void IrcStatusWindow::handleJoinMsg(const IrcMessage &msg)
         printError("Pointer to channel window is invalid. This path should not have been reached.");
 }
 
-void IrcStatusWindow::handleKickMsg(const IrcMessage &msg)
+void IrcStatusWindow::handleKickMsg(const Message &msg)
 {
     IrcChanWindow *pChanWin = dynamic_cast<IrcChanWindow *>(getChildIrcWindow(msg.m_params[0]));
     if(!pChanWin)
@@ -788,7 +788,7 @@ void IrcStatusWindow::handleKickMsg(const IrcMessage &msg)
     QString textToPrint;
 
     // if the KICK message is for you
-    if(m_pSharedService->getNick().compare(msg.m_params[1]) == 0)
+    if(m_pSharedSession->getNick().compare(msg.m_params[1]) == 0)
     {
         pChanWin->leaveChannel();
         textToPrint = "* You were kicked from ";
@@ -820,7 +820,7 @@ void IrcStatusWindow::handleKickMsg(const IrcMessage &msg)
     pChanWin->printOutput(textToPrint, kickColor);
 }
 
-void IrcStatusWindow::handleModeMsg(const IrcMessage &msg)
+void IrcStatusWindow::handleModeMsg(const Message &msg)
 {
     QString textToPrint = QString("* %1 has set mode: ").arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName));
 
@@ -855,7 +855,7 @@ void IrcStatusWindow::handleModeMsg(const IrcMessage &msg)
             }
             else
             {
-                ChanModeType type = getChanModeType(m_pSharedService->getChanModes(), modes[modesIndex]);
+                ChanModeType type = getChanModeType(m_pSharedSession->getChanModes(), modes[modesIndex]);
                 switch(type)
                 {
                     case ModeTypeA:
@@ -866,7 +866,7 @@ void IrcStatusWindow::handleModeMsg(const IrcMessage &msg)
                         if(paramsIndex >= msg.m_paramsNum)
                             break;
 
-                        QChar prefix = m_pSharedService->getPrefixRule(modes[modesIndex]);
+                        QChar prefix = m_pSharedSession->getPrefixRule(modes[modesIndex]);
                         if(prefix != '\0')
                         {
                             if(sign)
@@ -894,11 +894,11 @@ void IrcStatusWindow::handleModeMsg(const IrcMessage &msg)
     }
 }
 
-void IrcStatusWindow::handleNickMsg(const IrcMessage &msg)
+void IrcStatusWindow::handleNickMsg(const Message &msg)
 {
     // update the user's nickname if he's the one changing it
     QString oldNick = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
-    bool isMyNick = (oldNick.compare(m_pSharedService->getNick(), Qt::CaseSensitive) == 0);
+    bool isMyNick = (oldNick.compare(m_pSharedSession->getNick(), Qt::CaseSensitive) == 0);
 
     QString textToPrint = QString("* %1 is now known as %2")
                 .arg(oldNick)
@@ -907,7 +907,7 @@ void IrcStatusWindow::handleNickMsg(const IrcMessage &msg)
     QColor nickColor(g_pCfgManager->getOptionValue("colors.ini", "nick"));
     if(isMyNick)
     {
-        m_pSharedService->setNick(msg.m_params[0]);
+        m_pSharedSession->setNick(msg.m_params[0]);
         printOutput(textToPrint, nickColor);
     }
 
@@ -941,7 +941,7 @@ void IrcStatusWindow::handleNickMsg(const IrcMessage &msg)
     }
 }
 
-void IrcStatusWindow::handleNoticeMsg(const IrcMessage &msg)
+void IrcStatusWindow::handleNoticeMsg(const Message &msg)
 {
     QString source;
     if(!msg.m_prefix.isEmpty())
@@ -951,7 +951,7 @@ void IrcStatusWindow::handleNoticeMsg(const IrcMessage &msg)
     // if m_prefix is empty, it is from the host
     else
     {
-        source = m_pSharedService->getHost();
+        source = m_pSharedSession->getHost();
     }
 
     QString textToPrint = QString("-%1- %2")
@@ -962,7 +962,7 @@ void IrcStatusWindow::handleNoticeMsg(const IrcMessage &msg)
     printOutput(textToPrint, noticeColor);
 }
 
-void IrcStatusWindow::handlePartMsg(const IrcMessage &msg)
+void IrcStatusWindow::handlePartMsg(const Message &msg)
 {
     IrcChanWindow *pChanWin = dynamic_cast<IrcChanWindow *>(getChildIrcWindow(msg.m_params[0]));
     if(!pChanWin)
@@ -976,7 +976,7 @@ void IrcStatusWindow::handlePartMsg(const IrcMessage &msg)
     QString textToPrint;
 
     // if the PART message is of you leaving the channel
-    if(m_pSharedService->getNick().compare(parseMsgPrefix(msg.m_prefix, MsgPrefixName), Qt::CaseInsensitive) == 0)
+    if(m_pSharedSession->getNick().compare(parseMsgPrefix(msg.m_prefix, MsgPrefixName), Qt::CaseInsensitive) == 0)
     {
         textToPrint = QString("* You have left %1").arg(msg.m_params[0]);
         pChanWin->leaveChannel();
@@ -1007,7 +1007,7 @@ void IrcStatusWindow::handlePartMsg(const IrcMessage &msg)
     pChanWin->printOutput(textToPrint, partColor);
 }
 
-void IrcStatusWindow::handlePongMsg(const IrcMessage &msg)
+void IrcStatusWindow::handlePongMsg(const Message &msg)
 {
     // the prefix is used to determine the server that
     // sends the PONG rather than the first parameter,
@@ -1022,7 +1022,7 @@ void IrcStatusWindow::handlePongMsg(const IrcMessage &msg)
     printOutput(textToPrint);
 }
 
-void IrcStatusWindow::handlePrivMsg(const IrcMessage &msg)
+void IrcStatusWindow::handlePrivMsg(const Message &msg)
 {
     CtcpRequestType requestType = getCtcpRequestType(msg);
     QString user = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
@@ -1103,13 +1103,13 @@ void IrcStatusWindow::handlePrivMsg(const IrcMessage &msg)
     }
 
     // if the target is us, then it's an actual PM
-    if(m_pSharedService->getNick().compare(msg.m_params[0], Qt::CaseInsensitive) == 0)
+    if(m_pSharedSession->getNick().compare(msg.m_params[0], Qt::CaseInsensitive) == 0)
     {
         IrcPrivWindow *pPrivWin = dynamic_cast<IrcPrivWindow *>(getChildIrcWindow(user));
         if(!pPrivWin)
         {
             // todo
-            pPrivWin = new IrcPrivWindow(m_pSharedService, m_pSharedConn, user);
+            pPrivWin = new IrcPrivWindow(m_pSharedSession, m_pSharedConn, user);
             addPrivWindow(pPrivWin);
         }
 
@@ -1126,7 +1126,7 @@ void IrcStatusWindow::handlePrivMsg(const IrcMessage &msg)
     }
 }
 
-void IrcStatusWindow::handleQuitMsg(const IrcMessage &msg)
+void IrcStatusWindow::handleQuitMsg(const Message &msg)
 {
     QString user = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
     QString textToPrint = QString("* %1 (%2) has quit")
@@ -1168,7 +1168,7 @@ void IrcStatusWindow::handleQuitMsg(const IrcMessage &msg)
     }
 }
 
-void IrcStatusWindow::handleTopicMsg(const IrcMessage &msg)
+void IrcStatusWindow::handleTopicMsg(const Message &msg)
 {
     IIrcWindow *pChanWin = dynamic_cast<IrcChanWindow *>(getChildIrcWindow(msg.m_params[0]));
     if(pChanWin)
@@ -1190,7 +1190,7 @@ void IrcStatusWindow::handleTopicMsg(const IrcMessage &msg)
     }
 }
 
-void IrcStatusWindow::handleWallopsMsg(const IrcMessage &msg)
+void IrcStatusWindow::handleWallopsMsg(const Message &msg)
 {
     QString textToPrint = QString("* WALLOPS from %1: %2")
                 .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName))

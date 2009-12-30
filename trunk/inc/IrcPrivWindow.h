@@ -20,7 +20,7 @@ private:
     QString     m_targetNick;
 
 public:
-    IrcPrivWindow(QExplicitlySharedDataPointer<IrcServerInfoService> pSharedService,
+    IrcPrivWindow(QExplicitlySharedDataPointer<Session> pSharedSession,
                   QExplicitlySharedDataPointer<Connection> pSharedConn,
                   const QString &title = tr("Untitled"),
                   const QSize &size = QSize(500, 300));

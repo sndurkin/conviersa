@@ -10,19 +10,16 @@
 #include <QTcpSocket>
 #include <QSslSocket>
 
-#include "IChatWindow.h"
 #include "irc/Connection.h"
 
 const int CONFIG_CONNECTION_TIMEOUT_MSEC = 10000;
 
-namespace cv {
+namespace irc {
 
 //-----------------------------------//
 
-Connection::Connection(IChatWindow *pWindow, QTextCodec *pCodec)
-    : m_pWindow(pWindow),
-      m_pSocket(NULL),
-      m_pCodec(pCodec)
+Connection::Connection()
+    : m_pSocket(NULL)
 {
     m_connectionTimer.setSingleShot(true);
 }
@@ -125,12 +122,9 @@ void Connection::onFailedConnect()
 
 //-----------------------------------//
 
-
-// is called when there is data to be read from the socket;
-// reads the available data and fires the "OnReceiveData" event
-
 const int SOCKET_BUFFER_SIZE = 1024;
 
+// is called when there is data to be read from the socket
 void Connection::onReceiveData()
 {
     while(true)

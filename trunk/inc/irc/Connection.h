@@ -13,11 +13,8 @@
 #include <QTimer>
 
 class QTcpSocket;
-class QTextCodec;
 
-namespace cv {
-
-class IChatWindow;
+namespace irc {
 
 // provides connection services to the rest of the irc classes.
 // this class deals only with raw bytes and should use the parser
@@ -27,15 +24,13 @@ class Connection : public QObject, public QSharedData
 {
     Q_OBJECT
 
-    IChatWindow *   m_pWindow;
     QTcpSocket *    m_pSocket;
-    QTextCodec *    m_pCodec;
     QString         m_prevBuffer;
     QTimer          m_connectionTimer;
 
 public:
 
-    Connection(IChatWindow *pWindow, QTextCodec *pCodec);
+    Connection();
     virtual ~Connection();
 
     bool connect(const char *pServer, quint16 port);
@@ -46,7 +41,6 @@ public:
     bool isConnected() { return m_pSocket != NULL; }
 
     bool send(const QString &data);
-    void setCodec(QTextCodec *pCodec) { m_pCodec = pCodec; }
 
 signals:
     // signal emitted when we get a connection to the server
@@ -68,8 +62,7 @@ public slots:
     // is called when the timer times out before the socket can connect
     void onFailedConnect();
 
-    // is called when there is data to be read from the socket;
-    // reads the available data and fires the "OnReceiveData" event
+    // is called when there is data to be read from the socket
     void onReceiveData();
 };
 

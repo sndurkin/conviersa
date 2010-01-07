@@ -7,8 +7,8 @@
 ************************************************************************/
 
 #include <QtGui>
-#include "qext.h"
 #include "irc/Parser.h"
+#include "cv/qext.h"
 
 namespace cv { namespace irc {
 

@@ -11,8 +11,9 @@
 #include <QObject>
 #include <QString>
 #include <QSharedData>
+#include "irc/Connection.h"
 
-namespace cv { namespace irc {
+namespace irc {
 
 // this class specifies various properties about a specific IRC server
 // and provides an interface to them; it is maintained and used by an
@@ -20,6 +21,9 @@ namespace cv { namespace irc {
 class Session : public QObject, public QSharedData
 {
     Q_OBJECT
+
+private:
+    Connection *m_pConn;
 
 public:
     Session();
@@ -142,4 +146,4 @@ protected:
     int     m_modeNum;
 };
 
-} } // end namespaces
+} // end namespace

@@ -7,53 +7,47 @@ INCLUDEPATH = inc/
 DESTDIR = ../bin/
 OTHER_FILES += todo.txt \
     doc/License.txt
-HEADERS += inc/WindowManager.h \
-    inc/WindowContainer.h \
-    inc/SearchBar.h \
-    inc/qext.h \
-    inc/OutputWindowScrollBar.h \
-    inc/IrcTypes.h \
-    inc/IrcTextBlockData.h \
-    inc/IrcStatusWindow.h \
+HEADERS += inc/irc/Connection.h \
+    inc/irc/ChannelUser.h \
     inc/irc/Session.h \
-    inc/IrcPrivWindow.h \
     inc/irc/Parser.h \
-    inc/IrcChanWindow.h \
-    inc/IrcChanUser.h \
-    inc/IrcChanTopicDelegate.h \
-    inc/IrcChanListWindow.h \
-    inc/IIrcWindow.h \
-    inc/IChatWindow.h \
-    inc/definitions.h \
-    inc/irc/Connection.h \
-    inc/ConfigOption.h \
-    inc/ConfigManager.h \
-    inc/CLineEdit.h \
-    inc/Client.h \
-    inc/AltWindowContainer.h \
-    inc/Window.h \
-    inc/irc/Channel.h
-SOURCES += src/WindowManager.cpp \
-    src/WindowContainer.cpp \
-    src/SearchBar.cpp \
-    src/qext.cpp \
-    src/main.cpp \
-    src/OutputWindowScrollBar.cpp \
-    src/IrcTextBlockData.cpp \
-    src/IrcStatusWindow.cpp \
-    src/irc/Session.cpp \
-    src/IrcPrivWindow.cpp \
+    inc/cv/definitions.h \
+    inc/cv/qext.h \
+    inc/cv/Client.h \
+    inc/cv/Window.h \
+    inc/cv/WindowManager.h \
+    inc/cv/WindowContainer.h \
+    inc/cv/AltWindowContainer.h \
+    inc/cv/CLineEdit.h \
+    inc/cv/SearchBar.h \
+    inc/cv/ConfigOption.h \
+    inc/cv/ConfigManager.h \
+    inc/cv/irc/types.h \
+    inc/cv/irc/OutputWindow.h \
+    inc/cv/irc/OutputWindowScrollBar.h \
+    inc/cv/irc/StatusWindow.h \
+    inc/cv/irc/QueryWindow.h \
+    inc/cv/irc/ChannelWindow.h \
+    inc/cv/irc/ChannelTopicDelegate.h \
+    inc/cv/irc/ChannelListWindow.h
+SOURCES += src/irc/Connection.cpp \
+    src/irc/ChannelUser.cpp \
     src/irc/Parser.cpp \
-    src/IrcChanWindow.cpp \
-    src/IrcChanUser.cpp \
-    src/IrcChanTopicDelegate.cpp \
-    src/IrcChanListWindow.cpp \
-    src/IIrcWindow.cpp \
-    src/IChatWindow.cpp \
-    src/irc/Connection.cpp \
-    src/ConfigManager.cpp \
-    src/CLineEdit.cpp \
-    src/Client.cpp \
-    src/AltWindowContainer.cpp \
-    src/Window.cpp \
-
+    src/irc/Session.cpp \
+    src/cv/qext.cpp \
+    src/cv/main.cpp \
+    src/cv/Client.cpp \
+    src/cv/Window.cpp \
+    src/cv/WindowManager.cpp \
+    src/cv/WindowContainer.cpp \
+    src/cv/AltWindowContainer.cpp \
+    src/cv/CLineEdit.cpp \
+    src/cv/SearchBar.cpp \
+    src/cv/ConfigManager.cpp \
+    src/cv/irc/OutputWindow.cpp \
+    src/cv/irc/OutputWindowScrollBar.cpp \
+    src/cv/irc/StatusWindow.cpp \
+    src/cv/irc/QueryWindow.cpp \
+    src/cv/irc/ChannelWindow.cpp \
+    src/cv/irc/ChannelTopicDelegate.cpp \
+    src/cv/irc/ChannelListWindow.cpp

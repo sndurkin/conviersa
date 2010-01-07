@@ -8,7 +8,7 @@
 
 #include "irc/Session.h"
 
-namespace cv { namespace irc {
+namespace irc {
 
 Session::Session()
     : QSharedData(),
@@ -125,4 +125,4 @@ bool Session::isNickPrefix(const QChar &prefix)
     return false;
 }
 
-} } // end namespaces
+} // end namespace

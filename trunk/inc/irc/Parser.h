@@ -13,7 +13,7 @@
 #include <QStringList>
 #include <QTextDocument>
 
-namespace cv { namespace irc {
+namespace irc {
 
 enum CtcpRequestType
 {
@@ -148,4 +148,4 @@ QString getUser(const QString &nick, const QString &user);
 // returns false otherwise
 bool isChannel(const QString &str);
 
-} } // end namespaces
+} // end namespace

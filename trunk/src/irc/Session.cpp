@@ -7,31 +7,45 @@
 ************************************************************************/
 
 #include "irc/Session.h"
+#include "irc/Parser.h"
 
 namespace irc {
 
 Session::Session()
-    : QSharedData(),
-      m_attached(false),
-      m_nick("seand`")
+  : QSharedData(),
+    m_nick("seand`")    // TODO: dont hardcode nicks
 {
-    // TODO: dont hardcode nicks
+    m_pConn = new Connection;
+    QObject::connect(m_pConn, SIGNAL(connected()), this, SLOT(onConnect()));
+    QObject::connect(m_pConn, SIGNAL(disconnected()), this, SLOT(onDisconnect()));
+    QObject::connect(m_pConn, SIGNAL(dataReceived(QString)), this, SIGNAL(dataReceived(QString)));
+    QObject::connect(m_pConn, SIGNAL(dataReceived(QString)), this, SLOT(onReceiveData(QString)));
 }
 
-void Session::attachToServer(const QString &host, int port)
+Session::~Session()
+{
+    delete m_pConn;
+}
+
+void Session::connectToServer(const QString &host, int port)
 {
     m_host = host;
     m_port = port;
     m_prefixRules = "o@v+";
-    m_attached = true;
+    m_pConn->connectToHost(host.toAscii(), port);
 }
 
-void Session::detachFromServer()
+void Session::disconnectFromServer()
 {
-    m_attached = false;
+    m_pConn->disconnectFromHost();
 }
 
-// sets the prefix rules
+void Session::sendData(const QString &data)
+{
+    m_pConn->send(data + "\r\n");
+}
+
+// sets the prefix rules supported by the server
 void Session::setPrefixRules(const QString &prefixRules)
 {
     m_prefixRules = prefixRules;
@@ -123,6 +137,26 @@ bool Session::isNickPrefix(const QChar &prefix)
     }
 
     return false;
+}
+
+void Session::onConnect()
+{
+    // todo: use options
+    QString info = "PASS hello\r\nNICK seand`\r\nUSER guest tolmoon tolsun :Ronnie Reagan";
+    sendData(info);
+
+    emit connected();
+}
+
+void Session::onDisconnect()
+{
+    emit disconnected();
+}
+
+void Session::onReceiveData(const QString &data)
+{
+    Message msg = parseData(data);
+    emit dataParsed(msg);
 }
 
 } // end namespace

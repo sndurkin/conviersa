@@ -12,49 +12,33 @@
 #include <QString>
 #include <QSharedData>
 #include "irc/Connection.h"
+#include "irc/Parser.h"
 
 namespace irc {
 
-// this class specifies various properties about a specific IRC server
-// and provides an interface to them; it is maintained and used by an
-// IrcStatusWindow, but used by the other connected IRC windows as well
+// this class provides the entire interface to an IRC server
 class Session : public QObject, public QSharedData
 {
     Q_OBJECT
 
-private:
-    Connection *m_pConn;
-
 public:
     Session();
+    ~Session();
 
-    // attaches the service to a specific server (essentially
-    // reconstructs it
-    void attachToServer(const QString &host, int port);
+    void connectToServer(const QString &host, int port);
+    void disconnectFromServer();
+    bool isConnected() { return m_pConn->isConnected(); }
+    void sendData(const QString &data);
 
-    // detaches itself from a server (it can no longer
-    // be safely used)
-    void detachFromServer();
-
-    // returns whether it's attached or not
-    bool isAttached() { return m_attached; }
-
-    // sets the user's nickname
+    void setHost(const QString &host) { m_host = host; }
+    QString getHost() { return m_host; }
+    int getPort() { return m_port; }
     void setNick(const QString &nick) { m_nick = nick; }
-
-    // returns the user's nickname
     QString getNick() { return m_nick; }
 
-    // sets the host's name
-    void setHost(const QString &host) { m_host = host; }
+    Connection *getConnectionPtr() { return m_pConn; }
 
-    // returns the host's name
-    QString getHost() { return m_host; }
-
-    // returns the port number
-    int getPort() { return m_port; }
-
-    // sets the prefix rules
+    // sets the prefix rules supported by the server
     void setPrefixRules(const QString &prefixRules);
 
     // sets the channel modes supported by the server
@@ -89,14 +73,13 @@ public:
     // example prefixes: @, %, +
     bool isNickPrefix(const QChar &prefix);
 
-//signals:
-//
-//    // when you get any IRC message on the socket
-//    void onPacketMessage();
-//
-//    // when a connection is made to the server
-//    void onConnect();
-//
+signals:
+    // these signals are emitted from Session at the respective times
+    void connected();
+    void disconnected();
+    void dataReceived(const QString &data);
+    void dataParsed(const Message &msg);
+
 //    // when you are identified on the server
 //    void onIdentify();
 //
@@ -115,35 +98,46 @@ public:
 //    // when a DCC request is received
 //    void onDCCRequest();
 
-protected:
-    // tells whether the service is attached to a
-    // specific server or not
-    bool    m_attached;
+public slots:
+    // these are connected to the Connection class and are called when
+    // Connection emits them
+    void onConnect();
+    void onDisconnect();
+    void onReceiveData(const QString &data);
 
+private:
     // stores the user's nickname
-    QString m_nick;
+    QString     m_nick;
+
+    // the actual connection to the server
+    Connection *m_pConn;
 
     // stores the name of the host that we are connected to
-    QString m_host;
+    QString     m_host;
 
     // stores the port number of the server we're connected to
-    int m_port;
+    int         m_port;
 
     // format: <mode1><prefix1><mode2><prefix2>[<mode3><prefix3>] ...
     // default value: o@v+
-    QString m_prefixRules;
+    QString     m_prefixRules;
 
     // this comes from the 005 numeric, CHANMODES, which specifies
     // which channel modes the server supports, and which ones take
     // a parameter and which don't
     //
     // format: typeA,typeB,typeC,typeD
-    QString m_chanModes;
+    QString     m_chanModes;
 
     // this comes from the 005 numeric, MODES, which dictates
     // the maximum number of modes with parameters that may be set with
     // one message
-    int     m_modeNum;
+    int         m_modeNum;
+
+    // this acts as a more persistent buffer for receiving data from
+    // the Connection object, so that it can be separated by '\n' and
+    // then parsed
+    //QString     m_prevData;
 };
 
 } // end namespace

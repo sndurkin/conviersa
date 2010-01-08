@@ -7,10 +7,10 @@
 ************************************************************************/
 
 #include <QtGui>
+#include "qext.h"
 #include "irc/Parser.h"
-#include "cv/qext.h"
 
-namespace cv { namespace irc {
+namespace irc {
 
 // parses the data into a structure that holds all information
 // necessary to print the message
@@ -873,4 +873,4 @@ bool isChannel(const QString &str)
     }
 }
 
-} } // end namespaces
+} // end namespace

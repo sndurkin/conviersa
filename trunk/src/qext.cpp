@@ -6,9 +6,7 @@
 *
 ************************************************************************/
 
-#include "cv/qext.h"
-
-namespace cv {
+#include "qext.h"
 
 QString escapeEx(const QString &text)
 {
@@ -17,5 +15,3 @@ QString escapeEx(const QString &text)
     textToReturn.append("</span>");
     return textToReturn;
 }
-
-} // end namespace

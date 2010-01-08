@@ -19,7 +19,8 @@ namespace irc {
 //-----------------------------------//
 
 Connection::Connection()
-    : m_pSocket(NULL)
+    : m_pSocket(NULL),
+      m_prevBuffer("")
 {
     m_connectionTimer.setSingleShot(true);
 }
@@ -34,7 +35,7 @@ Connection::~Connection()
 
 //-----------------------------------//
 
-bool Connection::connect(const char *pServer, quint16 port)
+bool Connection::connectToHost(const char *pServer, quint16 port)
 {
     if(isConnected())
     {
@@ -62,52 +63,63 @@ bool Connection::connect(const char *pServer, quint16 port)
 
 //-----------------------------------//
 
+void Connection::disconnectFromHost()
+{
+    if(isConnected())
+        m_pSocket->close();
+}
+
+//-----------------------------------//
+
 bool Connection::send(const QString &data)
 {
-    if(!m_pSocket)
+    if(!isConnected())
         return false;
 
-    QString temp(m_pCodec->toUnicode(data.toAscii()) + "\r\n");
-    m_pSocket->write(temp.toAscii());
+    m_pSocket->write(data.toAscii());
     return true;
 }
 
 //-----------------------------------//
 
-void Connection::disconnect()
+QString Connection::getHost()
 {
     if(isConnected())
-    {
-        m_pSocket->close();
-    }
+        return m_pSocket->peerName();
+
+    return "";
 }
 
 //-----------------------------------//
 
-// is called when the socket connects to the server;
+int Connection::getPort()
+{
+    if(isConnected())
+        return m_pSocket->peerPort();
+
+    return -1;
+}
+
+//-----------------------------------//
+
 void Connection::onConnect()
 {
     m_connectionTimer.stop();
     emit connected();
-
-    // todo: use options
-    // todo: move to irc::Session
-    char *buf = "PASS hello\nNICK seand`\nUSER guest tolmoon tolsun :Ronnie Reagan\n";
-    m_pSocket->write(buf, strlen(buf));
 }
 
 //-----------------------------------//
 
-// is called when the socket is disconnected
 void Connection::onDisconnect()
 {
+    // todo: delete later?
+    //delete m_pSocket;
     m_pSocket = NULL;
     emit disconnected();
 }
 
 //-----------------------------------//
 
-// is called when the timer times out before the socket can connect
 void Connection::onFailedConnect()
 {
     // checks to see if it has emitted the connected() signal, to prevent
@@ -124,18 +136,17 @@ void Connection::onFailedConnect()
 
 const int SOCKET_BUFFER_SIZE = 1024;
 
-// is called when there is data to be read from the socket
 void Connection::onReceiveData()
 {
     while(true)
     {
-        char tempBuf[SOCKET_BUFFER_SIZE];
-        qint64 size = m_pSocket->read(tempBuf, SOCKET_BUFFER_SIZE-1);
+        char buffer[SOCKET_BUFFER_SIZE];
+        qint64 size = m_pSocket->read(buffer, SOCKET_BUFFER_SIZE-1);
 
         if(size > 0)
         {
-            tempBuf[size] = '\0';
-            m_prevBuffer += tempBuf;
+            buffer[size] = '\0';
+            m_prevBuffer += buffer;
 
             // check for a message within the buffer, to ensure only
             // whole messages are handled
@@ -143,9 +154,9 @@ void Connection::onReceiveData()
             while((numChars = m_prevBuffer.indexOf('\n') + 1) > 0)
             {
                 // retrieves the entire message up to and including the terminating '\n' character
-                QString msg = m_prevBuffer.left(numChars);
-                m_pWindow->handleData(msg);
+                QString data = m_prevBuffer.left(numChars);
                 m_prevBuffer.remove(0, numChars);
+                emit dataReceived(data);
             }
         }
         else
@@ -153,10 +164,8 @@ void Connection::onReceiveData()
             if(size < 0)
             {
                 // TODO: log this
-
-                //QMessageBox msg(QMessageBox::NoIcon, "Error", "There was an error in reading from the socket.");
-                //msg.exec();
             }
+
             break;
         }
     }

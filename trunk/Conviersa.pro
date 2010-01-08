@@ -7,12 +7,12 @@ INCLUDEPATH = inc/
 DESTDIR = ../bin/
 OTHER_FILES += todo.txt \
     doc/License.txt
-HEADERS += inc/irc/Connection.h \
+HEADERS += inc/qext.h \
+    inc/irc/Connection.h \
     inc/irc/ChannelUser.h \
     inc/irc/Session.h \
     inc/irc/Parser.h \
     inc/cv/definitions.h \
-    inc/cv/qext.h \
     inc/cv/Client.h \
     inc/cv/Window.h \
     inc/cv/WindowManager.h \
@@ -30,11 +30,11 @@ HEADERS += inc/irc/Connection.h \
     inc/cv/irc/ChannelWindow.h \
     inc/cv/irc/ChannelTopicDelegate.h \
     inc/cv/irc/ChannelListWindow.h
-SOURCES += src/irc/Connection.cpp \
+SOURCES += src/qext.cpp \
+    src/irc/Connection.cpp \
     src/irc/ChannelUser.cpp \
     src/irc/Parser.cpp \
     src/irc/Session.cpp \
-    src/cv/qext.cpp \
     src/cv/main.cpp \
     src/cv/Client.cpp \
     src/cv/Window.cpp \

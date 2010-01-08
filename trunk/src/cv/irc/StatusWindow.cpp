@@ -9,8 +9,8 @@
 #include <QWebView>
 #include <QMutex>
 #include <QDateTime>
+#include "qext.h"
 #include "irc/Session.h"
-#include "cv/qext.h"
 #include "cv/WindowManager.h"
 #include "cv/ConfigManager.h"
 #include "cv/irc/types.h"
@@ -25,10 +25,10 @@
 namespace cv { namespace irc {
 
 StatusWindow::StatusWindow(const QString &title/* = tr("Server Window")*/,
-                const QSize &size/* = QSize(500, 300)*/)
-    : OutputWindow(title, size),
-      m_populatingUserList(false),
-      m_pChanListWin(NULL)
+                           const QSize &size/* = QSize(500, 300)*/)
+  : OutputWindow(title, size),
+    m_populatingUserList(false),
+    m_pChanListWin(NULL)
 {
     m_pVLayout->addWidget(m_pOutput);
     m_pVLayout->addWidget(m_pInput);
@@ -37,14 +37,16 @@ StatusWindow::StatusWindow(const QString &title/* = tr("Server Window")*/,
     setLayout(m_pVLayout);
 
     m_pSharedSession = new Session;
-    m_pSharedConn = new Connection(this, m_pCodec);
-
-    QObject::connect(m_pSharedConn.data(), SIGNAL(disconnected()), this, SLOT(handleDisconnect()));
+    QObject::connect(m_pSharedSession.data(), SIGNAL(connected()), this, SLOT(onServerConnect()));
+    QObject::connect(m_pSharedSession.data(), SIGNAL(disconnected()), this, SLOT(onServerDisconnect()));
+    QObject::connect(m_pSharedSession.data(), SIGNAL(dataReceived(QString)), this, SLOT(onReceiveData(QString)));
+    QObject::connect(m_pSharedSession.data(), SIGNAL(dataParsed(Message)), this, SLOT(onReceiveMessage(Message)));
 }
 
 StatusWindow::~StatusWindow()
 {
-    m_pSharedConn->disconnect();
+    //QObject::disconnect(m_pSharedSession.data(), 0, 0, 0);
+    m_pSharedSession->disconnectFromServer();
 }
 
 int StatusWindow::getIrcWindowType()
@@ -52,17 +54,26 @@ int StatusWindow::getIrcWindowType()
     return IRC_STATUS_WIN_TYPE;
 }
 
-// handles the data received from the Connection class
-void StatusWindow::handleData(QString &data)
+void StatusWindow::onServerConnect() { }
+
+void StatusWindow::onServerDisconnect()
+{
+    printOutput("* Disconnected.");
+    setTitle("Server Window");
+    setWindowName("Server Window");
+}
+
+void StatusWindow::onReceiveData(const QString &data)
 {
 #if DEBUG_MESSAGES
     QString blah = data;
     blah.remove(blah.size()-2,2);
     printDebug(blah);
 #endif
+}
 
-    Message msg = parseData(data);
-
+void StatusWindow::onReceiveMessage(const Message &msg)
+{
     if(msg.m_isNumeric)
     {
         switch(msg.m_command)
@@ -230,7 +241,7 @@ void StatusWindow::handleData(QString &data)
             }
             case IRC_COMMAND_PING:
             {
-                m_pSharedConn->send("PONG :" + msg.m_params[0]);
+                m_pSharedSession->sendData("PONG :" + msg.m_params[0]);
                 break;
             }
             case IRC_COMMAND_PONG:
@@ -261,7 +272,8 @@ void StatusWindow::handleData(QString &data)
             default:
             {
                 // print the whole raw line
-                printOutput(data);
+                //printOutput(data);
+                // todo: decide what to do here
             }
         }
     }
@@ -306,33 +318,33 @@ QList<QueryWindow *> StatusWindow::getPrivateMessages()
 }
 
 // adds a channel to the list
-void StatusWindow::addChanWindow(ChannelWindow *pChanWin)
+void StatusWindow::addChannelWindow(ChannelWindow *pChanWin)
 {
     if(m_pManager)
         m_pManager->addWindow(pChanWin, m_pManager->getItemFromWindow(this));
     m_chanList.append(pChanWin);
     QObject::connect(pChanWin, SIGNAL(chanWindowClosing(ChannelWindow *)),
-                this, SLOT(removeChanWindow(ChannelWindow *)));
+                this, SLOT(removeChannelWindow(ChannelWindow *)));
 }
 
 // removes a channel from the list
-void StatusWindow::removeChanWindow(ChannelWindow *pChanWin)
+void StatusWindow::removeChannelWindow(ChannelWindow *pChanWin)
 {
     m_chanList.removeOne(pChanWin);
 }
 
 // adds a PM window to the list
-void StatusWindow::addPrivWindow(QueryWindow *pPrivWin)
+void StatusWindow::addQueryWindow(QueryWindow *pQueryWin)
 {
     if(m_pManager)
-        m_pManager->addWindow(pPrivWin, m_pManager->getItemFromWindow(this));
-    m_privList.append(pPrivWin);
-    QObject::connect(pPrivWin, SIGNAL(privWindowClosing(QueryWindow *)),
-                this, SLOT(removePrivWindow(QueryWindow *)));
+        m_pManager->addWindow(pQueryWin, m_pManager->getItemFromWindow(this));
+    m_privList.append(pQueryWin);
+    QObject::connect(pQueryWin, SIGNAL(privWindowClosing(QueryWindow *)),
+                this, SLOT(removeQueryWindow(QueryWindow *)));
 }
 
 // removes a PM window from the list
-void StatusWindow::removePrivWindow(QueryWindow *pPrivWin)
+void StatusWindow::removeQueryWindow(QueryWindow *pPrivWin)
 {
     m_privList.removeOne(pPrivWin);
 }
@@ -410,7 +422,7 @@ void StatusWindow::handle005Numeric(const Message &msg)
             // lets the server know we support multiple nick prefixes
             //
             // todo: UHNAMES?
-            m_pSharedConn->send("PROTOCTL NAMESX");
+            m_pSharedSession->sendData("PROTOCTL NAMESX");
         }
         else if(msg.m_params[i].startsWith("CHANMODES=", Qt::CaseInsensitive))
         {
@@ -537,7 +549,7 @@ void StatusWindow::handle321Numeric(const Message &msg)
 {
     if(!m_pChanListWin)
     {
-        m_pChanListWin = new (std::nothrow) ChannelListWindow(m_pSharedConn);
+        m_pChanListWin = new (std::nothrow) ChannelListWindow(m_pSharedSession);
         if(!m_pChanListWin)
             return;
 
@@ -573,7 +585,7 @@ void StatusWindow::handle322Numeric(const Message &msg)
         if(!m_sentListStopMsg)
         {
             m_sentListStopMsg = true;
-            m_pSharedConn->send("LisT STOP");
+            m_pSharedSession->sendData("LIST STOP");
         }
     }
 }
@@ -747,13 +759,13 @@ void StatusWindow::handleJoinMsg(const Message &msg)
         else
         {
             // create the channel and post the message to it
-            pChanWin = new (std::nothrow) ChannelWindow(m_pSharedSession, m_pSharedConn, msg.m_params[0]);
+            pChanWin = new (std::nothrow) ChannelWindow(m_pSharedSession, msg.m_params[0]);
             if(!pChanWin)
             {
                 printError("Allocation of a new channel window failed.");
                 return;
             }
-            addChanWindow(pChanWin);
+            addChannelWindow(pChanWin);
             textToPrint += "You have joined ";
         }
 
@@ -1083,7 +1095,7 @@ void StatusWindow::handlePrivMsg(const Message &msg)
                                                         .arg(user)
                                                         .arg(requestTypeStr)
                                                         .arg(replyStr);
-                m_pSharedConn->send(textToSend);
+                m_pSharedSession->sendData(textToSend);
             }
 
             color.setNamedColor(g_pCfgManager->getOptionValue("colors.ini", "ctcp"));
@@ -1105,15 +1117,15 @@ void StatusWindow::handlePrivMsg(const Message &msg)
     // if the target is us, then it's an actual PM
     if(m_pSharedSession->getNick().compare(msg.m_params[0], Qt::CaseInsensitive) == 0)
     {
-        QueryWindow *pPrivWin = dynamic_cast<QueryWindow *>(getChildIrcWindow(user));
-        if(!pPrivWin)
+        QueryWindow *pQueryWin = dynamic_cast<QueryWindow *>(getChildIrcWindow(user));
+        if(!pQueryWin)
         {
             // todo
-            pPrivWin = new QueryWindow(m_pSharedSession, m_pSharedConn, user);
-            addPrivWindow(pPrivWin);
+            pQueryWin = new QueryWindow(m_pSharedSession, user);
+            addQueryWindow(pQueryWin);
         }
 
-        pPrivWin->printOutput(textToPrint, color);
+        pQueryWin->printOutput(textToPrint, color);
     }
     else		// it's a channel
     {
@@ -1196,14 +1208,6 @@ void StatusWindow::handleWallopsMsg(const Message &msg)
                 .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName))
                 .arg(msg.m_params[0]);
     printOutput(textToPrint);
-}
-
-// handles a disconnection fired from the Connection object
-void StatusWindow::handleDisconnect()
-{
-    printOutput("* Disconnected.");
-    setTitle("Server Window");
-    setWindowName("Server Window");
 }
 
 } } // end namespaces

@@ -16,7 +16,6 @@
 class QTextEdit;
 class QMutex;
 class QTimer;
-class QTextTable;
 
 using namespace irc;
 
@@ -61,7 +60,7 @@ protected:
 
 public:
     OutputWindow(const QString &title = tr("Untitled"),
-               const QSize &size = QSize(500, 300));
+                 const QSize &size = QSize(500, 300));
 
     // misc functions
     virtual void giveFocus();
@@ -85,9 +84,6 @@ protected:
     // and keywords highlighted in the document
     void search(const QString &textToFind);
 
-    // changes the codec for the m_pOutput control
-    void changeCodec(const QString &codecStr);
-
     // handles child widget events
     bool eventFilter(QObject *obj, QEvent *event);
 
@@ -101,6 +97,10 @@ public slots:
     // text always starts at the bottom of the screen
     // (for the user)
     //void resizeTopMargin();
+
+    virtual void onServerConnect() = 0;
+    virtual void onServerDisconnect() = 0;
+    virtual void onReceiveMessage(const Message &msg) = 0;
 };
 
 //-----------------------------------//

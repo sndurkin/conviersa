@@ -9,13 +9,14 @@
 #pragma once
 
 #include <QString>
+#include "irc/ChannelUser.h"
 #include "cv/irc/OutputWindow.h"
 
 class QListWidget;
 class QSplitter;
 class QMutex;
 
-class irc::ChannelUser;
+using namespace irc;
 
 namespace cv { namespace irc {
 
@@ -36,9 +37,9 @@ protected:
 
 public:
     ChannelWindow(QExplicitlySharedDataPointer<Session> pSharedSession,
-                  QExplicitlySharedDataPointer<Connection> pSharedConn,
                   const QString &title = tr("Untitled"),
                   const QSize &size = QSize(500, 300));
+    ~ChannelWindow();
 
     bool isInChannel() { return m_inChannel; }
 
@@ -110,8 +111,9 @@ signals:
     void chanWindowClosing(ChannelWindow *pWin);
 
 public slots:
-    // handles a disconnection fired from the Connection object
-    void handleDisconnect();
+    void onServerConnect();
+    void onServerDisconnect();
+    void onReceiveMessage(const Message &msg);
 };
 
 } } // end namespaces

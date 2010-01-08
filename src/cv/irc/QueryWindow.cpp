@@ -17,12 +17,10 @@
 namespace cv { namespace irc {
 
 QueryWindow::QueryWindow(QExplicitlySharedDataPointer<Session> pSharedSession,
-                         QExplicitlySharedDataPointer<Connection> pSharedConn,
                          const QString &title/* = tr("Untitled")*/,
                          const QSize &size/* = QSize(500, 300)*/)
     : OutputWindow(title, size)
 {
-    m_pSharedConn = pSharedConn;
     m_pSharedSession = pSharedSession;
     m_targetNick = title;
 
@@ -32,7 +30,14 @@ QueryWindow::QueryWindow(QExplicitlySharedDataPointer<Session> pSharedSession,
     m_pVLayout->setContentsMargins(2, 2, 2, 2);
     setLayout(m_pVLayout);
 
-    QObject::connect(m_pSharedConn.data(), SIGNAL(disconnected()), this, SLOT(handleDisconnect()));
+    QObject::connect(m_pSharedSession.data(), SIGNAL(connected()), this, SLOT(onServerConnect()));
+    QObject::connect(m_pSharedSession.data(), SIGNAL(disconnected()), this, SLOT(onServerDisconnect()));
+    //QObject::connect(m_pSharedSession.data(), SIGNAL(dataParsed(Message)), this, SLOT(onReceiveMessage(Message)));
+}
+
+QueryWindow::~QueryWindow()
+{
+    QObject::disconnect(m_pSharedSession.data(), 0, this, 0);
 }
 
 int QueryWindow::getIrcWindowType()
@@ -67,9 +72,13 @@ void QueryWindow::closeEvent(QCloseEvent *event)
     return Window::closeEvent(event);
 }
 
-void QueryWindow::handleDisconnect()
+void QueryWindow::onServerConnect() { }
+
+void QueryWindow::onServerDisconnect()
 {
     printOutput("* Disconnected");
 }
+
+void QueryWindow::onReceiveMessage(const Message &msg) { }
 
 } } // end namespaces

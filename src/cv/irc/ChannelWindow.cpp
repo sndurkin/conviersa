@@ -22,16 +22,16 @@
 #include <QScrollBar>
 #include <QTextEdit>
 
+using namespace irc;
+
 namespace cv { namespace irc {
 
 ChannelWindow::ChannelWindow(QExplicitlySharedDataPointer<Session> pSharedSession,
-                             QExplicitlySharedDataPointer<Connection> pSharedConn,
                              const QString &title/* = tr("Untitled")*/,
                              const QSize &size/* = QSize(500, 300)*/)
     : OutputWindow(title, size),
       m_inChannel(false)
 {
-    m_pSharedConn = pSharedConn;
     m_pSharedSession = pSharedSession;
 
     m_pSplitter = new QSplitter(this);
@@ -57,7 +57,14 @@ ChannelWindow::ChannelWindow(QExplicitlySharedDataPointer<Session> pSharedSessio
 
     setLayout(m_pVLayout);
 
-    QObject::connect(m_pSharedConn.data(), SIGNAL(disconnected()), this, SLOT(handleDisconnect()));
+    QObject::connect(m_pSharedSession.data(), SIGNAL(connected()), this, SLOT(onServerConnect()));
+    QObject::connect(m_pSharedSession.data(), SIGNAL(disconnected()), this, SLOT(onServerDisconnect()));
+    //QObject::connect(m_pSharedSession.data(), SIGNAL(dataParsed(Message)), this, SLOT(onReceiveMessage(Message)));
+}
+
+ChannelWindow::~ChannelWindow()
+{
+    QObject::disconnect(m_pSharedSession.data(), 0, this, 0);
 }
 
 int ChannelWindow::getIrcWindowType()
@@ -236,7 +243,7 @@ void ChannelWindow::closeEvent(QCloseEvent *event)
         leaveChannel();
         QString textToSend = "PART ";
         textToSend += getWindowName();
-        m_pSharedConn->send(textToSend);
+        m_pSharedSession->sendData(textToSend);
     }
 
     return Window::closeEvent(event);
@@ -313,10 +320,14 @@ ChannelUser *ChannelWindow::findUser(const QString &user)
     return NULL;
 }
 
-void ChannelWindow::handleDisconnect()
+void ChannelWindow::onServerConnect() { }
+
+void ChannelWindow::onServerDisconnect()
 {
     printOutput("* Disconnected");
     m_pUserList->setEnabled(false);
 }
+
+void ChannelWindow::onReceiveMessage(const Message &msg) { }
 
 } } // end namespaces

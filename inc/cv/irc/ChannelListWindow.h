@@ -8,7 +8,10 @@
 
 #pragma once
 
+#include "irc/Session.h"
 #include "cv/Window.h"
+
+using namespace irc;
 
 class QVBoxLayout;
 class QTreeView;
@@ -38,6 +41,9 @@ class ChannelTopicDelegate;
 class ChannelListWindow : public Window
 {
     Q_OBJECT
+
+    QExplicitlySharedDataPointer<Session>
+                            m_pSharedSession;
 
     // main layout
     QVBoxLayout *           m_pVLayout;
@@ -83,7 +89,7 @@ class ChannelListWindow : public Window
     bool            m_savedTopicDisplay;
 
 public:
-    ChannelListWindow(QExplicitlySharedDataPointer<Connection> pSharedConn,
+    ChannelListWindow(QExplicitlySharedDataPointer<Session> pSharedSession,
                     const QSize &size = QSize(715, 300));
 
     void giveFocus();

@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
-        Client *pClient = new Client("Conviersa");
+    Client *pClient = new Client("Conviersa");
     pClient->show();
 
     return app.exec();

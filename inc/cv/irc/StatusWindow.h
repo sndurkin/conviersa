@@ -27,17 +27,14 @@ protected:
 
     ChannelListWindow *     m_pChanListWin;
     QList<ChannelWindow *>  m_chanList;
-    QList<QueryWindow *>  m_privList;
+    QList<QueryWindow *>    m_privList;
 
 public:
     StatusWindow(const QString &title = tr("Server Window"),
             const QSize &size = QSize(500, 300));
-    virtual ~StatusWindow();
+    ~StatusWindow();
 
     int getIrcWindowType();
-
-    // handles the data received from the Connection class
-    void handleData(QString &data);
 
     // returns a pointer to the IIrcWindow if it exists,
     // 	and is a child of this status window (meaning
@@ -57,10 +54,10 @@ public:
     QList<QueryWindow *> getPrivateMessages();
 
     // adds a channel to the list
-    void addChanWindow(ChannelWindow *pChan);
+    void addChannelWindow(ChannelWindow *pChan);
 
     // adds a PM window to the list
-    void addPrivWindow(QueryWindow *pPriv);
+    void addQueryWindow(QueryWindow *pPriv);
 
 protected:
     void handleTab();
@@ -100,14 +97,16 @@ private:
     void handleWallopsMsg(const Message &msg);
 
 public slots:
-    // handles a disconnection fired from the Connection object
-    void handleDisconnect();
+    void onServerConnect();
+    void onServerDisconnect();
+    void onReceiveData(const QString &data);
+    void onReceiveMessage(const Message &msg);
 
     // removes a channel window from the list
-    void removeChanWindow(ChannelWindow *pChanWin);
+    void removeChannelWindow(ChannelWindow *pChanWin);
 
     // removes a PM window from the list
-    void removePrivWindow(QueryWindow *pChanWin);
+    void removeQueryWindow(QueryWindow *pChanWin);
 };
 
 } } // end namespaces

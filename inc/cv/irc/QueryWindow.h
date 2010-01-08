@@ -21,9 +21,9 @@ private:
 
 public:
     QueryWindow(QExplicitlySharedDataPointer<Session> pSharedSession,
-                QExplicitlySharedDataPointer<Connection> pSharedConn,
                 const QString &title = tr("Untitled"),
                 const QSize &size = QSize(500, 300));
+    ~QueryWindow();
 
     int getIrcWindowType();
 
@@ -44,8 +44,9 @@ signals:
     void privWindowClosing(QueryWindow *pWin);
 
 public slots:
-    // handles a disconnection fired from the Connection object
-    void handleDisconnect();
+    void onServerConnect();
+    void onServerDisconnect();
+    void onReceiveMessage(const Message &msg);
 };
 
 } } // end namespaces

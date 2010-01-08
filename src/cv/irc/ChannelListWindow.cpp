@@ -30,15 +30,15 @@
 
 namespace cv { namespace irc {
 
-ChannelListWindow::ChannelListWindow(QExplicitlySharedDataPointer<Connection> pSharedConn,
+ChannelListWindow::ChannelListWindow(QExplicitlySharedDataPointer<Session> pSharedSession,
                                      const QSize &size/* = QSize(715, 300)*/)
-    : IChatWindow("Channel List", size),
+    : Window("Channel List", size),
       m_searchStr(),
       m_searchRegex(),
       m_savedMinUsers(0),
       m_savedMaxUsers(0)
 {
-    m_pSharedConn = pSharedConn;
+    m_pSharedSession = pSharedSession;
 
     m_pVLayout = new QVBoxLayout;
     m_pView = new QTreeView(this);
@@ -60,8 +60,8 @@ ChannelListWindow::ChannelListWindow(QExplicitlySharedDataPointer<Connection> pS
     m_pView->setRootIsDecorated(false);
     m_pView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
-    QObject::connect(m_pSharedConn.data(), SIGNAL(disconnected()), this, SLOT(handleDisconnect()));
-    QObject::connect(m_pSharedConn.data(), SIGNAL(connected()), this, SLOT(handleConnect()));
+    QObject::connect(m_pSharedSession.data(), SIGNAL(connected()), this, SLOT(handleConnect()));
+    QObject::connect(m_pSharedSession.data(), SIGNAL(disconnected()), this, SLOT(handleDisconnect()));
     QObject::connect(m_pView, SIGNAL(doubleClicked(const QModelIndex &)), this, SLOT(joinChannel(const QModelIndex &)));
 
     setupControls();
@@ -313,13 +313,13 @@ void ChannelListWindow::downloadList()
     {
         textToSend += QString(" %1").arg(m_pCustomParameters->text());
     }
-    m_pSharedConn->send(textToSend);
+    m_pSharedSession->sendData(textToSend);
 }
 
 // requests to stop the download of the channels from the server
 void ChannelListWindow::stopDownload()
 {
-    m_pSharedConn->send("LIST STOP");
+    m_pSharedSession->sendData("LIST STOP");
 }
 
 // joins the channel which is found with the given index
@@ -329,7 +329,7 @@ void ChannelListWindow::joinChannel(const QModelIndex &index)
     // this isn't enough
     if(index.isValid())
     {
-        m_pSharedConn->send(QString("JOIN :%1").arg(index.sibling(index.row(), 0).data().toString()));
+        m_pSharedSession->sendData(QString("JOIN :%1").arg(index.sibling(index.row(), 0).data().toString()));
     }
 }
 
@@ -354,7 +354,7 @@ void ChannelListWindow::startFilter()
     // if there are no constraints, just display all the channels
     if((m_pSearchBar->text().isEmpty()
             || (m_pCheckChanNames->checkState() == Qt::Unchecked
-                && m_pCheckChanTopics->checkState() == Qt::Unchecked))
+            && m_pCheckChanTopics->checkState() == Qt::Unchecked))
         && m_savedMinUsers == 0
         && m_savedMaxUsers == 0)
     {
@@ -379,7 +379,7 @@ void ChannelListWindow::startFilter()
     m_pMinUsers->setEnabled(false);
     m_pMaxUsersLabel->setEnabled(false);
     m_pMaxUsers->setEnabled(false);
-    if(m_pSharedConn->isConnected())
+    if(m_pSharedSession->isConnected())
         m_pDownloadingGroup->setEnabled(false);
     m_pSaveButton->setEnabled(false);
 
@@ -508,7 +508,7 @@ void ChannelListWindow::stopFilter()
     m_pMinUsers->setEnabled(true);
     m_pMaxUsersLabel->setEnabled(true);
     m_pMaxUsers->setEnabled(true);
-    if(m_pSharedConn->isConnected())
+    if(m_pSharedSession->isConnected())
         m_pDownloadingGroup->setEnabled(true);
     m_pSaveButton->setEnabled(true);
 }

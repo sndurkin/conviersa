@@ -14,9 +14,9 @@
 #include <QAbstractTextDocumentLayout>
 #include <QWebView>
 #include <QWebFrame>
+#include "qext.h"
 #include "irc/Parser.h"
 #include "irc/Session.h"
-#include "cv/qext.h"
 #include "cv/ConfigManager.h"
 #include "cv/irc/types.h"
 #include "cv/irc/OutputWindow.h"
@@ -76,7 +76,7 @@ void OutputWindow::printOutput(const QString &text, const QColor &color/* = QCol
     if(!m_pOutput->document()->isEmpty())
         cursor.insertBlock();
     QString textToPrint = escapeEx(stripCodes(text));
-
+/*
     if(text.contains(m_pSharedSession->getNick()))
     {
         textToPrint.prepend("<b>");
@@ -95,7 +95,7 @@ void OutputWindow::printOutput(const QString &text, const QColor &color/* = QCol
         cursor.insertText("match\n");
     if(URL.exactMatch("lolm"))
         cursor.insertText("match\n");
-
+*/
     cursor.insertHtml(m_pCodec->toUnicode(textToPrint.toAscii()));
 
     // sets the correct position of the cursor so that color
@@ -190,23 +190,6 @@ void OutputWindow::search(const QString &textToFind)
     }
 
     m_pOutput->setExtraSelections(list);
-}
-
-//-----------------------------------//
-
-// changes the codec for the m_pOutput control
-void OutputWindow::changeCodec(const QString &codecStr)
-{
-    QTextCodec *pCodec = QTextCodec::codecForName(codecStr.toAscii());
-    if(pCodec)
-    {
-        m_pCodec = pCodec;
-        m_pSharedConn->setCodec(pCodec);
-        QString msg = "Encoding successfully changed to \"";
-        msg += codecStr;
-        msg += "\"";
-        printOutput(msg);
-    }
 }
 
 //-----------------------------------//
@@ -334,21 +317,9 @@ void OutputWindow::handleInput(const QString &inputText)
             }
             else
             {
-                // close the connection
-                if(m_pSharedConn->isConnected())
-                    m_pSharedConn->disconnect();
-
-                // detach the session from the server
-                if(m_pSharedSession->isAttached())
-                    m_pSharedSession->detachFromServer();
-
-                if(!m_pSharedConn->connect(host.toAscii().data(), port))
-                {
-                    printOutput("Connect() returned false.");
-                    return;
-                }
-
-                m_pSharedSession->attachToServer(host, port);
+                if(m_pSharedSession->isConnected())
+                    m_pSharedSession->disconnectFromServer();
+                m_pSharedSession->connectToServer(host, port);
             }
 
             return;
@@ -357,12 +328,6 @@ void OutputWindow::handleInput(const QString &inputText)
         {
             text.remove(0, 7);
             search(text);
-            return;
-        }
-        else if(text.startsWith("codec ", Qt::CaseInsensitive))
-        {
-            text.remove(0, 6);
-            changeCodec(text);
             return;
         }
         else if(text.startsWith("codecs", Qt::CaseInsensitive))
@@ -376,7 +341,7 @@ void OutputWindow::handleInput(const QString &inputText)
         }
         else
         {
-            if(!m_pSharedConn->isConnected())
+            if(!m_pSharedSession->isConnected())
             {
                 printError("Not connected to a server.");
                 return;
@@ -424,7 +389,7 @@ void OutputWindow::handleInput(const QString &inputText)
         }
     }
 
-    if(!m_pSharedConn->isConnected())
+    if(!m_pSharedSession->isConnected())
     {
         printError("Not connected to a server.");
         return;
@@ -453,7 +418,7 @@ print_and_send_text:
 
 send_text:
     // send it
-    m_pSharedConn->send(textToSend);
+    m_pSharedSession->sendData(textToSend);
 }
 
 //-----------------------------------//

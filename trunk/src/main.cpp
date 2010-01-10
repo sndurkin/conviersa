@@ -7,9 +7,10 @@
 ************************************************************************/
 
 #include <QApplication>
-#include "cv/Client.h"
+#include "cv/gui/Client.h"
 
 using namespace cv;
+using namespace gui;
 
 int main(int argc, char *argv[])
 {

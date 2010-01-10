@@ -6,8 +6,13 @@
 *
 ************************************************************************/
 
-#pragma once
+#include "cv/gui/WindowContainer.h"
+#include "cv/gui/Window.h"
 
-#include <QtGui>
+namespace cv { namespace gui {
 
-QString escapeEx(const QString &text);
+WindowContainer::WindowContainer(QWidget* pParent)
+    : QMdiArea(pParent)
+{ }
+
+} } // end namespaces

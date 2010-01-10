@@ -11,7 +11,7 @@
 #include <QMdiArea>
 #include <QMdiSubWindow>
 
-namespace cv {
+namespace cv { namespace gui {
 
 class Window;
 
@@ -29,4 +29,4 @@ public:
     int size() const { return m_windows.size(); }
 };
 
-} // end namespace
+} } // end namespaces

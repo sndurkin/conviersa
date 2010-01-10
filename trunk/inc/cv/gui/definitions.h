@@ -10,7 +10,7 @@
 
 class QTreeWidgetItem;
 
-namespace cv {
+namespace cv { namespace gui {
 
 class Window;
 
@@ -31,4 +31,4 @@ struct win_info_t
     Window *            m_pWindow;
 };
 
-} // end namespace
+} } // end namespaces

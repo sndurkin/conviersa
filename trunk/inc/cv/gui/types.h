@@ -6,13 +6,13 @@
 *
 ************************************************************************/
 
-#include "cv/WindowContainer.h"
-#include "cv/Window.h"
+#pragma once
 
-namespace cv {
+namespace cv { namespace gui {
 
-WindowContainer::WindowContainer(QWidget* pParent)
-    : QMdiArea(pParent)
-{ }
+// reserved IrcWindowTypes
+#define	IRC_STATUS_WIN_TYPE     0
+#define	IRC_CHAN_WIN_TYPE       1
+#define	IRC_PRIV_WIN_TYPE       2
 
-} // end namespace
+} } // end namespaces

@@ -10,7 +10,7 @@
 
 #include <QMdiSubWindow>
 
-namespace cv {
+namespace cv { namespace gui {
 
 class WindowManager;
 class WindowContainer;
@@ -67,4 +67,4 @@ protected:
     void resizeEvent(QResizeEvent *event);
 };
 
-} // end namespace
+} } // end namespaces

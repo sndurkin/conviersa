@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "cv/WindowContainer.h"
+#include "cv/gui/WindowContainer.h"
 
 class QMainWindow;
 class QDockWidget;
@@ -16,7 +16,7 @@ class QListWidget;
 class QCloseEvent;
 class QMenuBar;
 
-namespace cv {
+namespace cv { namespace gui {
 
 class WindowManager;
 
@@ -43,4 +43,4 @@ protected:
     void closeEvent(QCloseEvent *event);
 };
 
-} // end namespace
+} } // end namespaces

@@ -8,13 +8,13 @@
 
 #pragma once
 
-#include "cv/CLineEdit.h"
+#include "cv/gui/CLineEdit.h"
 
 class QFocusEvent;
 class QPaintEvent;
 class QBrush;
 
-namespace cv {
+namespace cv { namespace gui {
 
 class SearchBar : public CLineEdit
 {
@@ -40,4 +40,4 @@ protected:
     void paintEvent(QPaintEvent *event);
 };
 
-} // end namespace
+} } // end namespaces

@@ -10,9 +10,9 @@
 #include <QPainter>
 #include <QBrush>
 #include <QLinearGradient>
-#include "cv/SearchBar.h"
+#include "cv/gui/SearchBar.h"
 
-namespace cv {
+namespace cv { namespace gui {
 
 SearchBar::SearchBar(QWidget *pParent/* = NULL*/)
     : CLineEdit("Search", pParent),
@@ -56,4 +56,4 @@ void SearchBar::paintEvent(QPaintEvent *event)
     }
 }
 
-} // end namespace
+} } // end namespaces

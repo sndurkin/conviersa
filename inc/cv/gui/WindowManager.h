@@ -12,11 +12,11 @@
 #include <QMouseEvent>
 #include <QMenu>
 #include <QList>
-#include "cv/definitions.h"
+#include "cv/gui/definitions.h"
 
 class QMdiSubWindow;
 
-namespace cv {
+namespace cv { namespace gui {
 
 class WindowContainer;
 class Window;
@@ -110,4 +110,4 @@ protected:
     void contextMenuEvent(QContextMenuEvent *event);
 };
 
-} // end namespace
+} } // end namespaces

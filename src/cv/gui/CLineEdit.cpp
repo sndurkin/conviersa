@@ -9,9 +9,9 @@
 #include <QFocusEvent>
 #include <QMouseEvent>
 #include <QPainter>
-#include "cv/CLineEdit.h"
+#include "cv/gui/CLineEdit.h"
 
-namespace cv {
+namespace cv { namespace gui {
 
 CLineEdit::CLineEdit(const QString &textToPrint, QWidget *pParent/* = NULL*/)
     : QLineEdit(pParent),
@@ -105,4 +105,4 @@ void CLineEdit::paintEvent(QPaintEvent *event)
     }
 }
 
-} // end namespace
+} } // end namespaces

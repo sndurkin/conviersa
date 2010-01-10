@@ -6,19 +6,19 @@
 *
 ************************************************************************/
 
-#include "cv/Client.h"
-#include "cv/WindowManager.h"
 #include "cv/ConfigManager.h"
-#include "cv/AltWindowContainer.h"
-#include "cv/irc/StatusWindow.h"
-#include "cv/irc/ChannelWindow.h"
-#include "cv/irc/QueryWindow.h"
+#include "cv/gui/Client.h"
+#include "cv/gui/WindowManager.h"
+#include "cv/gui/AltWindowContainer.h"
+#include "cv/gui/StatusWindow.h"
+#include "cv/gui/ChannelWindow.h"
+#include "cv/gui/QueryWindow.h"
 
 namespace cv {
 
-using namespace irc;
-
 ConfigManager *g_pCfgManager;
+
+namespace gui {
 
 //-----------------------------------//
 
@@ -104,4 +104,4 @@ void Client::onNewIrcServerWindow()
 
 //-----------------------------------//
 
-} // end namespace
+} } // end namespaces

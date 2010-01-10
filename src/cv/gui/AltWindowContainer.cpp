@@ -12,10 +12,10 @@
 #include <QCloseEvent>
 #include <QMenuBar>
 #include <QMenu>
-#include "cv/AltWindowContainer.h"
-#include "cv/WindowManager.h"
+#include "cv/gui/AltWindowContainer.h"
+#include "cv/gui/WindowManager.h"
 
-namespace cv {
+namespace cv { namespace gui {
 
 AltWindowContainer::AltWindowContainer(WindowManager *pManager)
     : WindowContainer(NULL),
@@ -53,4 +53,4 @@ void AltWindowContainer::closeEvent(QCloseEvent *event)
     event->accept();
 }
 
-} // end namespace
+} } // end namespaces

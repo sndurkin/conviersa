@@ -10,7 +10,7 @@
 
 #include <QLineEdit>
 
-namespace cv {
+namespace cv { namespace gui {
 
 // defines a custom line edit class that is basically a QLineEdit
 // with some additional features:
@@ -49,4 +49,4 @@ protected:
     void paintEvent(QPaintEvent *event);
 };
 
-} // end namespace
+} } // end namespaces

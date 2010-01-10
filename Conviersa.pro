@@ -7,47 +7,47 @@ INCLUDEPATH = inc/
 DESTDIR = ../bin/
 OTHER_FILES += todo.txt \
     doc/License.txt
-HEADERS += inc/qext.h \
-    inc/irc/Connection.h \
-    inc/irc/ChannelUser.h \
-    inc/irc/Session.h \
-    inc/irc/Parser.h \
-    inc/cv/definitions.h \
-    inc/cv/Client.h \
-    inc/cv/Window.h \
-    inc/cv/WindowManager.h \
-    inc/cv/WindowContainer.h \
-    inc/cv/AltWindowContainer.h \
-    inc/cv/CLineEdit.h \
-    inc/cv/SearchBar.h \
+HEADERS += inc/cv/qext.h \
+    inc/cv/Connection.h \
+    inc/cv/ChannelUser.h \
+    inc/cv/Session.h \
+    inc/cv/Parser.h \
     inc/cv/ConfigOption.h \
     inc/cv/ConfigManager.h \
-    inc/cv/irc/types.h \
-    inc/cv/irc/OutputWindow.h \
-    inc/cv/irc/OutputWindowScrollBar.h \
-    inc/cv/irc/StatusWindow.h \
-    inc/cv/irc/QueryWindow.h \
-    inc/cv/irc/ChannelWindow.h \
-    inc/cv/irc/ChannelTopicDelegate.h \
-    inc/cv/irc/ChannelListWindow.h
-SOURCES += src/qext.cpp \
-    src/irc/Connection.cpp \
-    src/irc/ChannelUser.cpp \
-    src/irc/Parser.cpp \
-    src/irc/Session.cpp \
-    src/cv/main.cpp \
-    src/cv/Client.cpp \
-    src/cv/Window.cpp \
-    src/cv/WindowManager.cpp \
-    src/cv/WindowContainer.cpp \
-    src/cv/AltWindowContainer.cpp \
-    src/cv/CLineEdit.cpp \
-    src/cv/SearchBar.cpp \
+    inc/cv/gui/definitions.h \
+    inc/cv/gui/Client.h \
+    inc/cv/gui/Window.h \
+    inc/cv/gui/WindowManager.h \
+    inc/cv/gui/WindowContainer.h \
+    inc/cv/gui/AltWindowContainer.h \
+    inc/cv/gui/CLineEdit.h \
+    inc/cv/gui/SearchBar.h \
+    inc/cv/gui/types.h \
+    inc/cv/gui/OutputWindow.h \
+    inc/cv/gui/OutputWindowScrollBar.h \
+    inc/cv/gui/StatusWindow.h \
+    inc/cv/gui/QueryWindow.h \
+    inc/cv/gui/ChannelWindow.h \
+    inc/cv/gui/ChannelTopicDelegate.h \
+    inc/cv/gui/ChannelListWindow.h
+SOURCES += src/main.cpp \
+    src/cv/qext.cpp \
+    src/cv/Connection.cpp \
+    src/cv/ChannelUser.cpp \
+    src/cv/Parser.cpp \
+    src/cv/Session.cpp \
     src/cv/ConfigManager.cpp \
-    src/cv/irc/OutputWindow.cpp \
-    src/cv/irc/OutputWindowScrollBar.cpp \
-    src/cv/irc/StatusWindow.cpp \
-    src/cv/irc/QueryWindow.cpp \
-    src/cv/irc/ChannelWindow.cpp \
-    src/cv/irc/ChannelTopicDelegate.cpp \
-    src/cv/irc/ChannelListWindow.cpp
+    src/cv/gui/Client.cpp \
+    src/cv/gui/Window.cpp \
+    src/cv/gui/WindowManager.cpp \
+    src/cv/gui/WindowContainer.cpp \
+    src/cv/gui/AltWindowContainer.cpp \
+    src/cv/gui/CLineEdit.cpp \
+    src/cv/gui/SearchBar.cpp \
+    src/cv/gui/OutputWindow.cpp \
+    src/cv/gui/OutputWindowScrollBar.cpp \
+    src/cv/gui/StatusWindow.cpp \
+    src/cv/gui/QueryWindow.cpp \
+    src/cv/gui/ChannelWindow.cpp \
+    src/cv/gui/ChannelTopicDelegate.cpp \
+    src/cv/gui/ChannelListWindow.cpp

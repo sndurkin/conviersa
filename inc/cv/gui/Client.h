@@ -16,7 +16,7 @@
 
 class QTreeWidgetItem;
 
-namespace cv {
+namespace cv { namespace gui {
 
 class WindowManager;
 class WindowContainer;
@@ -59,4 +59,4 @@ private:
 
 //-----------------------------------//
 
-} // end namespace
+} } // end namespaces

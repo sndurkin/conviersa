@@ -7,11 +7,11 @@
 ************************************************************************/
 
 #include <new>
-#include "cv/WindowManager.h"
-#include "cv/AltWindowContainer.h"
-#include "cv/Window.h"
+#include "cv/gui/WindowManager.h"
+#include "cv/gui/AltWindowContainer.h"
+#include "cv/gui/Window.h"
 
-namespace cv {
+namespace cv { namespace gui {
 
 WindowManager::WindowManager(QWidget *pParent, WindowContainer *pMainContainer)
     : QTreeWidget(pParent),
@@ -423,4 +423,4 @@ void WindowManager::contextMenuEvent(QContextMenuEvent *event)
     }
 }
 
-} // end namespace
+} } // end namespaces

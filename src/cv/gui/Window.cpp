@@ -7,11 +7,11 @@
 ************************************************************************/
 
 #include <QTreeWidgetItem>
-#include "cv/Window.h"
-#include "cv/WindowManager.h"
-#include "cv/WindowContainer.h"
+#include "cv/gui/Window.h"
+#include "cv/gui/WindowManager.h"
+#include "cv/gui/WindowContainer.h"
 
-namespace cv {
+namespace cv { namespace gui {
 
 Window::Window(const QString &title/* = tr("Untitled")*/,
                  const QSize &size/* = QSize(500, 300)*/)
@@ -126,5 +126,5 @@ void Window::resizeEvent(QResizeEvent *event)
     m_defSize = event->size();
 }
 
-} // end namespace
+} } // end namespaces
 

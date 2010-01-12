@@ -305,7 +305,7 @@ void OutputWindow::handleInput(const QString &inputText)
 
         // handle any special commands
         //
-        // current format: /server host port
+        // current format: /server <host> [port]
         // todo: fix channel leaving
         if(text.startsWith("server ", Qt::CaseInsensitive))
         {
@@ -314,15 +314,13 @@ void OutputWindow::handleInput(const QString &inputText)
             int port = text.section(' ', 2, 2, QString::SectionSkipEmpty).toInt(&ok);
             if(!ok)
             {
-                //printError("Invalid port.");
+                // TODO: change to use config
                 port = 6667;
             }
-            else
-            {
-                if(m_pSharedSession->isConnected())
-                    m_pSharedSession->disconnectFromServer();
-                m_pSharedSession->connectToServer(host, port);
-            }
+
+            if(m_pSharedSession->isConnected())
+                m_pSharedSession->disconnectFromServer();
+            m_pSharedSession->connectToServer(host, port);
 
             return;
         }

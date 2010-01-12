@@ -24,7 +24,6 @@ class Connection : public QObject
     Q_OBJECT
 
     QTcpSocket *    m_pSocket;
-    QString         m_prevBuffer;
     QTimer          m_connectionTimer;
 
 public:
@@ -54,7 +53,7 @@ public slots:
     void onConnect();
     void onDisconnect();
     void onFailedConnect();
-    void onReceiveData();
+    void onReadyRead();
 };
 
 } // end namespace

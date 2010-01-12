@@ -41,6 +41,19 @@ StatusWindow::StatusWindow(const QString &title/* = tr("Server Window")*/,
     QObject::connect(m_pSharedSession.data(), SIGNAL(disconnected()), this, SLOT(onServerDisconnect()));
     QObject::connect(m_pSharedSession.data(), SIGNAL(dataReceived(QString)), this, SLOT(onReceiveData(QString)));
     QObject::connect(m_pSharedSession.data(), SIGNAL(dataParsed(Message)), this, SLOT(onReceiveMessage(Message)));
+    QObject::connect(m_pSharedSession.data(), SIGNAL(errorMessage(Message)), this, SLOT(onErrorMessage(Message)));
+    QObject::connect(m_pSharedSession.data(), SIGNAL(inviteMessage(Message)), this, SLOT(onInviteMessage(Message)));
+    QObject::connect(m_pSharedSession.data(), SIGNAL(joinMessage(Message)), this, SLOT(onJoinMessage(Message)));
+    QObject::connect(m_pSharedSession.data(), SIGNAL(modeMessage(Message)), this, SLOT(onModeMessage(Message)));
+    QObject::connect(m_pSharedSession.data(), SIGNAL(nickMessage(Message)), this, SLOT(onNickMessage(Message)));
+    QObject::connect(m_pSharedSession.data(), SIGNAL(noticeMessage(Message)), this, SLOT(onNoticeMessage(Message)));
+    QObject::connect(m_pSharedSession.data(), SIGNAL(partMessage(Message)), this, SLOT(onPartMessage(Message)));
+    QObject::connect(m_pSharedSession.data(), SIGNAL(pongMessage(Message)), this, SLOT(onPongMessage(Message)));
+    QObject::connect(m_pSharedSession.data(), SIGNAL(privmsgMessage(Message)), this, SLOT(onPrivmsgMessage(Message)));
+    QObject::connect(m_pSharedSession.data(), SIGNAL(quitMessage(Message)), this, SLOT(onQuitMessage(Message)));
+    QObject::connect(m_pSharedSession.data(), SIGNAL(topicMessage(Message)), this, SLOT(onTopicMessage(Message)));
+    QObject::connect(m_pSharedSession.data(), SIGNAL(wallopsMessage(Message)), this, SLOT(onWallopsMessage(Message)));
+    QObject::connect(m_pSharedSession.data(), SIGNAL(numericMessage(Message)), this, SLOT(onNumericMessage(Message)));
 }
 
 StatusWindow::~StatusWindow()
@@ -58,7 +71,7 @@ void StatusWindow::onServerConnect() { }
 
 void StatusWindow::onServerDisconnect()
 {
-    printOutput("* Disconnected.");
+    printOutput("* Disconnected");
     setTitle("Server Window");
     setWindowName("Server Window");
 }
@@ -74,212 +87,12 @@ void StatusWindow::onReceiveData(const QString &data)
 
 void StatusWindow::onReceiveMessage(const Message &msg)
 {
-    if(msg.m_isNumeric)
-    {
-        switch(msg.m_command)
-        {
-            case 1:
-            {
-                handle001Numeric(msg);
-                printOutput(getNumericText(msg));
-                break;
-            }
-            case 2:
-            {
-                handle002Numeric(msg);
-                printOutput(getNumericText(msg));
-                break;
-            }
-            case 5:
-            {
-                handle005Numeric(msg);
-                printOutput(getNumericText(msg));
-                break;
-            }
-            // RPL_AWAY
-            case 301:
-            {
-                handle301Numeric(msg);
-                break;
-            }
-            /*// RPL_USERHOST
-            case 302:
-            {
-
-                break;
-            }
-            // RPL_isON
-            case 303:
-            {
-
-                break;
-            }*/
-            // RPL_WHOisIDLE
-            case 317:
-            {
-                handle317Numeric(msg);
-                break;
-            }
-            // RPL_LisTSTART
-            case 321:
-            {
-                handle321Numeric(msg);
-                break;
-            }
-            // RPL_LisT
-            case 322:
-            {
-                handle322Numeric(msg);
-                break;
-            }
-            // RPL_LisTEND
-            case 323:
-            {
-                handle323Numeric(msg);
-                break;
-            }
-            // RPL_WHOisACCOUNT
-            case 330:
-            {
-                handle330Numeric(msg);
-                break;
-            }
-            // RPL_TOPIC
-            case 332:
-            {
-                handle332Numeric(msg);
-                break;
-            }
-            // states when topic was last set
-            case 333:
-            {
-                handle333Numeric(msg);
-                break;
-            }
-            // RPL_NAMREPLY
-            case 353:
-            {
-                handle353Numeric(msg);
-                break;
-            }
-            // RPL_ENDOFNAMES
-            case 366:
-            {
-                handle366Numeric(msg);
-                break;
-            }
-            // ERR_NOSUCKNICK
-            case 401:
-            {
-                handle401Numeric(msg);
-                break;
-            }
-            // ERR_CANNOTSENDTOCHAN
-            case 404:
-            {
-                // handles 404 numeric messages too
-                handle401Numeric(msg);
-                break;
-            }
-            default:
-            {
-                // the following are not meant to be handled,
-                // but only printed:
-                // 	003
-                // 	004
-                // 	305
-                // 	306
-                //printOutput(convertDataToHtml(getNumericText(msg)));
-                printOutput(getNumericText(msg));
-            }
-        }
-    }
-    else
-    {
-        switch(msg.m_command)
-        {
-            case IRC_COMMAND_ERROR:
-            {
-                // prints the error message
-                printOutput(msg.m_params[0]);
-                break;
-            }
-            case IRC_COMMAND_INVITE:
-            {
-                handleInviteMsg(msg);
-                break;
-            }
-            case IRC_COMMAND_JOIN:
-            {
-                handleJoinMsg(msg);
-                break;
-            }
-            case IRC_COMMAND_KICK:
-            {
-                handleKickMsg(msg);
-                break;
-            }
-            case IRC_COMMAND_MODE:
-            {
-                handleModeMsg(msg);
-                break;
-            }
-            case IRC_COMMAND_NICK:
-            {
-                handleNickMsg(msg);
-                break;
-            }
-            case IRC_COMMAND_NOTICE:
-            {
-                handleNoticeMsg(msg);
-                break;
-            }
-            case IRC_COMMAND_PART:
-            {
-                handlePartMsg(msg);
-                break;
-            }
-            case IRC_COMMAND_PING:
-            {
-                m_pSharedSession->sendData("PONG :" + msg.m_params[0]);
-                break;
-            }
-            case IRC_COMMAND_PONG:
-            {
-                handlePongMsg(msg);
-                break;
-            }
-            case IRC_COMMAND_PRIVMSG:
-            {
-                handlePrivMsg(msg);
-                break;
-            }
-            case IRC_COMMAND_QUIT:
-            {
-                handleQuitMsg(msg);
-                break;
-            }
-            case IRC_COMMAND_TOPIC:
-            {
-                handleTopicMsg(msg);
-                break;
-            }
-            case IRC_COMMAND_WALLOPS:
-            {
-                handleWallopsMsg(msg);
-                break;
-            }
-            default:
-            {
-                // print the whole raw line
-                //printOutput(data);
-                // todo: decide what to do here
-            }
-        }
-    }
+    // print the whole raw line
+    //printOutput(data);
+    // todo: decide what to do here
 }
 
-// returns a pointer to the IIrcWindow if it exists
+// returns a pointer to the OutputWindow if it exists
 // 	(and is a child of this status window)
 // returns NULL otherwise
 OutputWindow *StatusWindow::getChildIrcWindow(const QString &name)
@@ -735,7 +548,133 @@ void StatusWindow::handle401Numeric(const Message &msg)
     }
 }
 
-void StatusWindow::handleInviteMsg(const Message &msg)
+void StatusWindow::onNumericMessage(const Message &msg)
+{
+    switch(msg.m_command)
+    {
+        case 1:
+        {
+            handle001Numeric(msg);
+            printOutput(getNumericText(msg));
+            break;
+        }
+        case 2:
+        {
+            handle002Numeric(msg);
+            printOutput(getNumericText(msg));
+            break;
+        }
+        case 5:
+        {
+            handle005Numeric(msg);
+            printOutput(getNumericText(msg));
+            break;
+        }
+        // RPL_AWAY
+        case 301:
+        {
+            handle301Numeric(msg);
+            break;
+        }
+        /*// RPL_USERHOST
+        case 302:
+        {
+
+            break;
+        }
+        // RPL_isON
+        case 303:
+        {
+
+            break;
+        }*/
+        // RPL_WHOisIDLE
+        case 317:
+        {
+            handle317Numeric(msg);
+            break;
+        }
+        // RPL_LisTSTART
+        case 321:
+        {
+            handle321Numeric(msg);
+            break;
+        }
+        // RPL_LisT
+        case 322:
+        {
+            handle322Numeric(msg);
+            break;
+        }
+        // RPL_LisTEND
+        case 323:
+        {
+            handle323Numeric(msg);
+            break;
+        }
+        // RPL_WHOisACCOUNT
+        case 330:
+        {
+            handle330Numeric(msg);
+            break;
+        }
+        // RPL_TOPIC
+        case 332:
+        {
+            handle332Numeric(msg);
+            break;
+        }
+        // states when topic was last set
+        case 333:
+        {
+            handle333Numeric(msg);
+            break;
+        }
+        // RPL_NAMREPLY
+        case 353:
+        {
+            handle353Numeric(msg);
+            break;
+        }
+        // RPL_ENDOFNAMES
+        case 366:
+        {
+            handle366Numeric(msg);
+            break;
+        }
+        // ERR_NOSUCKNICK
+        case 401:
+        {
+            handle401Numeric(msg);
+            break;
+        }
+        // ERR_CANNOTSENDTOCHAN
+        case 404:
+        {
+            // handles 404 numeric messages too
+            handle401Numeric(msg);
+            break;
+        }
+        default:
+        {
+            // the following are not meant to be handled,
+            // but only printed:
+            // 	003
+            // 	004
+            // 	305
+            // 	306
+            //printOutput(convertDataToHtml(getNumericText(msg)));
+            printOutput(getNumericText(msg));
+        }
+    }
+}
+
+void StatusWindow::onErrorMessage(const Message &msg)
+{
+    printOutput(msg.m_params[0]);
+}
+
+void StatusWindow::onInviteMessage(const Message &msg)
 {
     QString textToPrint = QString("* %1 has invited you to %2")
                 .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName))
@@ -743,7 +682,7 @@ void StatusWindow::handleInviteMsg(const Message &msg)
     printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "invite")));
 }
 
-void StatusWindow::handleJoinMsg(const Message &msg)
+void StatusWindow::onJoinMessage(const Message &msg)
 {
     ChannelWindow *pChanWin = dynamic_cast<ChannelWindow *>(getChildIrcWindow(msg.m_params[0]));
     QString textToPrint = "* ";
@@ -791,7 +730,7 @@ void StatusWindow::handleJoinMsg(const Message &msg)
         printError("Pointer to channel window is invalid. This path should not have been reached.");
 }
 
-void StatusWindow::handleKickMsg(const Message &msg)
+void StatusWindow::onKickMessage(const Message &msg)
 {
     ChannelWindow *pChanWin = dynamic_cast<ChannelWindow *>(getChildIrcWindow(msg.m_params[0]));
     if(!pChanWin)
@@ -832,7 +771,7 @@ void StatusWindow::handleKickMsg(const Message &msg)
     pChanWin->printOutput(textToPrint, kickColor);
 }
 
-void StatusWindow::handleModeMsg(const Message &msg)
+void StatusWindow::onModeMessage(const Message &msg)
 {
     QString textToPrint = QString("* %1 has set mode: ").arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName));
 
@@ -906,7 +845,7 @@ void StatusWindow::handleModeMsg(const Message &msg)
     }
 }
 
-void StatusWindow::handleNickMsg(const Message &msg)
+void StatusWindow::onNickMessage(const Message &msg)
 {
     // update the user's nickname if he's the one changing it
     QString oldNick = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
@@ -953,7 +892,7 @@ void StatusWindow::handleNickMsg(const Message &msg)
     }
 }
 
-void StatusWindow::handleNoticeMsg(const Message &msg)
+void StatusWindow::onNoticeMessage(const Message &msg)
 {
     QString source;
     if(!msg.m_prefix.isEmpty())
@@ -974,7 +913,7 @@ void StatusWindow::handleNoticeMsg(const Message &msg)
     printOutput(textToPrint, noticeColor);
 }
 
-void StatusWindow::handlePartMsg(const Message &msg)
+void StatusWindow::onPartMessage(const Message &msg)
 {
     ChannelWindow *pChanWin = dynamic_cast<ChannelWindow *>(getChildIrcWindow(msg.m_params[0]));
     if(!pChanWin)
@@ -1019,7 +958,7 @@ void StatusWindow::handlePartMsg(const Message &msg)
     pChanWin->printOutput(textToPrint, partColor);
 }
 
-void StatusWindow::handlePongMsg(const Message &msg)
+void StatusWindow::onPongMessage(const Message &msg)
 {
     // the prefix is used to determine the server that
     // sends the PONG rather than the first parameter,
@@ -1034,7 +973,7 @@ void StatusWindow::handlePongMsg(const Message &msg)
     printOutput(textToPrint);
 }
 
-void StatusWindow::handlePrivMsg(const Message &msg)
+void StatusWindow::onPrivmsgMessage(const Message &msg)
 {
     CtcpRequestType requestType = getCtcpRequestType(msg);
     QString user = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
@@ -1138,7 +1077,7 @@ void StatusWindow::handlePrivMsg(const Message &msg)
     }
 }
 
-void StatusWindow::handleQuitMsg(const Message &msg)
+void StatusWindow::onQuitMessage(const Message &msg)
 {
     QString user = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
     QString textToPrint = QString("* %1 (%2) has quit")
@@ -1180,7 +1119,7 @@ void StatusWindow::handleQuitMsg(const Message &msg)
     }
 }
 
-void StatusWindow::handleTopicMsg(const Message &msg)
+void StatusWindow::onTopicMessage(const Message &msg)
 {
     OutputWindow *pChanWin = dynamic_cast<ChannelWindow *>(getChildIrcWindow(msg.m_params[0]));
     if(pChanWin)
@@ -1202,7 +1141,7 @@ void StatusWindow::handleTopicMsg(const Message &msg)
     }
 }
 
-void StatusWindow::handleWallopsMsg(const Message &msg)
+void StatusWindow::onWallopsMessage(const Message &msg)
 {
     QString textToPrint = QString("* WALLOPS from %1: %2")
                 .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName))

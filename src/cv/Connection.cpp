@@ -19,8 +19,7 @@ namespace cv {
 //-----------------------------------//
 
 Connection::Connection()
-    : m_pSocket(NULL),
-      m_prevBuffer("")
+    : m_pSocket(NULL)
 {
     m_connectionTimer.setSingleShot(true);
 }
@@ -50,7 +49,7 @@ bool Connection::connectToHost(const char *pServer, quint16 port)
     // connects the necessary signals to each corresponding slot
     QObject::connect(m_pSocket, SIGNAL(connected()), this, SLOT(onConnect()));
     QObject::connect(m_pSocket, SIGNAL(disconnected()), this, SLOT(onDisconnect()));
-    QObject::connect(m_pSocket, SIGNAL(readyRead()), this, SLOT(onReceiveData()));
+    QObject::connect(m_pSocket, SIGNAL(readyRead()), this, SLOT(onReadyRead()));
     QObject::connect(&m_connectionTimer, SIGNAL(timeout()), this, SLOT(onFailedConnect()));
 
     m_pSocket->connectToHost(pServer, port);
@@ -136,7 +135,7 @@ void Connection::onFailedConnect()
 
 const int SOCKET_BUFFER_SIZE = 1024;
 
-void Connection::onReceiveData()
+void Connection::onReadyRead()
 {
     while(true)
     {
@@ -146,18 +145,8 @@ void Connection::onReceiveData()
         if(size > 0)
         {
             buffer[size] = '\0';
-            m_prevBuffer += buffer;
-
-            // check for a message within the buffer, to ensure only
-            // whole messages are handled
-            int numChars;
-            while((numChars = m_prevBuffer.indexOf('\n') + 1) > 0)
-            {
-                // retrieves the entire message up to and including the terminating '\n' character
-                QString data = m_prevBuffer.left(numChars);
-                m_prevBuffer.remove(0, numChars);
-                emit dataReceived(data);
-            }
+            QString data(buffer);
+            emit dataReceived(data);
         }
         else
         {
@@ -165,7 +154,6 @@ void Connection::onReceiveData()
             {
                 // TODO: log this
             }
-
             break;
         }
     }

@@ -13,7 +13,8 @@ namespace cv {
 
 Session::Session(const QString& nick)
   : QSharedData(),
-    m_nick(nick)
+    m_nick(nick),
+    m_prevData("")
 {
     m_pConn = new Connection;
     QObject::connect(m_pConn, SIGNAL(connected()), this, SLOT(onConnect()));
@@ -31,7 +32,14 @@ void Session::connectToServer(const QString& host, int port = 6667)
 {
     m_host = host;
     m_port = port;
+
+    // this defaults the server's prefix rules (for users in a channel)
+    // to @ for +o (oper), and + for +v (voice); this is just in case
+    // a server does not send explicit prefix rules to the Session
+    //
+    // for more info see the definition in Session.h
     m_prefixRules = "o@v+"; // TODO: wtf is this
+
     m_pConn->connectToHost(host.toAscii(), port);
 }
 
@@ -139,10 +147,71 @@ bool Session::isNickPrefix(const QChar &prefix)
     return false;
 }
 
+// handles the preliminary processing for all messages;
+// this will emit signals for specific message types, and store
+// some information as a result of others (like numerics)
+void Session::processMessage(const Message &msg)
+{
+    if(msg.m_isNumeric)
+    {
+        emit numericMessage(msg);
+    }
+    else
+    {
+        switch(msg.m_command)
+        {
+            case IRC_COMMAND_ERROR:
+                emit errorMessage(msg);
+                break;
+            case IRC_COMMAND_INVITE:
+                emit inviteMessage(msg);
+                break;
+            case IRC_COMMAND_JOIN:
+                emit joinMessage(msg);
+                break;
+            case IRC_COMMAND_KICK:
+                emit kickMessage(msg);
+                break;
+            case IRC_COMMAND_MODE:
+                emit modeMessage(msg);
+                break;
+            case IRC_COMMAND_NICK:
+                emit nickMessage(msg);
+                break;
+            case IRC_COMMAND_NOTICE:
+                emit noticeMessage(msg);
+                break;
+            case IRC_COMMAND_PART:
+                emit partMessage(msg);
+                break;
+            case IRC_COMMAND_PING:
+                sendData("PONG :" + msg.m_params[0]);
+                break;
+            case IRC_COMMAND_PONG:
+                emit pongMessage(msg);
+                break;
+            case IRC_COMMAND_PRIVMSG:
+                emit privmsgMessage(msg);
+                break;
+            case IRC_COMMAND_QUIT:
+                emit quitMessage(msg);
+                break;
+            case IRC_COMMAND_TOPIC:
+                emit topicMessage(msg);
+                break;
+            case IRC_COMMAND_WALLOPS:
+                emit wallopsMessage(msg);
+                break;
+            default:
+                emit dataParsed(msg);
+        }
+    }
+}
+
 void Session::onConnect()
 {
     // todo: use options
-    QString info = "PASS hello\r\nNICK seand`\r\nUSER guest tolmoon tolsun :Ronnie Reagan";
+    QString info = "PASS hello\r\nNICK " + m_nick + "\r\nUSER guest tolmoon tolsun :Ronnie Reagan";
     sendData(info);
 
     emit connected();
@@ -155,8 +224,19 @@ void Session::onDisconnect()
 
 void Session::onReceiveData(const QString &data)
 {
-    Message msg = parseData(data);
-    emit dataParsed(msg);
+    m_prevData += data;
+
+    // check for a message within the data buffer, to ensure only
+    // whole messages are handled
+    int numChars;
+    while((numChars = m_prevData.indexOf('\n') + 1) > 0)
+    {
+        // retrieves the entire message up to and including the terminating '\n' character
+        QString msgData = m_prevData.left(numChars);
+        m_prevData.remove(0, numChars);
+        Message msg = parseData(msgData);
+        processMessage(msg);
+    }
 }
 
 } // end namespace

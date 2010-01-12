@@ -73,12 +73,33 @@ public:
     // example prefixes: @, %, +
     bool isNickPrefix(const QChar &prefix);
 
+    // handles the preliminary processing for all messages;
+    // this will emit signals for specific message types, and store
+    // some information as a result of others (like numerics)
+    void processMessage(const Message &msg);
+
 signals:
     // these signals are emitted from Session at the respective times
     void connected();
     void disconnected();
     void dataReceived(const QString &data);
     void dataParsed(const Message &msg);
+
+    // these are individual signals for each specific message
+    void errorMessage(const Message &msg);
+    void inviteMessage(const Message &msg);
+    void joinMessage(const Message &msg);
+    void kickMessage(const Message &msg);
+    void modeMessage(const Message &msg);
+    void nickMessage(const Message &msg);
+    void noticeMessage(const Message &msg);
+    void partMessage(const Message &msg);
+    void pongMessage(const Message &msg);
+    void privmsgMessage(const Message &msg);
+    void quitMessage(const Message &msg);
+    void topicMessage(const Message &msg);
+    void wallopsMessage(const Message &msg);
+    void numericMessage(const Message &msg);
 
 //    // when you are identified on the server
 //    void onIdentify();
@@ -137,7 +158,7 @@ private:
     // this acts as a more persistent buffer for receiving data from
     // the Connection object, so that it can be separated by '\n' and
     // then parsed
-    //QString     m_prevData;
+    QString     m_prevData;
 };
 
 } // end namespace

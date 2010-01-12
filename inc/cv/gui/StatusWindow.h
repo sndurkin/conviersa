@@ -102,6 +102,22 @@ public slots:
     void onReceiveData(const QString &data);
     void onReceiveMessage(const Message &msg);
 
+    // message-related slots
+    void onErrorMessage(const Message &msg);
+    void onInviteMessage(const Message &msg);
+    void onJoinMessage(const Message &msg);
+    void onKickMessage(const Message &msg);
+    void onModeMessage(const Message &msg);
+    void onNickMessage(const Message &msg);
+    void onNoticeMessage(const Message &msg);
+    void onPartMessage(const Message &msg);
+    void onPongMessage(const Message &msg);
+    void onPrivmsgMessage(const Message &msg);
+    void onQuitMessage(const Message &msg);
+    void onTopicMessage(const Message &msg);
+    void onWallopsMessage(const Message &msg);
+    void onNumericMessage(const Message &msg);
+
     // removes a channel window from the list
     void removeChannelWindow(ChannelWindow *pChanWin);
 

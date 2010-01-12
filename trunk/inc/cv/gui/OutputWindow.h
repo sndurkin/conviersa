@@ -28,7 +28,7 @@ class OutputWindowScrollBar;
  *      - Status windows
  *      - Channel windows
  *      - Private windows
- * TODO: this needs a redisign. Looks messy to me. -- triton
+ * TODO: this needs a redesign. Looks messy to me. -- triton
  */
 
 class OutputWindow : public Window

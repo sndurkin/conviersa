@@ -22,7 +22,7 @@ class Session : public QObject, public QSharedData
     Q_OBJECT
 
 public:
-    Session();
+    Session(const QString& nick);
     ~Session();
 
     void connectToServer(const QString &host, int port);

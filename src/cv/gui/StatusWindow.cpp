@@ -36,7 +36,7 @@ StatusWindow::StatusWindow(const QString &title/* = tr("Server Window")*/,
     m_pVLayout->setContentsMargins(2, 2, 2, 2);
     setLayout(m_pVLayout);
 
-    m_pSharedSession = new Session;
+    m_pSharedSession = new Session("conviersa");
     QObject::connect(m_pSharedSession.data(), SIGNAL(connected()), this, SLOT(onServerConnect()));
     QObject::connect(m_pSharedSession.data(), SIGNAL(disconnected()), this, SLOT(onServerDisconnect()));
     QObject::connect(m_pSharedSession.data(), SIGNAL(dataReceived(QString)), this, SLOT(onReceiveData(QString)));

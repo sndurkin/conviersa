@@ -11,9 +11,9 @@
 
 namespace cv {
 
-Session::Session()
+Session::Session(const QString& nick)
   : QSharedData(),
-    m_nick("seand`")    // TODO: dont hardcode nicks
+    m_nick(nick)
 {
     m_pConn = new Connection;
     QObject::connect(m_pConn, SIGNAL(connected()), this, SLOT(onConnect()));
@@ -27,11 +27,11 @@ Session::~Session()
     delete m_pConn;
 }
 
-void Session::connectToServer(const QString &host, int port)
+void Session::connectToServer(const QString& host, int port = 6667)
 {
     m_host = host;
     m_port = port;
-    m_prefixRules = "o@v+";
+    m_prefixRules = "o@v+"; // TODO: wtf is this
     m_pConn->connectToHost(host.toAscii(), port);
 }
 

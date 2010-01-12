@@ -30,7 +30,7 @@ HEADERS += inc/cv/qext.h \
     inc/cv/gui/ChannelWindow.h \
     inc/cv/gui/ChannelTopicDelegate.h \
     inc/cv/gui/ChannelListWindow.h
-SOURCES += src/main.cpp \
+SOURCES += src/cv/main.cpp \
     src/cv/qext.cpp \
     src/cv/Connection.cpp \
     src/cv/ChannelUser.cpp \

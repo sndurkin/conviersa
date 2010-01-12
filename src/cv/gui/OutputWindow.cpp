@@ -30,6 +30,8 @@ OutputWindow::OutputWindow(const QString &title/* = tr("Untitled")*/,
                            const QSize &size/* = QSize(500, 300)*/)
     : Window(title, size),
       m_defaultFont("Arial", 10)
+      //m_pSharedSession(new Session("conviersa"))
+      // TODO: remove hardcode
 {
     // TODO: Choose an appropriate system default font...
     setFont(m_defaultFont);
@@ -83,7 +85,6 @@ void OutputWindow::printOutput(const QString &text, const QColor &color/* = QCol
         textToPrint.append("</b>");
         QApplication::beep();
     }
-
 
     QRegExp URL("lol(([\\w:]+)[/]{2})?(\\w|.)+");
 
@@ -313,7 +314,8 @@ void OutputWindow::handleInput(const QString &inputText)
             int port = text.section(' ', 2, 2, QString::SectionSkipEmpty).toInt(&ok);
             if(!ok)
             {
-                printError("Invalid port.");
+                //printError("Invalid port.");
+                port = 6667;
             }
             else
             {

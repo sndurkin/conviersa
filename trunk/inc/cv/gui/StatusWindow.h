@@ -59,6 +59,23 @@ public:
     // adds a PM window to the list
     void addQueryWindow(QueryWindow *pPriv);
 
+    // message-related events
+    void onErrorMessage(Event *evt);
+    void onInviteMessage(Event *evt);
+    void onJoinMessage(Event *evt);
+    void onKickMessage(Event *evt);
+    void onModeMessage(Event *evt);
+    void onNickMessage(Event *evt);
+    void onNoticeMessage(Event *evt);
+    void onPartMessage(Event *evt);
+    void onPongMessage(Event *evt);
+    void onPrivmsgMessage(Event *evt);
+    void onQuitMessage(Event *evt);
+    void onTopicMessage(Event *evt);
+    void onWallopsMessage(Event *evt);
+    void onNumericMessage(Event *evt);
+    void onUnknownMessage(Event *evt);
+
 protected:
     void handleTab();
 
@@ -100,23 +117,6 @@ public slots:
     void onServerConnect();
     void onServerDisconnect();
     void onReceiveData(const QString &data);
-    void onReceiveMessage(const Message &msg);
-
-    // message-related slots
-    void onErrorMessage(const Message &msg);
-    void onInviteMessage(const Message &msg);
-    void onJoinMessage(const Message &msg);
-    void onKickMessage(const Message &msg);
-    void onModeMessage(const Message &msg);
-    void onNickMessage(const Message &msg);
-    void onNoticeMessage(const Message &msg);
-    void onPartMessage(const Message &msg);
-    void onPongMessage(const Message &msg);
-    void onPrivmsgMessage(const Message &msg);
-    void onQuitMessage(const Message &msg);
-    void onTopicMessage(const Message &msg);
-    void onWallopsMessage(const Message &msg);
-    void onNumericMessage(const Message &msg);
 
     // removes a channel window from the list
     void removeChannelWindow(ChannelWindow *pChanWin);

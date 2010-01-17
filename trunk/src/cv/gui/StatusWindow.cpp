@@ -40,20 +40,22 @@ StatusWindow::StatusWindow(const QString &title/* = tr("Server Window")*/,
     QObject::connect(m_pSharedSession.data(), SIGNAL(connected()), this, SLOT(onServerConnect()));
     QObject::connect(m_pSharedSession.data(), SIGNAL(disconnected()), this, SLOT(onServerDisconnect()));
     QObject::connect(m_pSharedSession.data(), SIGNAL(dataReceived(QString)), this, SLOT(onReceiveData(QString)));
-    QObject::connect(m_pSharedSession.data(), SIGNAL(dataParsed(Message)), this, SLOT(onReceiveMessage(Message)));
-    QObject::connect(m_pSharedSession.data(), SIGNAL(errorMessage(Message)), this, SLOT(onErrorMessage(Message)));
-    QObject::connect(m_pSharedSession.data(), SIGNAL(inviteMessage(Message)), this, SLOT(onInviteMessage(Message)));
-    QObject::connect(m_pSharedSession.data(), SIGNAL(joinMessage(Message)), this, SLOT(onJoinMessage(Message)));
-    QObject::connect(m_pSharedSession.data(), SIGNAL(modeMessage(Message)), this, SLOT(onModeMessage(Message)));
-    QObject::connect(m_pSharedSession.data(), SIGNAL(nickMessage(Message)), this, SLOT(onNickMessage(Message)));
-    QObject::connect(m_pSharedSession.data(), SIGNAL(noticeMessage(Message)), this, SLOT(onNoticeMessage(Message)));
-    QObject::connect(m_pSharedSession.data(), SIGNAL(partMessage(Message)), this, SLOT(onPartMessage(Message)));
-    QObject::connect(m_pSharedSession.data(), SIGNAL(pongMessage(Message)), this, SLOT(onPongMessage(Message)));
-    QObject::connect(m_pSharedSession.data(), SIGNAL(privmsgMessage(Message)), this, SLOT(onPrivmsgMessage(Message)));
-    QObject::connect(m_pSharedSession.data(), SIGNAL(quitMessage(Message)), this, SLOT(onQuitMessage(Message)));
-    QObject::connect(m_pSharedSession.data(), SIGNAL(topicMessage(Message)), this, SLOT(onTopicMessage(Message)));
-    QObject::connect(m_pSharedSession.data(), SIGNAL(wallopsMessage(Message)), this, SLOT(onWallopsMessage(Message)));
-    QObject::connect(m_pSharedSession.data(), SIGNAL(numericMessage(Message)), this, SLOT(onNumericMessage(Message)));
+
+    EventManager *pEvtMgr = m_pSharedSession->getEventManager();
+    pEvtMgr->HookEvent("onErrorMessage", MakeDelegate(this, &StatusWindow::onErrorMessage));
+    pEvtMgr->HookEvent("onInviteMessage", MakeDelegate(this, &StatusWindow::onInviteMessage));
+    pEvtMgr->HookEvent("onJoinMessage", MakeDelegate(this, &StatusWindow::onJoinMessage));
+    pEvtMgr->HookEvent("onModeMessage", MakeDelegate(this, &StatusWindow::onModeMessage));
+    pEvtMgr->HookEvent("onNickMessage", MakeDelegate(this, &StatusWindow::onNickMessage));
+    pEvtMgr->HookEvent("onNoticeMessage", MakeDelegate(this, &StatusWindow::onNoticeMessage));
+    pEvtMgr->HookEvent("onPartMessage", MakeDelegate(this, &StatusWindow::onPartMessage));
+    pEvtMgr->HookEvent("onPongMessage", MakeDelegate(this, &StatusWindow::onPongMessage));
+    pEvtMgr->HookEvent("onPrivmsgMessage", MakeDelegate(this, &StatusWindow::onPrivmsgMessage));
+    pEvtMgr->HookEvent("onQuitMessage", MakeDelegate(this, &StatusWindow::onQuitMessage));
+    pEvtMgr->HookEvent("onTopicMessage", MakeDelegate(this, &StatusWindow::onTopicMessage));
+    pEvtMgr->HookEvent("onWallopsMessage", MakeDelegate(this, &StatusWindow::onWallopsMessage));
+    pEvtMgr->HookEvent("onNumericMessage", MakeDelegate(this, &StatusWindow::onNumericMessage));
+    pEvtMgr->HookEvent("onUnknownMessage", MakeDelegate(this, &StatusWindow::onUnknownMessage));
 }
 
 StatusWindow::~StatusWindow()
@@ -83,13 +85,6 @@ void StatusWindow::onReceiveData(const QString &data)
     blah.remove(blah.size()-2,2);
     printDebug(blah);
 #endif
-}
-
-void StatusWindow::onReceiveMessage(const Message &msg)
-{
-    // print the whole raw line
-    //printOutput(data);
-    // todo: decide what to do here
 }
 
 // returns a pointer to the OutputWindow if it exists
@@ -548,8 +543,9 @@ void StatusWindow::handle401Numeric(const Message &msg)
     }
 }
 
-void StatusWindow::onNumericMessage(const Message &msg)
+void StatusWindow::onNumericMessage(Event *evt)
 {
+    Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
     switch(msg.m_command)
     {
         case 1:
@@ -582,37 +578,37 @@ void StatusWindow::onNumericMessage(const Message &msg)
 
             break;
         }
-        // RPL_isON
+        // RPL_ISON
         case 303:
         {
 
             break;
         }*/
-        // RPL_WHOisIDLE
+        // RPL_WHOISIDLE
         case 317:
         {
             handle317Numeric(msg);
             break;
         }
-        // RPL_LisTSTART
+        // RPL_LISTSTART
         case 321:
         {
             handle321Numeric(msg);
             break;
         }
-        // RPL_LisT
+        // RPL_LIST
         case 322:
         {
             handle322Numeric(msg);
             break;
         }
-        // RPL_LisTEND
+        // RPL_LISTEND
         case 323:
         {
             handle323Numeric(msg);
             break;
         }
-        // RPL_WHOisACCOUNT
+        // RPL_WHOISACCOUNT
         case 330:
         {
             handle330Numeric(msg);
@@ -669,21 +665,24 @@ void StatusWindow::onNumericMessage(const Message &msg)
     }
 }
 
-void StatusWindow::onErrorMessage(const Message &msg)
+void StatusWindow::onErrorMessage(Event *evt)
 {
+    Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
     printOutput(msg.m_params[0]);
 }
 
-void StatusWindow::onInviteMessage(const Message &msg)
+void StatusWindow::onInviteMessage(Event *evt)
 {
+    Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
     QString textToPrint = QString("* %1 has invited you to %2")
                 .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName))
                 .arg(msg.m_params[1]);
     printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "invite")));
 }
 
-void StatusWindow::onJoinMessage(const Message &msg)
+void StatusWindow::onJoinMessage(Event *evt)
 {
+    Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
     ChannelWindow *pChanWin = dynamic_cast<ChannelWindow *>(getChildIrcWindow(msg.m_params[0]));
     QString textToPrint = "* ";
 
@@ -730,8 +729,9 @@ void StatusWindow::onJoinMessage(const Message &msg)
         printError("Pointer to channel window is invalid. This path should not have been reached.");
 }
 
-void StatusWindow::onKickMessage(const Message &msg)
+void StatusWindow::onKickMessage(Event *evt)
 {
+    Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
     ChannelWindow *pChanWin = dynamic_cast<ChannelWindow *>(getChildIrcWindow(msg.m_params[0]));
     if(!pChanWin)
         return;
@@ -771,8 +771,9 @@ void StatusWindow::onKickMessage(const Message &msg)
     pChanWin->printOutput(textToPrint, kickColor);
 }
 
-void StatusWindow::onModeMessage(const Message &msg)
+void StatusWindow::onModeMessage(Event *evt)
 {
+    Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
     QString textToPrint = QString("* %1 has set mode: ").arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName));
 
     // ignore first parameter
@@ -845,8 +846,9 @@ void StatusWindow::onModeMessage(const Message &msg)
     }
 }
 
-void StatusWindow::onNickMessage(const Message &msg)
+void StatusWindow::onNickMessage(Event *evt)
 {
+    Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
     // update the user's nickname if he's the one changing it
     QString oldNick = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
     bool isMyNick = (oldNick.compare(m_pSharedSession->getNick(), Qt::CaseSensitive) == 0);
@@ -892,8 +894,9 @@ void StatusWindow::onNickMessage(const Message &msg)
     }
 }
 
-void StatusWindow::onNoticeMessage(const Message &msg)
+void StatusWindow::onNoticeMessage(Event *evt)
 {
+    Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
     QString source;
     if(!msg.m_prefix.isEmpty())
     {
@@ -913,8 +916,9 @@ void StatusWindow::onNoticeMessage(const Message &msg)
     printOutput(textToPrint, noticeColor);
 }
 
-void StatusWindow::onPartMessage(const Message &msg)
+void StatusWindow::onPartMessage(Event *evt)
 {
+    Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
     ChannelWindow *pChanWin = dynamic_cast<ChannelWindow *>(getChildIrcWindow(msg.m_params[0]));
     if(!pChanWin)
     {
@@ -958,8 +962,9 @@ void StatusWindow::onPartMessage(const Message &msg)
     pChanWin->printOutput(textToPrint, partColor);
 }
 
-void StatusWindow::onPongMessage(const Message &msg)
+void StatusWindow::onPongMessage(Event *evt)
 {
+    Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
     // the prefix is used to determine the server that
     // sends the PONG rather than the first parameter,
     // because it will always have the server in it
@@ -973,8 +978,9 @@ void StatusWindow::onPongMessage(const Message &msg)
     printOutput(textToPrint);
 }
 
-void StatusWindow::onPrivmsgMessage(const Message &msg)
+void StatusWindow::onPrivmsgMessage(Event *evt)
 {
+    Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
     CtcpRequestType requestType = getCtcpRequestType(msg);
     QString user = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
 
@@ -1077,8 +1083,9 @@ void StatusWindow::onPrivmsgMessage(const Message &msg)
     }
 }
 
-void StatusWindow::onQuitMessage(const Message &msg)
+void StatusWindow::onQuitMessage(Event *evt)
 {
+    Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
     QString user = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
     QString textToPrint = QString("* %1 (%2) has quit")
                             .arg(user)
@@ -1119,8 +1126,9 @@ void StatusWindow::onQuitMessage(const Message &msg)
     }
 }
 
-void StatusWindow::onTopicMessage(const Message &msg)
+void StatusWindow::onTopicMessage(Event *evt)
 {
+    Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
     OutputWindow *pChanWin = dynamic_cast<ChannelWindow *>(getChildIrcWindow(msg.m_params[0]));
     if(pChanWin)
     {
@@ -1141,12 +1149,21 @@ void StatusWindow::onTopicMessage(const Message &msg)
     }
 }
 
-void StatusWindow::onWallopsMessage(const Message &msg)
+void StatusWindow::onWallopsMessage(Event *evt)
 {
+    Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
     QString textToPrint = QString("* WALLOPS from %1: %2")
                 .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName))
                 .arg(msg.m_params[0]);
     printOutput(textToPrint);
+}
+
+void StatusWindow::onUnknownMessage(Event *evt)
+{
+    Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
+    // print the whole raw line
+    //printOutput(data);
+    // todo: decide what to do here
 }
 
 } } // end namespaces

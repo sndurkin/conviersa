@@ -13,8 +13,21 @@
 #include <QSharedData>
 #include "cv/Connection.h"
 #include "cv/Parser.h"
+#include "cv/EventManager.h"
 
 namespace cv {
+
+class MessageEvent : public Event
+{
+    Message m_msg;
+
+public:
+    MessageEvent(const Message &msg)
+      : m_msg(msg)
+    { }
+
+    Message getMessage() { return m_msg; }
+};
 
 // this class provides the entire interface to an IRC server
 class Session : public QObject, public QSharedData
@@ -36,7 +49,7 @@ public:
     void setNick(const QString &nick) { m_nick = nick; }
     QString getNick() { return m_nick; }
 
-    Connection *getConnectionPtr() { return m_pConn; }
+    EventManager *getEventManager() { return m_pEvtMgr; }
 
     // sets the prefix rules supported by the server
     void setPrefixRules(const QString &prefixRules);
@@ -74,7 +87,7 @@ public:
     bool isNickPrefix(const QChar &prefix);
 
     // handles the preliminary processing for all messages;
-    // this will emit signals for specific message types, and store
+    // this will fire events for specific message types, and store
     // some information as a result of others (like numerics)
     void processMessage(const Message &msg);
 
@@ -83,23 +96,6 @@ signals:
     void connected();
     void disconnected();
     void dataReceived(const QString &data);
-    void dataParsed(const Message &msg);
-
-    // these are individual signals for each specific message
-    void errorMessage(const Message &msg);
-    void inviteMessage(const Message &msg);
-    void joinMessage(const Message &msg);
-    void kickMessage(const Message &msg);
-    void modeMessage(const Message &msg);
-    void nickMessage(const Message &msg);
-    void noticeMessage(const Message &msg);
-    void partMessage(const Message &msg);
-    void pongMessage(const Message &msg);
-    void privmsgMessage(const Message &msg);
-    void quitMessage(const Message &msg);
-    void topicMessage(const Message &msg);
-    void wallopsMessage(const Message &msg);
-    void numericMessage(const Message &msg);
 
 //    // when you are identified on the server
 //    void onIdentify();
@@ -128,37 +124,40 @@ public slots:
 
 private:
     // stores the user's nickname
-    QString     m_nick;
+    QString         m_nick;
 
     // the actual connection to the server
-    Connection *m_pConn;
+    Connection *    m_pConn;
+
+    // event manager for the session object
+    EventManager *  m_pEvtMgr;
 
     // stores the name of the host that we are connected to
-    QString     m_host;
+    QString         m_host;
 
     // stores the port number of the server we're connected to
-    int         m_port;
+    int             m_port;
 
     // format: <mode1><prefix1><mode2><prefix2>[<mode3><prefix3>] ...
     // default value: o@v+
-    QString     m_prefixRules;
+    QString         m_prefixRules;
 
     // this comes from the 005 numeric, CHANMODES, which specifies
     // which channel modes the server supports, and which ones take
     // a parameter and which don't
     //
     // format: typeA,typeB,typeC,typeD
-    QString     m_chanModes;
+    QString         m_chanModes;
 
     // this comes from the 005 numeric, MODES, which dictates
     // the maximum number of modes with parameters that may be set with
     // one message
-    int         m_modeNum;
+    int             m_modeNum;
 
     // this acts as a more persistent buffer for receiving data from
     // the Connection object, so that it can be separated by '\n' and
     // then parsed
-    QString     m_prevData;
+    QString         m_prevData;
 };
 
 } // end namespace

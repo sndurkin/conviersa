@@ -14,6 +14,7 @@ HEADERS += inc/cv/qext.h \
     inc/cv/Parser.h \
     inc/cv/ConfigOption.h \
     inc/cv/ConfigManager.h \
+    inc/cv/FastDelegate.h \
     inc/cv/gui/definitions.h \
     inc/cv/gui/Client.h \
     inc/cv/gui/Window.h \
@@ -29,7 +30,8 @@ HEADERS += inc/cv/qext.h \
     inc/cv/gui/QueryWindow.h \
     inc/cv/gui/ChannelWindow.h \
     inc/cv/gui/ChannelTopicDelegate.h \
-    inc/cv/gui/ChannelListWindow.h
+    inc/cv/gui/ChannelListWindow.h \
+    inc/cv/EventManager.h
 SOURCES += src/cv/main.cpp \
     src/cv/qext.cpp \
     src/cv/Connection.cpp \
@@ -50,4 +52,5 @@ SOURCES += src/cv/main.cpp \
     src/cv/gui/QueryWindow.cpp \
     src/cv/gui/ChannelWindow.cpp \
     src/cv/gui/ChannelTopicDelegate.cpp \
-    src/cv/gui/ChannelListWindow.cpp
+    src/cv/gui/ChannelListWindow.cpp \
+    src/cv/EventManager.cpp

@@ -21,6 +21,23 @@ Session::Session(const QString& nick)
     QObject::connect(m_pConn, SIGNAL(disconnected()), this, SLOT(onDisconnect()));
     QObject::connect(m_pConn, SIGNAL(dataReceived(QString)), this, SIGNAL(dataReceived(QString)));
     QObject::connect(m_pConn, SIGNAL(dataReceived(QString)), this, SLOT(onReceiveData(QString)));
+
+    m_pEvtMgr = new EventManager;
+    m_pEvtMgr->CreateEvent("onErrorMessage");
+    m_pEvtMgr->CreateEvent("onInviteMessage");
+    m_pEvtMgr->CreateEvent("onJoinMessage");
+    m_pEvtMgr->CreateEvent("onKickMessage");
+    m_pEvtMgr->CreateEvent("onModeMessage");
+    m_pEvtMgr->CreateEvent("onNickMessage");
+    m_pEvtMgr->CreateEvent("onNoticeMessage");
+    m_pEvtMgr->CreateEvent("onPartMessage");
+    m_pEvtMgr->CreateEvent("onPongMessage");
+    m_pEvtMgr->CreateEvent("onPrivmsgMessage");
+    m_pEvtMgr->CreateEvent("onQuitMessage");
+    m_pEvtMgr->CreateEvent("onTopicMessage");
+    m_pEvtMgr->CreateEvent("onWallopsMessage");
+    m_pEvtMgr->CreateEvent("onNumericMessage");
+    m_pEvtMgr->CreateEvent("onUnknownMessage");
 }
 
 Session::~Session()
@@ -38,7 +55,7 @@ void Session::connectToServer(const QString& host, int port = 6667)
     // a server does not send explicit prefix rules to the Session
     //
     // for more info see the definition in Session.h
-    m_prefixRules = "o@v+"; // TODO: wtf is this
+    m_prefixRules = "o@v+";
 
     m_pConn->connectToHost(host.toAscii(), port);
 }
@@ -148,64 +165,67 @@ bool Session::isNickPrefix(const QChar &prefix)
 }
 
 // handles the preliminary processing for all messages;
-// this will emit signals for specific message types, and store
+// this will fire events for specific message types, and store
 // some information as a result of others (like numerics)
 void Session::processMessage(const Message &msg)
 {
+    Event *evt = new MessageEvent(msg);
     if(msg.m_isNumeric)
     {
-        emit numericMessage(msg);
+        m_pEvtMgr->FireEvent("onNumericMessage", evt);
     }
     else
     {
         switch(msg.m_command)
         {
             case IRC_COMMAND_ERROR:
-                emit errorMessage(msg);
+                m_pEvtMgr->FireEvent("onErrorMessage", evt);
                 break;
             case IRC_COMMAND_INVITE:
-                emit inviteMessage(msg);
+                m_pEvtMgr->FireEvent("onInviteMessage", evt);
                 break;
             case IRC_COMMAND_JOIN:
-                emit joinMessage(msg);
+                m_pEvtMgr->FireEvent("onJoinMessage", evt);
                 break;
             case IRC_COMMAND_KICK:
-                emit kickMessage(msg);
+                m_pEvtMgr->FireEvent("onKickMessage", evt);
                 break;
             case IRC_COMMAND_MODE:
-                emit modeMessage(msg);
+                m_pEvtMgr->FireEvent("onModeMessage", evt);
                 break;
             case IRC_COMMAND_NICK:
-                emit nickMessage(msg);
+                m_pEvtMgr->FireEvent("onNickMessage", evt);
                 break;
             case IRC_COMMAND_NOTICE:
-                emit noticeMessage(msg);
+                m_pEvtMgr->FireEvent("onNoticeMessage", evt);
                 break;
             case IRC_COMMAND_PART:
-                emit partMessage(msg);
+                m_pEvtMgr->FireEvent("onPartMessage", evt);
                 break;
             case IRC_COMMAND_PING:
                 sendData("PONG :" + msg.m_params[0]);
                 break;
             case IRC_COMMAND_PONG:
-                emit pongMessage(msg);
+                m_pEvtMgr->FireEvent("onPongMessage", evt);
                 break;
             case IRC_COMMAND_PRIVMSG:
-                emit privmsgMessage(msg);
+                m_pEvtMgr->FireEvent("onPrivmsgMessage", evt);
                 break;
             case IRC_COMMAND_QUIT:
-                emit quitMessage(msg);
+                m_pEvtMgr->FireEvent("onQuitMessage", evt);
                 break;
             case IRC_COMMAND_TOPIC:
-                emit topicMessage(msg);
+                m_pEvtMgr->FireEvent("onTopicMessage", evt);
                 break;
             case IRC_COMMAND_WALLOPS:
-                emit wallopsMessage(msg);
+                m_pEvtMgr->FireEvent("onWallopsMessage", evt);
                 break;
             default:
-                emit dataParsed(msg);
+                m_pEvtMgr->FireEvent("onUnknownMessage", evt);
         }
     }
+
+    delete evt;
 }
 
 void Session::onConnect()

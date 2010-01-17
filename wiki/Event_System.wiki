@@ -8,4 +8,4 @@ The problem is that we don't have enough control over the system, because there 
 
 http://imgur.com/VjocC.png
 
-This will allow plugins to override default functionality of the base client easily, by returning a value that aborts the rest of the hook chain. It also allows plugins to see the information before the base client, so that they can modify it before it trickles down to the default event handling.
+This will allow plugins to override default functionality of the base client easily, by returning a value that aborts the rest of the hook chain. It also allows plugins to see the information before the base client, so that they can modify it before it trickles down to the default event handling (which is any handling inside the main app).

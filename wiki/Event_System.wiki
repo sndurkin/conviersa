@@ -1,0 +1,11 @@
+#summary explanation of the move from signals/slots to a custom event system
+
+What we currently have is the Qt signals/slots system, which looks something like this:
+
+http://imgur.com/GYgvE.png
+
+The problem is that we don't have enough control over the system, because there are no return values, and there is no way to really control the chain of functions. So, we'll be using a custom event system that looks something like this:
+
+http://imgur.com/ubD64.png
+
+This will allow plugins to override default functionality of the base client easily, by returning a value that aborts the rest of the hook chain. It also allows plugins to see the information before the base client, so that they can modify it before it trickles down to the default event handling.

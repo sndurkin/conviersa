@@ -95,10 +95,6 @@ public slots:
     // text always starts at the bottom of the screen
     // (for the user)
     //void resizeTopMargin();
-
-    virtual void onServerConnect() = 0;
-    virtual void onServerDisconnect() = 0;
-    virtual void onReceiveMessage(const Message &msg) = 0;
 };
 
 //-----------------------------------//

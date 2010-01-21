@@ -14,6 +14,7 @@
 #include "cv/ChannelUser.h"
 #include "cv/Session.h"
 #include "cv/Connection.h"
+#include "cv/ConfigManager.h"
 #include "cv/gui/types.h"
 #include "cv/gui/WindowManager.h"
 #include "cv/gui/ChannelWindow.h"
@@ -55,8 +56,9 @@ ChannelWindow::ChannelWindow(QExplicitlySharedDataPointer<Session> pSharedSessio
 
     setLayout(m_pVLayout);
 
-    QObject::connect(m_pSharedSession.data(), SIGNAL(connected()), this, SLOT(onServerConnect()));
-    QObject::connect(m_pSharedSession.data(), SIGNAL(disconnected()), this, SLOT(onServerDisconnect()));
+    m_pSharedSession->getEventManager()->HookEvent("onNumericMessage", MakeDelegate(this, &ChannelWindow::onNumericMessage));
+    //QObject::connect(m_pSharedSession.data(), SIGNAL(connected()), this, SLOT(onServerConnect()));
+    //QObject::connect(m_pSharedSession.data(), SIGNAL(disconnected()), this, SLOT(onServerDisconnect()));
     //QObject::connect(m_pSharedSession.data(), SIGNAL(dataParsed(Message)), this, SLOT(onReceiveMessage(Message)));
 }
 
@@ -191,6 +193,51 @@ void ChannelWindow::removePrefixFromUser(const QString &user, const QChar &prefi
     }
 }
 
+void ChannelWindow::onNumericMessage(Event *evt)
+{
+    Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
+    switch(msg.m_command)
+    {
+        // RPL_TOPIC
+        case 332:
+        {
+            // msg.m_params[0]: my nick
+            // msg.m_params[1]: channel
+            // msg.m_params[2]: topic
+            if(msg.m_params[1].compare(getWindowName(), Qt::CaseInsensitive) == 0)
+            {
+                QString titleWithTopic = QString("%1: %2")
+                                         .arg(getWindowName())
+                                         .arg(stripCodes(msg.m_params[2]));
+                setTitle(titleWithTopic);
+
+                QColor topicColor(g_pCfgManager->getOptionValue("colors.ini", "topic"));
+                QString textToPrint = QString("* Topic is: %1").arg(msg.m_params[2]);
+                printOutput(textToPrint, topicColor);
+            }
+
+            break;
+        }
+        case 333:
+        {
+            // msg.m_params[0]: my nick
+            // msg.m_params[1]: channel
+            // msg.m_params[2]: nick
+            // msg.m_params[3]: unix time
+            if(msg.m_params[1].compare(getWindowName(), Qt::CaseInsensitive) == 0)
+            {
+                QString textToPrint = QString("* Topic set by %1 on %2 %3")
+                                      .arg(msg.m_params[2])
+                                      .arg(getDate(msg.m_params[3]))
+                                      .arg(getTime(msg.m_params[3]));
+                printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "topic")));
+            }
+
+            break;
+        }
+    }
+}
+
 void ChannelWindow::handleTab()
 {
     QString text = getInputText();
@@ -317,7 +364,7 @@ ChannelUser *ChannelWindow::findUser(const QString &user)
 
     return NULL;
 }
-
+/*
 void ChannelWindow::onServerConnect() { }
 
 void ChannelWindow::onServerDisconnect()
@@ -327,5 +374,5 @@ void ChannelWindow::onServerDisconnect()
 }
 
 void ChannelWindow::onReceiveMessage(const Message &msg) { }
-
+*/
 } } // end namespaces

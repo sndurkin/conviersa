@@ -37,11 +37,10 @@ StatusWindow::StatusWindow(const QString &title/* = tr("Server Window")*/,
     setLayout(m_pVLayout);
 
     m_pSharedSession = new Session("conviersa");
-    QObject::connect(m_pSharedSession.data(), SIGNAL(connected()), this, SLOT(onServerConnect()));
-    QObject::connect(m_pSharedSession.data(), SIGNAL(disconnected()), this, SLOT(onServerDisconnect()));
-    QObject::connect(m_pSharedSession.data(), SIGNAL(dataReceived(QString)), this, SLOT(onReceiveData(QString)));
-
     EventManager *pEvtMgr = m_pSharedSession->getEventManager();
+    pEvtMgr->HookEvent("onConnect", MakeDelegate(this, &StatusWindow::onServerConnect));
+    pEvtMgr->HookEvent("onDisconnect", MakeDelegate(this, &StatusWindow::onServerDisconnect));
+    pEvtMgr->HookEvent("onReceiveData", MakeDelegate(this, &StatusWindow::onReceiveData));
     pEvtMgr->HookEvent("onErrorMessage", MakeDelegate(this, &StatusWindow::onErrorMessage));
     pEvtMgr->HookEvent("onInviteMessage", MakeDelegate(this, &StatusWindow::onInviteMessage));
     pEvtMgr->HookEvent("onJoinMessage", MakeDelegate(this, &StatusWindow::onJoinMessage));
@@ -67,24 +66,6 @@ StatusWindow::~StatusWindow()
 int StatusWindow::getIrcWindowType()
 {
     return IRC_STATUS_WIN_TYPE;
-}
-
-void StatusWindow::onServerConnect() { }
-
-void StatusWindow::onServerDisconnect()
-{
-    printOutput("* Disconnected");
-    setTitle("Server Window");
-    setWindowName("Server Window");
-}
-
-void StatusWindow::onReceiveData(const QString &data)
-{
-#if DEBUG_MESSAGES
-    QString blah = data;
-    blah.remove(blah.size()-2,2);
-    printDebug(blah);
-#endif
 }
 
 // returns a pointer to the OutputWindow if it exists
@@ -175,184 +156,6 @@ bool StatusWindow::eventFilter(QObject *obj, QEvent *event)
     return OutputWindow::eventFilter(obj, event);
 }
 
-void StatusWindow::handle001Numeric(const Message &msg)
-{
-    // msg.m_params[0]: my nick
-    // msg.m_params[1]: "Welcome to the <server name> IRC Network, <nick>[!user@host]"
-    //
-    // check to make sure nickname hasn't changed; some or all servers apparently don't
-    // send you a NICK message when your nickname conflicts with another user upon
-    // first entering the server, and you try to change it
-    if(m_pSharedSession->getNick().compare(msg.m_params[0], Qt::CaseInsensitive) != 0)
-    {
-        m_pSharedSession->setNick(msg.m_params[0]);
-    }
-
-    QString header = "Welcome to the ";
-    if(msg.m_params[1].startsWith(header, Qt::CaseInsensitive))
-    {
-        int idx = msg.m_params[1].indexOf(' ', header.size(), Qt::CaseInsensitive);
-        if(idx >= 0)
-        {
-            // change name of the window to the name of the network
-            QString networkName = msg.m_params[1].mid(header.size(), idx - header.size());
-            setTitle(networkName);
-            setWindowName(networkName);
-        }
-    }
-}
-
-void StatusWindow::handle002Numeric(const Message &msg)
-{
-    // msg.m_params[0]: my nick
-    // msg.m_params[1]: "Your host is ..."
-    QString header = "Your host is ";
-    QString hostStr = msg.m_params[1].section(',', 0, 0);
-    if(hostStr.startsWith(header))
-    {
-        m_pSharedSession->setHost(hostStr.mid(header.size()));
-    }
-}
-
-void StatusWindow::handle005Numeric(const Message &msg)
-{
-    // we only go to the second-to-last parameter,
-    // because the last parameter holds "are supported
-    // by this server"
-    for(int i = 1; i < msg.m_paramsNum-1; ++i)
-    {
-        if(msg.m_params[i].startsWith("PREFIX=", Qt::CaseInsensitive))
-        {
-            m_pSharedSession->setPrefixRules(getPrefixRules(msg.m_params[i]));
-        }
-        else if(msg.m_params[i].compare("NAMESX", Qt::CaseInsensitive) == 0)
-        {
-            // lets the server know we support multiple nick prefixes
-            //
-            // todo: UHNAMES?
-            m_pSharedSession->sendData("PROTOCTL NAMESX");
-        }
-        else if(msg.m_params[i].startsWith("CHANMODES=", Qt::CaseInsensitive))
-        {
-            m_pSharedSession->setChanModes(msg.m_params[i].section('=', 1));
-        }
-    }
-}
-
-void StatusWindow::handle301Numeric(const Message &msg)
-{
-    // msg.m_params[0]: my nick
-    // msg.m_params[1]: nick
-    // msg.m_params[2]: away message
-        QString textToPrint = QString("%1 is away: %2")
-                                .arg(msg.m_params[1])
-                                .arg(convertDataToHtml(msg.m_params[2]));
-    printOutput(textToPrint);
-}
-
-void StatusWindow::handle317Numeric(const Message &msg)
-{
-    // msg.m_params[0]: my nick
-    // msg.m_params[1]: nick
-    // msg.m_params[2]: seconds
-    // two options here:
-        //	1)      msg.m_params[3]: "seconds idle"
-        //	2)      msg.m_params[3]: unix time
-    //		msg.m_params[4]: "seconds idle, signon time"
-
-    // get the number of idle seconds first, convert
-    // to h, m, s format
-    bool conversionOk;
-    uint numSecs = msg.m_params[2].toInt(&conversionOk);
-    if(conversionOk)
-    {
-        QString textToPrint = QString("%1 has been idle ").arg(msg.m_params[1]);
-
-        // 24 * 60 * 60 = 86400
-        uint numDays = numSecs / 86400;
-        if(numDays)
-        {
-            textToPrint += QString::number(numDays);
-            if(numDays == 1)
-            {
-                textToPrint += "day ";
-            }
-            else
-            {
-                textToPrint += "days ";
-            }
-            numSecs = numSecs % 86400;
-        }
-
-        // 60 * 60 = 3600
-        uint numHours = numSecs / 3600;
-        if(numHours)
-        {
-            textToPrint += QString::number(numHours);
-            if(numHours == 1)
-            {
-                textToPrint += "hr ";
-            }
-            else
-            {
-                textToPrint += "hrs ";
-            }
-            numSecs = numSecs % 3600;
-        }
-
-        uint numMinutes = numSecs / 60;
-        if(numMinutes)
-        {
-            textToPrint += QString::number(numMinutes);
-            if(numMinutes == 1)
-            {
-                textToPrint += "min ";
-            }
-            else
-            {
-                textToPrint += "mins ";
-            }
-            numSecs = numSecs % 60;
-        }
-
-        if(numSecs)
-        {
-            textToPrint += QString::number(numSecs);
-            if(numSecs == 1)
-            {
-                textToPrint += "sec ";
-            }
-            else
-            {
-                textToPrint += "secs ";
-            }
-        }
-
-        // remove trailing space
-        textToPrint.remove(textToPrint.size()-1, 1);
-
-        // right now this will only support 5 parameters
-        // (1 extra for the signon time), but i can easily
-        // add support for more later
-        if(msg.m_paramsNum > 4)
-        {
-            uint uTime = msg.m_params[3].toInt(&conversionOk);
-            if(conversionOk)
-            {
-                QDateTime dt;
-                dt.setTime_t(uTime);
-
-                QString strDate = dt.toString("ddd MMM dd");
-                QString strTime = dt.toString("hh:mm:ss");
-
-                textToPrint += QString(", signed on %1 %2").arg(strDate).arg(strTime);
-            }
-        }
-
-        printOutput(textToPrint);
-    }
-}
-
 void StatusWindow::handle321Numeric(const Message &msg)
 {
     if(!m_pChanListWin)
@@ -408,80 +211,6 @@ void StatusWindow::handle323Numeric(const Message &msg)
     m_sentListStopMsg = false;
 }
 
-void StatusWindow::handle330Numeric(const Message &msg)
-{
-    // msg.m_params[0]: my nick
-    // msg.m_params[1]: nick
-    // msg.m_params[2]: login/auth
-    // msg.m_params[3]: "is logged in as"
-    QString textToPrint = QString("%1 %2: %3").arg(msg.m_params[1])
-                                .arg(msg.m_params[3])
-                                .arg(msg.m_params[2]);
-    printOutput(textToPrint);
-}
-
-void StatusWindow::handle332Numeric(const Message &msg)
-{
-    // msg.m_params[0]: my nick
-    // msg.m_params[1]: channel
-    // msg.m_params[2]: topic
-    OutputWindow *pChanWin = getChildIrcWindow(msg.m_params[1]);
-    if(pChanWin)
-    {
-        QString titleWithTopic = QString("%1: %2").arg(pChanWin->getWindowName())
-                                    .arg(stripCodes(msg.m_params[2]));
-        pChanWin->setTitle(titleWithTopic);
-
-        QColor topicColor(g_pCfgManager->getOptionValue("colors.ini", "topic"));
-        QString textToPrint = QString("* Topic is: %1").arg(msg.m_params[2]);
-        pChanWin->printOutput(textToPrint, topicColor);
-    }
-    else
-    {
-        printOutput(getNumericText(msg));
-    }
-}
-
-void StatusWindow::handle333Numeric(const Message &msg)
-{
-    // msg.m_params[0]: my nick
-    // msg.m_params[1]: channel
-    // msg.m_params[2]: nick
-    // msg.m_params[3]: unix time
-    OutputWindow *pChanWin = getChildIrcWindow(msg.m_params[1]);
-
-    bool conversionOk;
-    uint uTime = msg.m_params[3].toInt(&conversionOk);
-    if(conversionOk)
-    {
-        QDateTime dt;
-        dt.setTime_t(uTime);
-        QString strDate = dt.toString("ddd MMM dd");
-        QString strTime = dt.toString("hh:mm:ss");
-
-        QString textToPrint;
-        if(pChanWin)
-        {
-            textToPrint += "* Topic set by ";
-        }
-        else
-        {
-            textToPrint += QString("%1 topic set by ").arg(msg.m_params[1]);
-        }
-
-        textToPrint += QString("%1 on %2 %3").arg(msg.m_params[2]).arg(strDate).arg(strTime);
-
-        if(pChanWin)
-        {
-            pChanWin->printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "topic")));
-        }
-        else
-        {
-            printOutput(textToPrint);
-        }
-    }
-}
-
 void StatusWindow::handle353Numeric(const Message &msg)
 {
     // msg.m_params[0]: my nick
@@ -526,21 +255,22 @@ void StatusWindow::handle366Numeric(const Message &msg)
     }
 }
 
-// covers both 401 and 404 numerics
-void StatusWindow::handle401Numeric(const Message &msg)
+void StatusWindow::onServerConnect(Event *evt) { }
+
+void StatusWindow::onServerDisconnect(Event *evt)
 {
-    // msg.m_params[0]: my nick
-    // msg.m_params[1]: nick/channel
-    // msg.m_params[2]: "No such nick/channel"
-    OutputWindow *pPrivWin = getChildIrcWindow(msg.m_params[1]);
-    if(pPrivWin)
-    {
-        pPrivWin->printOutput(getNumericText(msg));
-    }
-    else
-    {
-        printOutput(getNumericText(msg));
-    }
+    printOutput("* Disconnected");
+    setTitle("Server Window");
+    setWindowName("Server Window");
+}
+
+void StatusWindow::onReceiveData(Event *evt)
+{
+#if DEBUG_MESSAGES
+    QString data = dynamic_cast<DataEvent *>(evt)->getData();
+    data.remove(data.size()-2,2);
+    printDebug(data);
+#endif
 }
 
 void StatusWindow::onNumericMessage(Event *evt)
@@ -550,26 +280,24 @@ void StatusWindow::onNumericMessage(Event *evt)
     {
         case 1:
         {
-            handle001Numeric(msg);
-            printOutput(getNumericText(msg));
-            break;
-        }
-        case 2:
-        {
-            handle002Numeric(msg);
-            printOutput(getNumericText(msg));
-            break;
-        }
-        case 5:
-        {
-            handle005Numeric(msg);
-            printOutput(getNumericText(msg));
+            // change name of the window to the name of the network
+            QString networkName = getNetworkNameFrom001(msg);
+            setTitle(networkName);
+            setWindowName(networkName);
+
             break;
         }
         // RPL_AWAY
         case 301:
         {
-            handle301Numeric(msg);
+            // msg.m_params[0]: my nick
+            // msg.m_params[1]: nick
+            // msg.m_params[2]: away message
+            QString textToPrint = QString("%1 is away: %2")
+                                  .arg(msg.m_params[1])
+                                  .arg(convertDataToHtml(msg.m_params[2]));
+            printOutput(textToPrint);
+
             break;
         }
         /*// RPL_USERHOST
@@ -587,7 +315,10 @@ void StatusWindow::onNumericMessage(Event *evt)
         // RPL_WHOISIDLE
         case 317:
         {
-            handle317Numeric(msg);
+            QString textToPrint = QString("%1 has been idle %2")
+                                  .arg(msg.m_params[1])
+                                  .arg(getIdleTextFrom317(msg));
+            printOutput(textToPrint);
             break;
         }
         // RPL_LISTSTART
@@ -611,19 +342,46 @@ void StatusWindow::onNumericMessage(Event *evt)
         // RPL_WHOISACCOUNT
         case 330:
         {
-            handle330Numeric(msg);
+            // msg.m_params[0]: my nick
+            // msg.m_params[1]: nick
+            // msg.m_params[2]: login/auth
+            // msg.m_params[3]: "is logged in as"
+            QString textToPrint = QString("%1 %2: %3")
+                                  .arg(msg.m_params[1])
+                                  .arg(msg.m_params[3])
+                                  .arg(msg.m_params[2]);
+            printOutput(textToPrint);
             break;
         }
         // RPL_TOPIC
         case 332:
         {
-            handle332Numeric(msg);
+            // msg.m_params[0]: my nick
+            // msg.m_params[1]: channel
+            // msg.m_params[2]: topic
+            if(getChildIrcWindow(msg.m_params[1]) == NULL)
+            {
+                printOutput(getNumericText(msg));
+            }
             break;
         }
         // states when topic was last set
         case 333:
         {
-            handle333Numeric(msg);
+            // msg.m_params[0]: my nick
+            // msg.m_params[1]: channel
+            // msg.m_params[2]: nick
+            // msg.m_params[3]: unix time
+            if(getChildIrcWindow(msg.m_params[1]) == NULL)
+            {
+                QString textToPrint = QString("%1 topic set by %2 on %3 %4")
+                                      .arg(msg.m_params[1])
+                                      .arg(msg.m_params[2])
+                                      .arg(getDate(msg.m_params[3]))
+                                      .arg(getTime(msg.m_params[3]));
+                printOutput(textToPrint);
+            }
+
             break;
         }
         // RPL_NAMREPLY
@@ -638,17 +396,16 @@ void StatusWindow::onNumericMessage(Event *evt)
             handle366Numeric(msg);
             break;
         }
-        // ERR_NOSUCKNICK
-        case 401:
+        case 401:   // ERR_NOSUCKNICK
+        case 404:   // ERR_CANNOTSENDTOCHAN
         {
-            handle401Numeric(msg);
-            break;
-        }
-        // ERR_CANNOTSENDTOCHAN
-        case 404:
-        {
-            // handles 404 numeric messages too
-            handle401Numeric(msg);
+            // msg.m_params[0]: my nick
+            // msg.m_params[1]: nick/channel
+            // msg.m_params[2]: "No such nick/channel"
+            if(getChildIrcWindow(msg.m_params[1]) == NULL)
+            {
+                printOutput(getNumericText(msg));
+            }
             break;
         }
         default:

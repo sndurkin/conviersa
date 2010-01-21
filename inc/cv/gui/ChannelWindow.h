@@ -85,6 +85,9 @@ public:
     // returns the number of users currently in the channel
     int getUserCount() { return m_users.size(); }
 
+    // events
+    void onNumericMessage(Event *evt);
+
 protected:
     void handleTab();
     void closeEvent(QCloseEvent *event);
@@ -107,11 +110,6 @@ signals:
     // signifies that the window is closing - this is *only*
     // for IrcStatusWindow to use
     void chanWindowClosing(ChannelWindow *pWin);
-
-public slots:
-    void onServerConnect();
-    void onServerDisconnect();
-    void onReceiveMessage(const Message &msg);
 };
 
 } } // end namespaces

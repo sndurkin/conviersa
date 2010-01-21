@@ -29,6 +29,18 @@ public:
     Message getMessage() { return m_msg; }
 };
 
+class DataEvent : public Event
+{
+    QString m_data;
+
+public:
+    DataEvent(const QString &data)
+      : m_data(data)
+    { }
+
+    QString getData() { return m_data; }
+};
+
 // this class provides the entire interface to an IRC server
 class Session : public QObject, public QSharedData
 {
@@ -123,14 +135,14 @@ public slots:
     void onReceiveData(const QString &data);
 
 private:
-    // stores the user's nickname
-    QString         m_nick;
-
     // the actual connection to the server
     Connection *    m_pConn;
 
     // event manager for the session object
     EventManager *  m_pEvtMgr;
+
+    // stores the user's nickname
+    QString         m_nick;
 
     // stores the name of the host that we are connected to
     QString         m_host;

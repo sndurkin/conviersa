@@ -89,6 +89,10 @@ struct Message
 // necessary to print the message
 Message parseData(const QString &data);
 
+// message-specific parsing
+QString getNetworkNameFrom001(const Message &msg);
+QString getIdleTextFrom317(const Message &msg);
+
 // converts data received from the server, complete
 // with any control codes, to HTML-formatted text
 // ready for display
@@ -141,6 +145,16 @@ QString parseMsgPrefix(const QString &prefix, MsgPrefixPart part);
 // decide between using the given text and "you" in a message
 // todo: change name, it sucks
 QString getUser(const QString &nick, const QString &user);
+
+// returns the date based on the string representation
+// of unix time; if the string passed is not a valid number or
+// is not in unix time, returns an empty string
+QString getDate(QString strUnixTime);
+
+// returns the time based on the string representation
+// of unix time; if the string passed is not a valid number or
+// is not in unix time, returns an empty string
+QString getTime(QString strUnixTime);
 
 // used to differentiate between a channel and a nickname
 //

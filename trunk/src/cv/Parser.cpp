@@ -141,6 +141,118 @@ Message parseData(const QString &data)
     return msg;
 }
 
+QString getNetworkNameFrom001(const Message &msg)
+{
+    // msg.m_params[0]: my nick
+    // msg.m_params[1]: "Welcome to the <server name> IRC Network, <nick>[!user@host]"
+    QString header = "Welcome to the ";
+    if(msg.m_params[1].startsWith(header, Qt::CaseInsensitive))
+    {
+        int idx = msg.m_params[1].indexOf(' ', header.size(), Qt::CaseInsensitive);
+        if(idx >= 0)
+        {
+            return msg.m_params[1].mid(header.size(), idx - header.size());
+        }
+    }
+
+    return "";
+}
+
+QString getIdleTextFrom317(const Message &msg)
+{
+    // msg.m_params[0]: my nick
+    // msg.m_params[1]: nick
+    // msg.m_params[2]: seconds
+    // two options here:
+    //    1) msg.m_params[3]: "seconds idle"
+    //    2) msg.m_params[3]: unix time
+    // msg.m_params[4]: "seconds idle, signon time"
+
+    QString idleText = "";
+
+    // get the number of idle seconds first, convert
+    // to h, m, s format
+    bool conversionOk;
+    uint numSecs = msg.m_params[2].toInt(&conversionOk);
+    if(conversionOk)
+    {
+        // 24 * 60 * 60 = 86400
+        uint numDays = numSecs / 86400;
+        if(numDays)
+        {
+            idleText += QString::number(numDays);
+            if(numDays == 1)
+            {
+                idleText += "day ";
+            }
+            else
+            {
+                idleText += "days ";
+            }
+            numSecs = numSecs % 86400;
+        }
+
+        // 60 * 60 = 3600
+        uint numHours = numSecs / 3600;
+        if(numHours)
+        {
+            idleText += QString::number(numHours);
+            if(numHours == 1)
+            {
+                idleText += "hr ";
+            }
+            else
+            {
+                idleText += "hrs ";
+            }
+            numSecs = numSecs % 3600;
+        }
+
+        uint numMinutes = numSecs / 60;
+        if(numMinutes)
+        {
+            idleText += QString::number(numMinutes);
+            if(numMinutes == 1)
+            {
+                idleText += "min ";
+            }
+            else
+            {
+                idleText += "mins ";
+            }
+            numSecs = numSecs % 60;
+        }
+
+        if(numSecs)
+        {
+            idleText += QString::number(numSecs);
+            if(numSecs == 1)
+            {
+                idleText += "sec ";
+            }
+            else
+            {
+                idleText += "secs ";
+            }
+        }
+
+        // remove trailing space
+        idleText.remove(idleText.size()-1, 1);
+
+        // right now this will only support 5 parameters
+        // (1 extra for the signon time), but i can easily
+        // add support for more later
+        if(msg.m_paramsNum > 4)
+        {
+            idleText += QString(", signed on %1 %2")
+                        .arg(getDate(msg.m_params[3]))
+                        .arg(getTime(msg.m_params[3]));
+        }
+    }
+
+    return idleText;
+}
+
 // helper function for ConvertDataToHtml()
 QString getFontStyle(bool leadingFontTag, const QColor &defaultFg, const QColor &defaultBg,
                      const QColor &fg, const QColor &bg, bool reverse, bool underline, bool bold)
@@ -853,6 +965,40 @@ QString parseMsgPrefix(const QString &prefix, MsgPrefixPart part)
             return userAndHost.section('@', 1);
         }
     }
+}
+
+// returns the date based on the string representation
+// of unix time; if the string passed is not a valid number or
+// is not in unix time, returns an empty string
+QString getDate(QString strUnixTime)
+{
+    bool conversionOk;
+    uint unixTime = strUnixTime.toInt(&conversionOk);
+    if(conversionOk)
+    {
+        QDateTime dt;
+        dt.setTime_t(unixTime);
+        return dt.toString("ddd MMM dd");
+    }
+
+    return "";
+}
+
+// returns the time based on the string representation
+// of unix time; if the string passed is not a valid number or
+// is not in unix time, returns an empty string
+QString getTime(QString strUnixTime)
+{
+    bool conversionOk;
+    uint unixTime = strUnixTime.toInt(&conversionOk);
+    if(conversionOk)
+    {
+        QDateTime dt;
+        dt.setTime_t(unixTime);
+        return dt.toString("hh:mm:ss");
+    }
+
+    return "";
 }
 
 // used to differentiate between a channel and a nickname

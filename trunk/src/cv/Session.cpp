@@ -23,6 +23,9 @@ Session::Session(const QString& nick)
     QObject::connect(m_pConn, SIGNAL(dataReceived(QString)), this, SLOT(onReceiveData(QString)));
 
     m_pEvtMgr = new EventManager;
+    m_pEvtMgr->CreateEvent("onConnect");
+    m_pEvtMgr->CreateEvent("onDisconnect");
+    m_pEvtMgr->CreateEvent("onReceiveData");
     m_pEvtMgr->CreateEvent("onErrorMessage");
     m_pEvtMgr->CreateEvent("onInviteMessage");
     m_pEvtMgr->CreateEvent("onJoinMessage");
@@ -172,6 +175,61 @@ void Session::processMessage(const Message &msg)
     Event *evt = new MessageEvent(msg);
     if(msg.m_isNumeric)
     {
+        switch(msg.m_command)
+        {
+            case 1:
+            {
+                // check to make sure nickname hasn't changed; some or all servers apparently don't
+                // send you a NICK message when your nickname conflicts with another user upon
+                // first entering the server, and you try to change it
+                if(m_nick.compare(msg.m_params[0], Qt::CaseInsensitive) != 0)
+                {
+                    setNick(msg.m_params[0]);
+                }
+
+                break;
+            }
+            case 2:
+            {
+                // msg.m_params[0]: my nick
+                // msg.m_params[1]: "Your host is ..."
+                QString header = "Your host is ";
+                QString hostStr = msg.m_params[1].section(',', 0, 0);
+                if(hostStr.startsWith(header))
+                {
+                    setHost(hostStr.mid(header.size()));
+                }
+
+                break;
+            }
+            case 5:
+            {
+                // we only go to the second-to-last parameter,
+                // because the last parameter holds "are supported
+                // by this server"
+                for(int i = 1; i < msg.m_paramsNum-1; ++i)
+                {
+                    if(msg.m_params[i].startsWith("PREFIX=", Qt::CaseInsensitive))
+                    {
+                        setPrefixRules(getPrefixRules(msg.m_params[i]));
+                    }
+                    else if(msg.m_params[i].compare("NAMESX", Qt::CaseInsensitive) == 0)
+                    {
+                        // lets the server know we support multiple nick prefixes
+                        //
+                        // todo: UHNAMES?
+                        sendData("PROTOCTL NAMESX");
+                    }
+                    else if(msg.m_params[i].startsWith("CHANMODES=", Qt::CaseInsensitive))
+                    {
+                        setChanModes(msg.m_params[i].section('=', 1));
+                    }
+                }
+
+                break;
+            }
+        }
+
         m_pEvtMgr->FireEvent("onNumericMessage", evt);
     }
     else
@@ -234,12 +292,14 @@ void Session::onConnect()
     QString info = "PASS hello\r\nNICK " + m_nick + "\r\nUSER guest tolmoon tolsun :Ronnie Reagan";
     sendData(info);
 
-    emit connected();
+    // todo: find out what to do with Event *
+    m_pEvtMgr->FireEvent("onConnect", NULL);
 }
 
 void Session::onDisconnect()
 {
-    emit disconnected();
+    // todo: find out what to do with Event *
+    m_pEvtMgr->FireEvent("onDisconnect", NULL);
 }
 
 void Session::onReceiveData(const QString &data)
@@ -254,6 +314,11 @@ void Session::onReceiveData(const QString &data)
         // retrieves the entire message up to and including the terminating '\n' character
         QString msgData = m_prevData.left(numChars);
         m_prevData.remove(0, numChars);
+
+        Event *evt = new DataEvent(msgData);
+        m_pEvtMgr->FireEvent("onReceiveData", evt);
+        delete evt;
+
         Message msg = parseData(msgData);
         processMessage(msg);
     }

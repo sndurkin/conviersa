@@ -34,6 +34,9 @@ public:
     // (same as IWindow::GetWindowName() & IWindow::GetTitle())
     QString getTargetNick();
 
+    // events
+    void onNumericMessage(Event *evt);
+
 protected:
     void handleTab();
     void closeEvent(QCloseEvent *event);
@@ -42,11 +45,6 @@ signals:
     // signifies that the window is closing - this is *only*
     // for IrcStatusWindow to use
     void privWindowClosing(QueryWindow *pWin);
-
-public slots:
-    void onServerConnect();
-    void onServerDisconnect();
-    void onReceiveMessage(const Message &msg);
 };
 
 } } // end namespaces

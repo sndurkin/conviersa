@@ -42,9 +42,6 @@ public:
     // returns NULL otherwise
     OutputWindow *getChildIrcWindow(const QString &name);
 
-    // returns a list of all IIrcWindows under the IrcStatusWindow
-    QList<OutputWindow *> getChildIrcWindows();
-
     // returns a list of all IrcChanWindows that are currently
     // being managed in the server
     QList<ChannelWindow *> getChannels();
@@ -59,7 +56,10 @@ public:
     // adds a PM window to the list
     void addQueryWindow(QueryWindow *pPriv);
 
-    // message-related events
+    // events
+    void onServerConnect(Event *evt);
+    void onServerDisconnect(Event *evt);
+    void onReceiveData(Event *evt);
     void onErrorMessage(Event *evt);
     void onInviteMessage(Event *evt);
     void onJoinMessage(Event *evt);
@@ -84,40 +84,13 @@ protected:
 
 private:
     // numeric messages
-    void handle001Numeric(const Message &msg);
-    void handle002Numeric(const Message &msg);
-    void handle005Numeric(const Message &msg);
-    void handle301Numeric(const Message &msg);
-    void handle317Numeric(const Message &msg);
     void handle321Numeric(const Message &msg);
     void handle322Numeric(const Message &msg);
     void handle323Numeric(const Message &msg);
-    void handle330Numeric(const Message &msg);
-    void handle332Numeric(const Message &msg);
-    void handle333Numeric(const Message &msg);
     void handle353Numeric(const Message &msg);
     void handle366Numeric(const Message &msg);
-    void handle401Numeric(const Message &msg);
-
-    // other messages
-    void handleInviteMsg(const Message &msg);
-    void handleJoinMsg(const Message &msg);
-    void handleKickMsg(const Message &msg);
-    void handleModeMsg(const Message &msg);
-    void handleNickMsg(const Message &msg);
-    void handleNoticeMsg(const Message &msg);
-    void handlePartMsg(const Message &msg);
-    void handlePongMsg(const Message &msg);
-    void handlePrivMsg(const Message &msg);
-    void handleQuitMsg(const Message &msg);
-    void handleTopicMsg(const Message &msg);
-    void handleWallopsMsg(const Message &msg);
 
 public slots:
-    void onServerConnect();
-    void onServerDisconnect();
-    void onReceiveData(const QString &data);
-
     // removes a channel window from the list
     void removeChannelWindow(ChannelWindow *pChanWin);
 

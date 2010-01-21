@@ -30,8 +30,9 @@ QueryWindow::QueryWindow(QExplicitlySharedDataPointer<Session> pSharedSession,
     m_pVLayout->setContentsMargins(2, 2, 2, 2);
     setLayout(m_pVLayout);
 
-    QObject::connect(m_pSharedSession.data(), SIGNAL(connected()), this, SLOT(onServerConnect()));
-    QObject::connect(m_pSharedSession.data(), SIGNAL(disconnected()), this, SLOT(onServerDisconnect()));
+    m_pSharedSession->getEventManager()->HookEvent("onNumericMessage", MakeDelegate(this, &QueryWindow::onNumericMessage));
+    //QObject::connect(m_pSharedSession.data(), SIGNAL(connected()), this, SLOT(onServerConnect()));
+    //QObject::connect(m_pSharedSession.data(), SIGNAL(disconnected()), this, SLOT(onServerDisconnect()));
     //QObject::connect(m_pSharedSession.data(), SIGNAL(dataParsed(Message)), this, SLOT(onReceiveMessage(Message)));
 }
 
@@ -60,6 +61,25 @@ QString QueryWindow::getTargetNick()
     return m_targetNick;
 }
 
+void QueryWindow::onNumericMessage(Event *evt)
+{
+    Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
+    switch(msg.m_command)
+    {
+        case 401:   // ERR_NOSUCKNICK
+        case 404:   // ERR_CANNOTSENDTOCHAN
+        {
+            // msg.m_params[0]: my nick
+            // msg.m_params[1]: nick/channel
+            // msg.m_params[2]: "No such nick/channel"
+            if(msg.m_params[1].compare(getWindowName(), Qt::CaseInsensitive) == 0)
+            {
+                printOutput(getNumericText(msg));
+            }
+        }
+    }
+}
+
 void QueryWindow::handleTab()
 {
     QString text = getInputText();
@@ -71,7 +91,7 @@ void QueryWindow::closeEvent(QCloseEvent *event)
     emit privWindowClosing(this);
     return Window::closeEvent(event);
 }
-
+/*
 void QueryWindow::onServerConnect() { }
 
 void QueryWindow::onServerDisconnect()
@@ -80,5 +100,5 @@ void QueryWindow::onServerDisconnect()
 }
 
 void QueryWindow::onReceiveMessage(const Message &msg) { }
-
+*/
 } } // end namespaces

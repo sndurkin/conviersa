@@ -41,6 +41,8 @@ public:
 
     bool isInChannel() { return m_inChannel; }
 
+    bool isChannelName(const QString &name) { return (name.compare(getWindowName(), Qt::CaseInsensitive) == 0); }
+
     int getIrcWindowType();
 
     // lets the user know that he is back inside the channel,
@@ -87,6 +89,13 @@ public:
 
     // events
     void onNumericMessage(Event *evt);
+    void onJoinMessage(Event *evt);
+    void onKickMessage(Event *evt);
+    void onModeMessage(Event *evt);
+    void onNickMessage(Event *evt);
+    void onPartMessage(Event *evt);
+    void onPrivmsgMessage(Event *evt);
+    void onTopicMessage(Event *evt);
 
 protected:
     void handleTab();

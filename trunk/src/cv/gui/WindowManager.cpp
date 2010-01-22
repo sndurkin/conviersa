@@ -24,14 +24,6 @@ WindowManager::WindowManager(QWidget *pParent, WindowContainer *pMainContainer)
     setupContextMenu();
 
     QObject::connect(m_pMainContainer, SIGNAL(subWindowActivated(QMdiSubWindow *)), this, SLOT(onSubWindowActivated(QMdiSubWindow *)));
-
-    /*
-    // add the orphaned window node, and hide it;
-    // it is only shown when there is an orphaned window
-    m_pOrphanTreeItem = AddTreeGroup("Orphaned Windows");
-    m_pOrphanTreeItem->setHidden(true);
-    m_numOrphans = 0;
-    */
 }
 
 WindowManager::~WindowManager()

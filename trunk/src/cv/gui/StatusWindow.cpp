@@ -47,11 +47,9 @@ StatusWindow::StatusWindow(const QString &title/* = tr("Server Window")*/,
     pEvtMgr->HookEvent("onModeMessage", MakeDelegate(this, &StatusWindow::onModeMessage));
     pEvtMgr->HookEvent("onNickMessage", MakeDelegate(this, &StatusWindow::onNickMessage));
     pEvtMgr->HookEvent("onNoticeMessage", MakeDelegate(this, &StatusWindow::onNoticeMessage));
-    pEvtMgr->HookEvent("onPartMessage", MakeDelegate(this, &StatusWindow::onPartMessage));
     pEvtMgr->HookEvent("onPongMessage", MakeDelegate(this, &StatusWindow::onPongMessage));
     pEvtMgr->HookEvent("onPrivmsgMessage", MakeDelegate(this, &StatusWindow::onPrivmsgMessage));
     pEvtMgr->HookEvent("onQuitMessage", MakeDelegate(this, &StatusWindow::onQuitMessage));
-    pEvtMgr->HookEvent("onTopicMessage", MakeDelegate(this, &StatusWindow::onTopicMessage));
     pEvtMgr->HookEvent("onWallopsMessage", MakeDelegate(this, &StatusWindow::onWallopsMessage));
     pEvtMgr->HookEvent("onNumericMessage", MakeDelegate(this, &StatusWindow::onNumericMessage));
     pEvtMgr->HookEvent("onUnknownMessage", MakeDelegate(this, &StatusWindow::onUnknownMessage));
@@ -90,6 +88,13 @@ OutputWindow *StatusWindow::getChildIrcWindow(const QString &name)
     }
 
     return NULL;
+}
+
+// returns true if the child window with the provided name
+// exists, returns false otherwise
+bool StatusWindow::childIrcWindowExists(const QString &name)
+{
+    return (getChildIrcWindow(name) != NULL);
 }
 
 // returns a list of all IrcChanWindows that are currently
@@ -240,15 +245,9 @@ void StatusWindow::handle366Numeric(const Message &msg)
     // msg.m_params[0]: my nick
     // msg.m_params[1]: channel
     // msg.m_params[2]: "End of NAMES list"
-    OutputWindow *pChanWin = getChildIrcWindow(msg.m_params[1]);
 
-    // RPL_ENDOFNAMES was sent as a result of a JOIN command
-    if(pChanWin && m_populatingUserList)
-    {
-        m_populatingUserList = false;
-    }
     // RPL_ENDOFNAMES was sent as a result of a NAMES command
-    else
+    if(!childIrcWindowExists(msg.m_params[1]))
     {
         //printOutput(ConvertDataToHtml(getNumericText(msg)));
         printOutput(getNumericText(msg));
@@ -359,7 +358,7 @@ void StatusWindow::onNumericMessage(Event *evt)
             // msg.m_params[0]: my nick
             // msg.m_params[1]: channel
             // msg.m_params[2]: topic
-            if(getChildIrcWindow(msg.m_params[1]) == NULL)
+            if(!childIrcWindowExists(msg.m_params[1]))
             {
                 printOutput(getNumericText(msg));
             }
@@ -372,7 +371,7 @@ void StatusWindow::onNumericMessage(Event *evt)
             // msg.m_params[1]: channel
             // msg.m_params[2]: nick
             // msg.m_params[3]: unix time
-            if(getChildIrcWindow(msg.m_params[1]) == NULL)
+            if(!childIrcWindowExists(msg.m_params[1]))
             {
                 QString textToPrint = QString("%1 topic set by %2 on %3 %4")
                                       .arg(msg.m_params[1])
@@ -402,7 +401,7 @@ void StatusWindow::onNumericMessage(Event *evt)
             // msg.m_params[0]: my nick
             // msg.m_params[1]: nick/channel
             // msg.m_params[2]: "No such nick/channel"
-            if(getChildIrcWindow(msg.m_params[1]) == NULL)
+            if(!childIrcWindowExists(msg.m_params[1]))
             {
                 printOutput(getNumericText(msg));
             }
@@ -432,173 +431,47 @@ void StatusWindow::onInviteMessage(Event *evt)
 {
     Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
     QString textToPrint = QString("* %1 has invited you to %2")
-                .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName))
-                .arg(msg.m_params[1]);
+                          .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName))
+                          .arg(msg.m_params[1]);
     printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "invite")));
 }
 
 void StatusWindow::onJoinMessage(Event *evt)
 {
     Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
-    ChannelWindow *pChanWin = dynamic_cast<ChannelWindow *>(getChildIrcWindow(msg.m_params[0]));
-    QString textToPrint = "* ";
 
-    // if the JOIN message is of you joining the channel
     QString nickJoined = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
-    if(m_pSharedSession->getNick().compare(nickJoined, Qt::CaseInsensitive) == 0)
+    if(m_pSharedSession->isMyNick(nickJoined) && !childIrcWindowExists(msg.m_params[0]))
     {
-        if(pChanWin)
+        // create the channel and post the message to it
+        ChannelWindow *pChanWin = new (std::nothrow) ChannelWindow(m_pSharedSession, msg.m_params[0]);
+        if(!pChanWin)
         {
-            textToPrint += "You have rejoined ";
+            printError("Allocation of a new channel window failed.");
+            return;
         }
-        else
-        {
-            // create the channel and post the message to it
-            pChanWin = new (std::nothrow) ChannelWindow(m_pSharedSession, msg.m_params[0]);
-            if(!pChanWin)
-            {
-                printError("Allocation of a new channel window failed.");
-                return;
-            }
-            addChannelWindow(pChanWin);
-            textToPrint += "You have joined ";
-        }
-
+        addChannelWindow(pChanWin);
         pChanWin->joinChannel();
-        textToPrint += msg.m_params[0];
         m_populatingUserList = true;
-    }
-    else
-    {
-        if(pChanWin)
-        {
-            textToPrint += QString("%1 (%2) has joined %3")
-                    .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName))
-                    .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixUserAndHost))
-                    .arg(msg.m_params[0]);
-            pChanWin->addUser(nickJoined);
-        }
-    }
-
-    if(pChanWin)
+        QString textToPrint = QString("* You have joined %1").arg(msg.m_params[0]);
         pChanWin->printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "join")));
-    else
-        printError("Pointer to channel window is invalid. This path should not have been reached.");
-}
-
-void StatusWindow::onKickMessage(Event *evt)
-{
-    Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
-    ChannelWindow *pChanWin = dynamic_cast<ChannelWindow *>(getChildIrcWindow(msg.m_params[0]));
-    if(!pChanWin)
-        return;
-
-    QString textToPrint;
-
-    // if the KICK message is for you
-    if(m_pSharedSession->getNick().compare(msg.m_params[1]) == 0)
-    {
-        pChanWin->leaveChannel();
-        textToPrint = "* You were kicked from ";
     }
-    else
-    {
-        textToPrint = QString("* %1 was kicked from ").arg(msg.m_params[1]);
-        pChanWin->removeUser(msg.m_params[1]);
-    }
-
-    textToPrint += QString("%1 by %2")
-                .arg(msg.m_params[0])
-                .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName));
-
-    bool hasReason = !msg.m_params[2].isEmpty();
-    if(hasReason)
-    {
-        textToPrint += QString(" (%1)").arg(msg.m_params[2]);
-    }
-
-    QColor kickColor(g_pCfgManager->getOptionValue("colors.ini", "kick"));
-    /*
-    if(hasReason)
-    {
-        textToPrint += QString("</font><font color=%1>)</font>").arg(kickColor.name());
-    }
-    */
-
-    pChanWin->printOutput(textToPrint, kickColor);
 }
 
 void StatusWindow::onModeMessage(Event *evt)
 {
     Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
-    QString textToPrint = QString("* %1 has set mode: ").arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName));
-
-    // ignore first parameter
-    for(int i = 1; i < msg.m_paramsNum; ++i)
+    if(!childIrcWindowExists(msg.m_params[0]))  // user mode
     {
-            textToPrint += msg.m_params[i];
-            textToPrint += ' ';
-    }
+        QString textToPrint = QString("* %1 has set mode: ").arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName));
 
-    // channel mode
-    //
-    // todo: fix
-    if(isChannel(msg.m_params[0]))
-    {
-        ChannelWindow *pChanWin = dynamic_cast<ChannelWindow *>(getChildIrcWindow(msg.m_params[0]));
-        if(!pChanWin)
-            return;
-
-        bool sign = true;
-        QString modes = msg.m_params[1];
-
-        for(int modesIndex = 0, paramsIndex = 2; modesIndex < modes.size(); ++modesIndex)
+        // ignore first parameter
+        for(int i = 1; i < msg.m_paramsNum; ++i)
         {
-            if(modes[modesIndex] == '+')
-            {
-                sign = true;
-            }
-            else if(modes[modesIndex] == '-')
-            {
-                sign = false;
-            }
-            else
-            {
-                ChanModeType type = getChanModeType(m_pSharedSession->getChanModes(), modes[modesIndex]);
-                switch(type)
-                {
-                    case ModeTypeA:
-                    case ModeTypeB:
-                    case ModeTypeC:
-                    {
-                        // if there's no params left then continue
-                        if(paramsIndex >= msg.m_paramsNum)
-                            break;
-
-                        QChar prefix = m_pSharedSession->getPrefixRule(modes[modesIndex]);
-                        if(prefix != '\0')
-                        {
-                            if(sign)
-                                pChanWin->addPrefixToUser(msg.m_params[paramsIndex], prefix);
-                            else
-                                pChanWin->removePrefixFromUser(msg.m_params[paramsIndex], prefix);
-                        }
-
-                        ++paramsIndex;
-                        break;
-                    }
-                    default:
-                    {
-
-                    }
-                }
-            }
+                textToPrint += msg.m_params[i];
+                textToPrint += ' ';
         }
 
-        pChanWin->printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "mode")));
-    }
-    else	// user mode
-    {
         printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "mode")));
     }
 }
@@ -606,48 +479,14 @@ void StatusWindow::onModeMessage(Event *evt)
 void StatusWindow::onNickMessage(Event *evt)
 {
     Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
-    // update the user's nickname if he's the one changing it
+
     QString oldNick = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
-    bool isMyNick = (oldNick.compare(m_pSharedSession->getNick(), Qt::CaseSensitive) == 0);
-
-    QString textToPrint = QString("* %1 is now known as %2")
-                .arg(oldNick)
-                .arg(msg.m_params[0]);
-
-    QColor nickColor(g_pCfgManager->getOptionValue("colors.ini", "nick"));
-    if(isMyNick)
+    if(m_pSharedSession->isMyNick(oldNick))
     {
-        m_pSharedSession->setNick(msg.m_params[0]);
-        printOutput(textToPrint, nickColor);
-    }
-
-    for(int i = 0; i < m_chanList.size(); ++i)
-    {
-        if(m_chanList[i]->hasUser(oldNick))
-        {
-            m_chanList[i]->changeUserNick(oldNick, msg.m_params[0]);
-            m_chanList[i]->printOutput(textToPrint, nickColor);
-        }
-    }
-
-    // will print a nick change message to the private message window
-    // if we get a NICK message, which will only be if we're in
-    // a channel with the person (or if the nick being changed is ours)
-    for(int i = 0; i < m_privList.size(); ++i)
-    {
-        if(isMyNick)
-        {
-            m_privList[i]->printOutput(textToPrint, nickColor);
-        }
-        else
-        {
-            if(oldNick.compare(m_privList[i]->getTargetNick(), Qt::CaseInsensitive) == 0)
-            {
-                m_privList[i]->setTargetNick(msg.m_params[0]);
-                m_privList[i]->printOutput(textToPrint, nickColor);
-                break;
-            }
-        }
+        QString textToPrint = QString("* %1 is now known as %2")
+                              .arg(oldNick)
+                              .arg(msg.m_params[0]);
+        printOutput(textToPrint, g_pCfgManager->getOptionValue("colors.ini", "nick"));
     }
 }
 
@@ -666,62 +505,15 @@ void StatusWindow::onNoticeMessage(Event *evt)
     }
 
     QString textToPrint = QString("-%1- %2")
-                            .arg(source)
-                            .arg(msg.m_params[1]);
-
-    QColor noticeColor(g_pCfgManager->getOptionValue("colors.ini", "notice"));
-    printOutput(textToPrint, noticeColor);
-}
-
-void StatusWindow::onPartMessage(Event *evt)
-{
-    Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
-    ChannelWindow *pChanWin = dynamic_cast<ChannelWindow *>(getChildIrcWindow(msg.m_params[0]));
-    if(!pChanWin)
-    {
-        // the window received a close message and sent
-        // the PART message without expecting a reply,
-        // so just ignore it
-        return;
-    }
-
-    QString textToPrint;
-
-    // if the PART message is of you leaving the channel
-    if(m_pSharedSession->getNick().compare(parseMsgPrefix(msg.m_prefix, MsgPrefixName), Qt::CaseInsensitive) == 0)
-    {
-        textToPrint = QString("* You have left %1").arg(msg.m_params[0]);
-        pChanWin->leaveChannel();
-    }
-    else
-    {
-        textToPrint = QString("* %1 (%2) has left %3")
-                .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName))
-                .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixUserAndHost))
-                .arg(msg.m_params[0]);
-        pChanWin->removeUser(parseMsgPrefix(msg.m_prefix, MsgPrefixName));
-    }
-
-    // if there's a part message
-    QColor partColor(g_pCfgManager->getOptionValue("colors.ini", "part"));
-    bool hasReason = (msg.m_paramsNum > 1 && !msg.m_params[1].isEmpty());
-    if(hasReason)
-    {
-        textToPrint += QString(" (%1)").arg(msg.m_params[1]);
-    }
-
-    /*
-    if(hasReason)
-    {
-        textToPrint += QString("</font><font color=%1>)</font>").arg(partColor.name());
-    }
-    */
-    pChanWin->printOutput(textToPrint, partColor);
+                          .arg(source)
+                          .arg(msg.m_params[1]);
+    printOutput(textToPrint, g_pCfgManager->getOptionValue("colors.ini", "notice"));
 }
 
 void StatusWindow::onPongMessage(Event *evt)
 {
     Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
+
     // the prefix is used to determine the server that
     // sends the PONG rather than the first parameter,
     // because it will always have the server in it
@@ -730,113 +522,73 @@ void StatusWindow::onPongMessage(Event *evt)
     //	PING hi :there
     //	:irc.server.net PONG there :hi
     QString textToPrint = QString("* PONG from %1: %2")
-                .arg(msg.m_prefix)
-                .arg(msg.m_params[1]);
+                          .arg(msg.m_prefix)
+                          .arg(msg.m_params[1]);
     printOutput(textToPrint);
 }
 
 void StatusWindow::onPrivmsgMessage(Event *evt)
 {
     Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
+
+    QString fromNick = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
     CtcpRequestType requestType = getCtcpRequestType(msg);
-    QString user = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
-
-    QString textToPrint;
-    QColor color;
-
-    if(requestType != RequestTypeInvalid)
+    if(requestType != RequestTypeInvalid &&
+       requestType != RequestTypeAction)
     {
-        // ACTION is /me, so handle according to that
-        if(requestType == RequestTypeAction)
-        {
-            QString action = msg.m_params[1];
+        QString replyStr;
+        QString requestTypeStr;
 
-            // action = "\1ACTION <action>\1"
-            // first 8 characters and last 1 character need to be excluded
-            // so we'll take the mid, starting at index 8 and going until every
-            // character but the last is included
-            color.setNamedColor(g_pCfgManager->getOptionValue("colors.ini", "action"));
-            textToPrint = QString("* %1 %2")
-                    .arg(user)
-                    .arg(action.mid(8, action.size()-9));
-        }
-        else		// regular CTCP requests
+        switch(requestType)
         {
-            QString replyStr;
-            QString requestTypeStr;
-
-            switch(requestType)
+            case RequestTypeVersion:
             {
-                case RequestTypeVersion:
-                {
-                    replyStr = "IMClient v0.00001";
-                    requestTypeStr = "VERSION";
-                    break;
-                }
-                case RequestTypeTime:
-                {
-                    replyStr = "time for you to get a watch";
-                    requestTypeStr = "TIME";
-                    break;
-                }
-                case RequestTypeFinger:
-                {
-                    replyStr = "good hustle.";
-                    requestTypeStr = "FINGER";
-                    break;
-                }
-                default:
-                {
-                    requestTypeStr = "UNKNOWN";
-                }
+                replyStr = "conviersa v0.00000000001";
+                requestTypeStr = "VERSION";
+                break;
             }
-
-            if(!replyStr.isEmpty())
+            case RequestTypeTime:
             {
-                QString textToSend = QString("NOTICE %1 :\1%2 %3\1")
-                                                        .arg(user)
-                                                        .arg(requestTypeStr)
-                                                        .arg(replyStr);
-                m_pSharedSession->sendData(textToSend);
+                replyStr = "bitch, please";
+                requestTypeStr = "TIME";
+                break;
             }
-
-            color.setNamedColor(g_pCfgManager->getOptionValue("colors.ini", "ctcp"));
-            textToPrint = QString("[CTCP %1 (from %2)]")
-                                        .arg(requestTypeStr)
-                                        .arg(user);
-            printOutput(textToPrint, color);
-            return;
+            case RequestTypeFinger:
+            {
+                replyStr = "good hustle.";
+                requestTypeStr = "FINGER";
+                break;
+            }
+            default:
+            {
+                requestTypeStr = "UNKNOWN";
+            }
         }
-    }
-    else	// not CTCP, so handle normally
-    {
-            color.setNamedColor(g_pCfgManager->getOptionValue("colors.ini", "say"));
-            textToPrint = QString("<%1> %2")
-                            .arg(user)
-                            .arg(msg.m_params[1]);
-    }
 
-    // if the target is us, then it's an actual PM
-    if(m_pSharedSession->getNick().compare(msg.m_params[0], Qt::CaseInsensitive) == 0)
-    {
-        QueryWindow *pQueryWin = dynamic_cast<QueryWindow *>(getChildIrcWindow(user));
-        if(!pQueryWin)
+        if(!replyStr.isEmpty())
         {
-            // todo
-            pQueryWin = new QueryWindow(m_pSharedSession, user);
-            addQueryWindow(pQueryWin);
+            QString textToSend = QString("NOTICE %1 :\1%2 %3\1")
+                                 .arg(fromNick)
+                                 .arg(requestTypeStr)
+                                 .arg(replyStr);
+            m_pSharedSession->sendData(textToSend);
         }
 
-        pQueryWin->printOutput(textToPrint, color);
+        QString textToPrint = QString("[CTCP %1 (from %2)]")
+                              .arg(requestTypeStr)
+                              .arg(fromNick);
+        printOutput(textToPrint, g_pCfgManager->getOptionValue("colors.ini", "ctcp"));
+        return;
     }
-    else		// it's a channel
+
+    // if the target is me, then it's a PM from someone
+    if(m_pSharedSession->isMyNick(msg.m_params[0]) && !childIrcWindowExists(fromNick))
     {
-        ChannelWindow *pChanWin = dynamic_cast<ChannelWindow *>(getChildIrcWindow(msg.m_params[0]));
-        if(pChanWin)
-        {
-            // todo: figure out nick prefixes later
-            pChanWin->printOutput(textToPrint, color);
-        }
+        QueryWindow *pQueryWin = new QueryWindow(m_pSharedSession, fromNick);
+        addQueryWindow(pQueryWin);
+
+        // delegate to  window
+        pQueryWin->onPrivmsgMessage(evt);
     }
 }
 
@@ -879,29 +631,6 @@ void StatusWindow::onQuitMessage(Event *evt)
         {
             m_privList[i]->printOutput(textToPrint, quitColor);
             break;
-        }
-    }
-}
-
-void StatusWindow::onTopicMessage(Event *evt)
-{
-    Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
-    OutputWindow *pChanWin = dynamic_cast<ChannelWindow *>(getChildIrcWindow(msg.m_params[0]));
-    if(pChanWin)
-    {
-        QString textToPrint = QString("* %1 changes topic to: %2")
-                    .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName))
-                    .arg(msg.m_params[1]);
-        QColor topicColor(g_pCfgManager->getOptionValue("colors.ini", "topic"));
-        pChanWin->printOutput(textToPrint, topicColor);
-
-        if(m_pManager)
-        {
-            QTreeWidgetItem *pItem = m_pManager->getItemFromWindow(pChanWin);
-            QString titleWithTopic = QString("%1: %2")
-                                .arg(pItem->text(0))
-                                .arg(msg.m_params[1]);
-            pChanWin->setTitle(stripCodes(titleWithTopic));
         }
     }
 }

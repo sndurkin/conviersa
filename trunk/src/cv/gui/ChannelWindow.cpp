@@ -57,14 +57,26 @@ ChannelWindow::ChannelWindow(QExplicitlySharedDataPointer<Session> pSharedSessio
     setLayout(m_pVLayout);
 
     m_pSharedSession->getEventManager()->HookEvent("onNumericMessage", MakeDelegate(this, &ChannelWindow::onNumericMessage));
-    //QObject::connect(m_pSharedSession.data(), SIGNAL(connected()), this, SLOT(onServerConnect()));
-    //QObject::connect(m_pSharedSession.data(), SIGNAL(disconnected()), this, SLOT(onServerDisconnect()));
-    //QObject::connect(m_pSharedSession.data(), SIGNAL(dataParsed(Message)), this, SLOT(onReceiveMessage(Message)));
+    m_pSharedSession->getEventManager()->HookEvent("onJoinMessage", MakeDelegate(this, &ChannelWindow::onJoinMessage));
+    m_pSharedSession->getEventManager()->HookEvent("onKickMessage", MakeDelegate(this, &ChannelWindow::onKickMessage));
+    m_pSharedSession->getEventManager()->HookEvent("onModeMessage", MakeDelegate(this, &ChannelWindow::onModeMessage));
+    m_pSharedSession->getEventManager()->HookEvent("onNickMessage", MakeDelegate(this, &ChannelWindow::onNickMessage));
+    m_pSharedSession->getEventManager()->HookEvent("onPartMessage", MakeDelegate(this, &ChannelWindow::onPartMessage));
+    m_pSharedSession->getEventManager()->HookEvent("onPrivmsgMessage", MakeDelegate(this, &ChannelWindow::onPrivmsgMessage));
+    m_pSharedSession->getEventManager()->HookEvent("onTopicMessage", MakeDelegate(this, &ChannelWindow::onTopicMessage));
 }
 
 ChannelWindow::~ChannelWindow()
 {
-    QObject::disconnect(m_pSharedSession.data(), 0, this, 0);
+    // todo: rewrite
+    m_pSharedSession->getEventManager()->UnhookEvent("onNumericMessage", MakeDelegate(this, &ChannelWindow::onNumericMessage));
+    m_pSharedSession->getEventManager()->UnhookEvent("onJoinMessage", MakeDelegate(this, &ChannelWindow::onJoinMessage));
+    m_pSharedSession->getEventManager()->UnhookEvent("onKickMessage", MakeDelegate(this, &ChannelWindow::onKickMessage));
+    m_pSharedSession->getEventManager()->UnhookEvent("onModeMessage", MakeDelegate(this, &ChannelWindow::onModeMessage));
+    m_pSharedSession->getEventManager()->UnhookEvent("onNickMessage", MakeDelegate(this, &ChannelWindow::onNickMessage));
+    m_pSharedSession->getEventManager()->UnhookEvent("onPartMessage", MakeDelegate(this, &ChannelWindow::onPartMessage));
+    m_pSharedSession->getEventManager()->UnhookEvent("onPrivmsgMessage", MakeDelegate(this, &ChannelWindow::onPrivmsgMessage));
+    m_pSharedSession->getEventManager()->UnhookEvent("onTopicMessage", MakeDelegate(this, &ChannelWindow::onTopicMessage));
 }
 
 int ChannelWindow::getIrcWindowType()
@@ -204,7 +216,7 @@ void ChannelWindow::onNumericMessage(Event *evt)
             // msg.m_params[0]: my nick
             // msg.m_params[1]: channel
             // msg.m_params[2]: topic
-            if(msg.m_params[1].compare(getWindowName(), Qt::CaseInsensitive) == 0)
+            if(isChannelName(msg.m_params[1]))
             {
                 QString titleWithTopic = QString("%1: %2")
                                          .arg(getWindowName())
@@ -224,7 +236,7 @@ void ChannelWindow::onNumericMessage(Event *evt)
             // msg.m_params[1]: channel
             // msg.m_params[2]: nick
             // msg.m_params[3]: unix time
-            if(msg.m_params[1].compare(getWindowName(), Qt::CaseInsensitive) == 0)
+            if(isChannelName(msg.m_params[1]))
             {
                 QString textToPrint = QString("* Topic set by %1 on %2 %3")
                                       .arg(msg.m_params[2])
@@ -234,6 +246,233 @@ void ChannelWindow::onNumericMessage(Event *evt)
             }
 
             break;
+        }
+    }
+}
+
+void ChannelWindow::onJoinMessage(Event *evt)
+{
+    Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
+    if(isChannelName(msg.m_params[0]))
+    {
+        QString textToPrint;
+        QString nickJoined = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
+        if(m_pSharedSession->isMyNick(nickJoined))
+        {
+            joinChannel();
+            textToPrint = QString("* You have rejoined %1").arg(msg.m_params[0]);
+        }
+        else
+        {
+            textToPrint = QString("%1 (%2) has joined %3")
+                          .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName))
+                          .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixUserAndHost))
+                          .arg(msg.m_params[0]);
+            addUser(nickJoined);
+        }
+
+        printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "join")));
+    }
+}
+
+void ChannelWindow::onKickMessage(Event *evt)
+{
+    Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
+    if(isChannelName(msg.m_params[0]))
+    {
+        QString textToPrint;
+        if(m_pSharedSession->isMyNick(msg.m_params[1]))
+        {
+            leaveChannel();
+            textToPrint = "* You were kicked";
+        }
+        else
+        {
+            removeUser(msg.m_params[1]);
+            textToPrint = QString("* %1 was kicked").arg(msg.m_params[1]);
+        }
+
+        textToPrint += QString(" by %2").arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName));
+
+        bool hasReason = (msg.m_paramsNum > 2 && !msg.m_params[2].isEmpty());
+        if(hasReason)
+        {
+            textToPrint += QString(" (%1)").arg(msg.m_params[2]);
+        }
+
+        printOutput(textToPrint, g_pCfgManager->getOptionValue("colors.ini", "kick"));
+    }
+}
+
+void ChannelWindow::onModeMessage(Event *evt)
+{
+    Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
+    if(isChannelName(msg.m_params[0]))
+    {
+        QString textToPrint = QString("* %1 has set mode: ").arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName));
+
+        // ignore first parameter
+        for(int i = 1; i < msg.m_paramsNum; ++i)
+        {
+                textToPrint += msg.m_params[i];
+                textToPrint += ' ';
+        }
+
+        bool sign = true;
+        QString modes = msg.m_params[1];
+        for(int modesIndex = 0, paramsIndex = 2; modesIndex < modes.size(); ++modesIndex)
+        {
+            if(modes[modesIndex] == '+')
+            {
+                sign = true;
+            }
+            else if(modes[modesIndex] == '-')
+            {
+                sign = false;
+            }
+            else
+            {
+                ChanModeType type = getChanModeType(m_pSharedSession->getChanModes(), modes[modesIndex]);
+                switch(type)
+                {
+                    case ModeTypeA:
+                    case ModeTypeB:
+                    case ModeTypeC:
+                    {
+                        // if there's no params left then continue
+                        if(paramsIndex >= msg.m_paramsNum)
+                            break;
+
+                        QChar prefix = m_pSharedSession->getPrefixRule(modes[modesIndex]);
+                        if(prefix != '\0')
+                        {
+                            if(sign)
+                                addPrefixToUser(msg.m_params[paramsIndex], prefix);
+                            else
+                                removePrefixFromUser(msg.m_params[paramsIndex], prefix);
+                        }
+
+                        ++paramsIndex;
+                        break;
+                    }
+                    default:
+                    {
+
+                    }
+                }
+            }
+        }
+
+        printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "mode")));
+    }
+}
+
+void ChannelWindow::onNickMessage(Event *evt)
+{
+    Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
+
+    QString oldNick = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
+    if(hasUser(oldNick))
+    {
+        changeUserNick(oldNick, msg.m_params[0]);
+        QString textToPrint = QString("* %1 is now known as %2")
+                              .arg(oldNick)
+                              .arg(msg.m_params[0]);
+        printOutput(textToPrint, g_pCfgManager->getOptionValue("colors.ini", "nick"));
+    }
+}
+
+void ChannelWindow::onPartMessage(Event *evt)
+{
+    Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
+    if(isChannelName(msg.m_params[0]))
+    {
+        QString textToPrint;
+
+        // if the PART message is of you leaving the channel
+        if(m_pSharedSession->isMyNick(parseMsgPrefix(msg.m_prefix, MsgPrefixName)))
+        {
+            leaveChannel();
+            textToPrint = QString("* You have left %1").arg(msg.m_params[0]);
+
+        }
+        else
+        {
+            removeUser(parseMsgPrefix(msg.m_prefix, MsgPrefixName));
+            textToPrint = QString("* %1 (%2) has left %3")
+                          .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName))
+                          .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixUserAndHost))
+                          .arg(msg.m_params[0]);
+        }
+
+        // if there's a part message
+        bool hasReason = (msg.m_paramsNum > 1 && !msg.m_params[1].isEmpty());
+        if(hasReason)
+        {
+            textToPrint += QString(" (%1)").arg(msg.m_params[1]);
+        }
+
+        printOutput(textToPrint, g_pCfgManager->getOptionValue("colors.ini", "part"));
+    }
+}
+
+void ChannelWindow::onPrivmsgMessage(Event *evt)
+{
+    Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
+    if(isChannelName(msg.m_params[0]))
+    {
+        QString fromNick = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
+        QString textToPrint;
+        QColor color;
+
+        CtcpRequestType requestType = getCtcpRequestType(msg);
+        if(requestType != RequestTypeInvalid)
+        {
+            // ACTION is /me, so handle according to that
+            if(requestType == RequestTypeAction)
+            {
+                QString action = msg.m_params[1];
+
+                // action = "\1ACTION <action>\1"
+                // first 8 characters and last 1 character need to be excluded
+                // so we'll take the mid, starting at index 8 and going until every
+                // character but the last is included
+                color.setNamedColor(g_pCfgManager->getOptionValue("colors.ini", "action"));
+                textToPrint = QString("* %1 %2")
+                              .arg(fromNick)
+                              .arg(action.mid(8, action.size()-9));
+            }
+        }
+        else
+        {
+            color.setNamedColor(g_pCfgManager->getOptionValue("colors.ini", "say"));
+            textToPrint = QString("<%1> %2")
+                          .arg(fromNick)
+                          .arg(msg.m_params[1]);
+        }
+
+        printOutput(textToPrint, color);
+    }
+}
+
+void ChannelWindow::onTopicMessage(Event *evt)
+{
+    Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
+    if(isChannelName(msg.m_params[0]))
+    {
+        QString textToPrint = QString("* %1 changes topic to: %2")
+                    .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName))
+                    .arg(msg.m_params[1]);
+        QColor topicColor(g_pCfgManager->getOptionValue("colors.ini", "topic"));
+        printOutput(textToPrint, topicColor);
+
+        if(m_pManager)
+        {
+            QTreeWidgetItem *pItem = m_pManager->getItemFromWindow(this);
+            QString titleWithTopic = QString("%1: %2")
+                                     .arg(pItem->text(0))
+                                     .arg(msg.m_params[1]);
+            setTitle(stripCodes(titleWithTopic));
         }
     }
 }

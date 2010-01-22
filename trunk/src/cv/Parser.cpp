@@ -892,7 +892,7 @@ QString getPrefixRules(const QString &param)
 CtcpRequestType getCtcpRequestType(const Message &msg)
 {
     // it has to be a private message
-    if(msg.m_command != IRC_COMMAND_PRIVMSG)
+    if(msg.m_isNumeric || msg.m_command != IRC_COMMAND_PRIVMSG)
     {
         return RequestTypeInvalid;
     }

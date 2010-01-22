@@ -60,6 +60,7 @@ public:
     int getPort() { return m_port; }
     void setNick(const QString &nick) { m_nick = nick; }
     QString getNick() { return m_nick; }
+    bool isMyNick(const QString &nick) { return (m_nick.compare(nick, Qt::CaseSensitive) == 0); }
 
     EventManager *getEventManager() { return m_pEvtMgr; }
 

@@ -42,6 +42,10 @@ public:
     // returns NULL otherwise
     OutputWindow *getChildIrcWindow(const QString &name);
 
+    // returns true if the child window with the provided name
+    // exists, returns false otherwise
+    bool childIrcWindowExists(const QString &name);
+
     // returns a list of all IrcChanWindows that are currently
     // being managed in the server
     QList<ChannelWindow *> getChannels();
@@ -63,15 +67,12 @@ public:
     void onErrorMessage(Event *evt);
     void onInviteMessage(Event *evt);
     void onJoinMessage(Event *evt);
-    void onKickMessage(Event *evt);
     void onModeMessage(Event *evt);
     void onNickMessage(Event *evt);
     void onNoticeMessage(Event *evt);
-    void onPartMessage(Event *evt);
     void onPongMessage(Event *evt);
     void onPrivmsgMessage(Event *evt);
     void onQuitMessage(Event *evt);
-    void onTopicMessage(Event *evt);
     void onWallopsMessage(Event *evt);
     void onNumericMessage(Event *evt);
     void onUnknownMessage(Event *evt);

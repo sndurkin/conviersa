@@ -182,7 +182,7 @@ void Session::processMessage(const Message &msg)
                 // check to make sure nickname hasn't changed; some or all servers apparently don't
                 // send you a NICK message when your nickname conflicts with another user upon
                 // first entering the server, and you try to change it
-                if(m_nick.compare(msg.m_params[0], Qt::CaseInsensitive) != 0)
+                if(!isMyNick(msg.m_params[0]))
                 {
                     setNick(msg.m_params[0]);
                 }
@@ -237,49 +237,86 @@ void Session::processMessage(const Message &msg)
         switch(msg.m_command)
         {
             case IRC_COMMAND_ERROR:
+            {
                 m_pEvtMgr->FireEvent("onErrorMessage", evt);
                 break;
+            }
             case IRC_COMMAND_INVITE:
+            {
                 m_pEvtMgr->FireEvent("onInviteMessage", evt);
                 break;
+            }
             case IRC_COMMAND_JOIN:
+            {
                 m_pEvtMgr->FireEvent("onJoinMessage", evt);
                 break;
+            }
             case IRC_COMMAND_KICK:
+            {
                 m_pEvtMgr->FireEvent("onKickMessage", evt);
                 break;
+            }
             case IRC_COMMAND_MODE:
+            {
                 m_pEvtMgr->FireEvent("onModeMessage", evt);
                 break;
+            }
             case IRC_COMMAND_NICK:
+            {
                 m_pEvtMgr->FireEvent("onNickMessage", evt);
+
+                // update the user's nickname if he's the one changing it
+                QString oldNick = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
+                if(isMyNick(oldNick))
+                {
+                    setNick(msg.m_params[0]);
+                }
                 break;
+            }
             case IRC_COMMAND_NOTICE:
+            {
                 m_pEvtMgr->FireEvent("onNoticeMessage", evt);
                 break;
+            }
             case IRC_COMMAND_PART:
+            {
                 m_pEvtMgr->FireEvent("onPartMessage", evt);
                 break;
+            }
             case IRC_COMMAND_PING:
+            {
                 sendData("PONG :" + msg.m_params[0]);
                 break;
+            }
             case IRC_COMMAND_PONG:
+            {
                 m_pEvtMgr->FireEvent("onPongMessage", evt);
                 break;
+            }
             case IRC_COMMAND_PRIVMSG:
+            {
                 m_pEvtMgr->FireEvent("onPrivmsgMessage", evt);
                 break;
+            }
             case IRC_COMMAND_QUIT:
+            {
                 m_pEvtMgr->FireEvent("onQuitMessage", evt);
                 break;
+            }
             case IRC_COMMAND_TOPIC:
+            {
                 m_pEvtMgr->FireEvent("onTopicMessage", evt);
                 break;
+            }
             case IRC_COMMAND_WALLOPS:
+            {
                 m_pEvtMgr->FireEvent("onWallopsMessage", evt);
                 break;
+            }
             default:
+            {
                 m_pEvtMgr->FireEvent("onUnknownMessage", evt);
+            }
         }
     }
 

@@ -9,6 +9,7 @@
 #include <QWebView>
 #include <QMutex>
 #include "cv/Session.h"
+#include "cv/ConfigManager.h"
 #include "cv/gui/types.h"
 #include "cv/gui/WindowManager.h"
 #include "cv/gui/QueryWindow.h"
@@ -17,12 +18,11 @@
 namespace cv { namespace gui {
 
 QueryWindow::QueryWindow(QExplicitlySharedDataPointer<Session> pSharedSession,
-                         const QString &title/* = tr("Untitled")*/,
-                         const QSize &size/* = QSize(500, 300)*/)
-    : OutputWindow(title, size)
+                         const QString &targetNick)
+    : OutputWindow(targetNick)
 {
     m_pSharedSession = pSharedSession;
-    m_targetNick = title;
+    m_targetNick = targetNick;
 
     m_pVLayout->addWidget(m_pOutput);
     m_pVLayout->addWidget(m_pInput);
@@ -31,14 +31,16 @@ QueryWindow::QueryWindow(QExplicitlySharedDataPointer<Session> pSharedSession,
     setLayout(m_pVLayout);
 
     m_pSharedSession->getEventManager()->HookEvent("onNumericMessage", MakeDelegate(this, &QueryWindow::onNumericMessage));
-    //QObject::connect(m_pSharedSession.data(), SIGNAL(connected()), this, SLOT(onServerConnect()));
-    //QObject::connect(m_pSharedSession.data(), SIGNAL(disconnected()), this, SLOT(onServerDisconnect()));
-    //QObject::connect(m_pSharedSession.data(), SIGNAL(dataParsed(Message)), this, SLOT(onReceiveMessage(Message)));
+    m_pSharedSession->getEventManager()->HookEvent("onNickMessage", MakeDelegate(this, &QueryWindow::onNickMessage));
+    m_pSharedSession->getEventManager()->HookEvent("onPrivmsgMessage", MakeDelegate(this, &QueryWindow::onPrivmsgMessage));
 }
 
 QueryWindow::~QueryWindow()
 {
-    QObject::disconnect(m_pSharedSession.data(), 0, this, 0);
+    // todo: rewrite
+    m_pSharedSession->getEventManager()->UnhookEvent("onNumericMessage", MakeDelegate(this, &QueryWindow::onNumericMessage));
+    m_pSharedSession->getEventManager()->UnhookEvent("onNickMessage", MakeDelegate(this, &QueryWindow::onNickMessage));
+    m_pSharedSession->getEventManager()->UnhookEvent("onPrivmsgMessage", MakeDelegate(this, &QueryWindow::onPrivmsgMessage));
 }
 
 int QueryWindow::getIrcWindowType()
@@ -76,6 +78,77 @@ void QueryWindow::onNumericMessage(Event *evt)
             {
                 printOutput(getNumericText(msg));
             }
+        }
+    }
+}
+
+void QueryWindow::onNickMessage(Event *evt)
+{
+    Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
+
+    // will print a nick change message to the PM window
+    // if we get a NICK message, which will only be if we're in
+    // a channel with the person (or if the nick being changed is ours)
+    QString oldNick = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
+    QString textToPrint = QString("* %1 is now known as %2")
+                          .arg(oldNick)
+                          .arg(msg.m_params[0]);
+    QString nickColor = g_pCfgManager->getOptionValue("colors.ini", "nick");
+    if(m_pSharedSession->isMyNick(oldNick))
+    {
+        printOutput(textToPrint, nickColor);
+    }
+    else
+    {
+        // if the target nick has changed and there isn't another query with that name
+        // already open, then we can safely change the this query's target nick
+        bool queryWindowExists = dynamic_cast<StatusWindow *>(m_pManager->getParentWindow(this))->childIrcWindowExists(msg.m_params[0]);
+        if(isTargetNick(oldNick) && !queryWindowExists)
+        {
+            setTargetNick(msg.m_params[0]);
+            printOutput(textToPrint, nickColor);
+        }
+    }
+}
+
+void QueryWindow::onPrivmsgMessage(Event *evt)
+{
+    Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
+    if(m_pSharedSession->isMyNick(msg.m_params[0]))
+    {
+        QString fromNick = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
+        if(isTargetNick(fromNick))
+        {
+            QString textToPrint;
+            QColor color;
+
+            CtcpRequestType requestType = getCtcpRequestType(msg);
+            if(requestType != RequestTypeInvalid)
+            {
+                // ACTION is /me, so handle according to that
+                if(requestType == RequestTypeAction)
+                {
+                    QString action = msg.m_params[1];
+
+                    // action = "\1ACTION <action>\1"
+                    // first 8 characters and last 1 character need to be excluded
+                    // so we'll take the mid, starting at index 8 and going until every
+                    // character but the last is included
+                    color.setNamedColor(g_pCfgManager->getOptionValue("colors.ini", "action"));
+                    textToPrint = QString("* %1 %2")
+                                  .arg(fromNick)
+                                  .arg(action.mid(8, action.size()-9));
+                }
+            }
+            else
+            {
+                color.setNamedColor(g_pCfgManager->getOptionValue("colors.ini", "say"));
+                textToPrint = QString("<%1> %2")
+                              .arg(fromNick)
+                              .arg(msg.m_params[1]);
+            }
+
+            printOutput(textToPrint, color);
         }
     }
 }

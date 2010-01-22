@@ -21,8 +21,7 @@ private:
 
 public:
     QueryWindow(QExplicitlySharedDataPointer<Session> pSharedSession,
-                const QString &title = tr("Untitled"),
-                const QSize &size = QSize(500, 300));
+                const QString &targetNick);
     ~QueryWindow();
 
     int getIrcWindowType();
@@ -34,8 +33,12 @@ public:
     // (same as IWindow::GetWindowName() & IWindow::GetTitle())
     QString getTargetNick();
 
+    bool isTargetNick(const QString &nick) { return (m_targetNick.compare(nick, Qt::CaseSensitive) == 0); }
+
     // events
     void onNumericMessage(Event *evt);
+    void onNickMessage(Event *evt);
+    void onPrivmsgMessage(Event *evt);
 
 protected:
     void handleTab();

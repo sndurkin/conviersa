@@ -1,11 +1,28 @@
 #summary explanation of the move from signals/slots to a custom event system
+<font size=3>
+==Old System==
+What we used to have was the Qt signals/slots system, which conceptually looked something like this:
 
-What we currently have is the Qt signals/slots system, which looks something like this:
+ http://imgur.com/GYgvE.png
 
-http://imgur.com/GYgvE.png
+The problem with this is that we don't have enough control over the delegation system, because there are no return values, and there is no way to really control the chain of functions.
+<br>
+<br>
+----
+<br>
+==New System==
 
-The problem is that we don't have enough control over the system, because there are no return values, and there is no way to really control the chain of functions. So, we'll be using a custom event system that looks something like this:
+To solve the problems mentioned above, we created a custom event system that looks like this:
 
-http://imgur.com/VjocC.png
+ http://imgur.com/VjocC.png
 
-This will allow plugins to override default functionality of the base client easily, by returning a value that aborts the rest of the hook chain. It also allows plugins to see the information before the base client, so that they can modify it before it trickles down to the default event handling (which is any handling inside the main app).
+Some of the features of this event system are:
+  * anything that has access to the event manager can hook an event, adding additional "default functionality"
+  * any plugin that hooks an event can override the base client's default functionality by returning a value that aborts the rest of the hook chain
+  * all plugins get access to event information before the base client's default functionality, so they can easily modify it then pass it on
+<br>
+This works pretty well for base client functionality: Every `Session` object has its own `EventManager` instance, and creates various events for connecting, disconnecting, and receiving messages. Each Window that uses this Session object (`StatusWindow`, `ChannelWindow`, `QueryWindow`, etc) can then hook the events it needs to use, and all is well. The only problem it has is with providing full functionality for plugins.
+
+Let's use a simple example. Let's say that a plugin wants to add some functionality that would be the same regardless of the `Session`. It could try to hook the KICK message from the server, and immediately send a JOIN message back to add an auto-rejoin feature into the client (which will be provided by default, but this is an example). In order to accomplish this, the plugin would have to hook every `Session`'s KICK message event. That would get pretty annoying. It would be much easier to have a way to globally hook all KICK messages from all servers, and then act accordingly. That's where *event system chaining* comes in.
+
+*Event system chaining* is a way for an `EventSystem` to pass an event fire "up the chain" to another `EventSystem`. As an example, `EventSystem` A creates an event called "onMessage". Then `EventSystem` B comes along and creates an event called "onMessage" but it also adds A to its chain, so that when B's "onMessage" event fires, it will also fire A's event. We can have also have other `EventSystem`s C, D, and E that also chain with A, so that A acts as a global one to all of them. Then a plugin can hook A's event, and it can now access every "onMessage" event that fires.

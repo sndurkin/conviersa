@@ -17,7 +17,7 @@ To solve the problems mentioned above, we created a custom event system that loo
  http://imgur.com/VjocC.png
 
 Some of the features of this event system are:
-  * anything in the base client that has access to an `EventManager` instance can hook an event, adding "default functionality" to the event
+  * anything in the base client that has access to an `EventManager` instance can hook an event, adding "default functionality" to it
   * any plugin that hooks an event can override the base client's default functionality by returning a value that aborts the rest of the hook chain
   * all plugins get access to event information before the base client's default functionality, so they can easily modify it then pass it on
 <br>

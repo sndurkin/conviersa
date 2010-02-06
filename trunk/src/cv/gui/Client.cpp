@@ -10,13 +10,15 @@
 #include "cv/gui/Client.h"
 #include "cv/gui/WindowManager.h"
 #include "cv/gui/AltWindowContainer.h"
+#include "cv/gui/InputOutputWindow.h"
 #include "cv/gui/StatusWindow.h"
 #include "cv/gui/ChannelWindow.h"
 #include "cv/gui/QueryWindow.h"
 
 namespace cv {
 
-ConfigManager *g_pCfgManager;
+ConfigManager * g_pCfgManager;
+EventManager *  g_pEvtManager;
 
 namespace gui {
 
@@ -44,6 +46,11 @@ Client::Client(const QString &title)
 
     g_pCfgManager = new ConfigManager;
     setupColorConfig();
+
+    // TODO: fill in with events
+    g_pEvtManager = new EventManager;
+    g_pEvtManager->createEvent("onInput");
+    g_pEvtManager->hookEvent("onInput", &InputOutputWindow::handleInput);
 }
 
 //-----------------------------------//

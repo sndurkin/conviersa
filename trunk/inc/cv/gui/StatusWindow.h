@@ -9,7 +9,7 @@
 #pragma once
 
 #include "cv/Parser.h"
-#include "cv/gui/OutputWindow.h"
+#include "cv/gui/InputOutputWindow.h"
 
 namespace cv { namespace gui {
 
@@ -17,7 +17,7 @@ class ChannelListWindow;
 class ChannelWindow;
 class QueryWindow;
 
-class StatusWindow : public OutputWindow
+class StatusWindow : public InputOutputWindow
 {
     Q_OBJECT
 

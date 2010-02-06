@@ -52,7 +52,7 @@ private:
     void setupMenu();
     void setupColorConfig();
 
-    public slots:
+public slots:
     // creates a blank IRC server window
     void onNewIrcServerWindow();
 };

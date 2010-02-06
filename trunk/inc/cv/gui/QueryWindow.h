@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include "cv/gui/OutputWindow.h"
+#include "cv/gui/InputOutputWindow.h"
 
 namespace cv { namespace gui {
 
-class QueryWindow : public OutputWindow
+class QueryWindow : public InputOutputWindow
 {
     Q_OBJECT
 

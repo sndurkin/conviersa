@@ -26,7 +26,7 @@ namespace cv { namespace gui {
 
 StatusWindow::StatusWindow(const QString &title/* = tr("Server Window")*/,
                            const QSize &size/* = QSize(500, 300)*/)
-  : OutputWindow(title, size),
+  : InputOutputWindow(title, size),
     m_populatingUserList(false),
     m_pChanListWin(NULL)
 {
@@ -38,21 +38,21 @@ StatusWindow::StatusWindow(const QString &title/* = tr("Server Window")*/,
 
     m_pSharedSession = new Session("conviersa");
     EventManager *pEvtMgr = m_pSharedSession->getEventManager();
-    pEvtMgr->HookEvent("onConnect", MakeDelegate(this, &StatusWindow::onServerConnect));
-    pEvtMgr->HookEvent("onDisconnect", MakeDelegate(this, &StatusWindow::onServerDisconnect));
-    pEvtMgr->HookEvent("onReceiveData", MakeDelegate(this, &StatusWindow::onReceiveData));
-    pEvtMgr->HookEvent("onErrorMessage", MakeDelegate(this, &StatusWindow::onErrorMessage));
-    pEvtMgr->HookEvent("onInviteMessage", MakeDelegate(this, &StatusWindow::onInviteMessage));
-    pEvtMgr->HookEvent("onJoinMessage", MakeDelegate(this, &StatusWindow::onJoinMessage));
-    pEvtMgr->HookEvent("onModeMessage", MakeDelegate(this, &StatusWindow::onModeMessage));
-    pEvtMgr->HookEvent("onNickMessage", MakeDelegate(this, &StatusWindow::onNickMessage));
-    pEvtMgr->HookEvent("onNoticeMessage", MakeDelegate(this, &StatusWindow::onNoticeMessage));
-    pEvtMgr->HookEvent("onPongMessage", MakeDelegate(this, &StatusWindow::onPongMessage));
-    pEvtMgr->HookEvent("onPrivmsgMessage", MakeDelegate(this, &StatusWindow::onPrivmsgMessage));
-    pEvtMgr->HookEvent("onQuitMessage", MakeDelegate(this, &StatusWindow::onQuitMessage));
-    pEvtMgr->HookEvent("onWallopsMessage", MakeDelegate(this, &StatusWindow::onWallopsMessage));
-    pEvtMgr->HookEvent("onNumericMessage", MakeDelegate(this, &StatusWindow::onNumericMessage));
-    pEvtMgr->HookEvent("onUnknownMessage", MakeDelegate(this, &StatusWindow::onUnknownMessage));
+    pEvtMgr->hookEvent("onConnect", MakeDelegate(this, &StatusWindow::onServerConnect));
+    pEvtMgr->hookEvent("onDisconnect", MakeDelegate(this, &StatusWindow::onServerDisconnect));
+    pEvtMgr->hookEvent("onReceiveData", MakeDelegate(this, &StatusWindow::onReceiveData));
+    pEvtMgr->hookEvent("onErrorMessage", MakeDelegate(this, &StatusWindow::onErrorMessage));
+    pEvtMgr->hookEvent("onInviteMessage", MakeDelegate(this, &StatusWindow::onInviteMessage));
+    pEvtMgr->hookEvent("onJoinMessage", MakeDelegate(this, &StatusWindow::onJoinMessage));
+    pEvtMgr->hookEvent("onModeMessage", MakeDelegate(this, &StatusWindow::onModeMessage));
+    pEvtMgr->hookEvent("onNickMessage", MakeDelegate(this, &StatusWindow::onNickMessage));
+    pEvtMgr->hookEvent("onNoticeMessage", MakeDelegate(this, &StatusWindow::onNoticeMessage));
+    pEvtMgr->hookEvent("onPongMessage", MakeDelegate(this, &StatusWindow::onPongMessage));
+    pEvtMgr->hookEvent("onPrivmsgMessage", MakeDelegate(this, &StatusWindow::onPrivmsgMessage));
+    pEvtMgr->hookEvent("onQuitMessage", MakeDelegate(this, &StatusWindow::onQuitMessage));
+    pEvtMgr->hookEvent("onWallopsMessage", MakeDelegate(this, &StatusWindow::onWallopsMessage));
+    pEvtMgr->hookEvent("onNumericMessage", MakeDelegate(this, &StatusWindow::onNumericMessage));
+    pEvtMgr->hookEvent("onUnknownMessage", MakeDelegate(this, &StatusWindow::onUnknownMessage));
 }
 
 StatusWindow::~StatusWindow()
@@ -158,7 +158,7 @@ bool StatusWindow::eventFilter(QObject *obj, QEvent *event)
         m_pChanListWin = NULL;
     }
 
-    return OutputWindow::eventFilter(obj, event);
+    return InputOutputWindow::eventFilter(obj, event);
 }
 
 void StatusWindow::handle321Numeric(const Message &msg)

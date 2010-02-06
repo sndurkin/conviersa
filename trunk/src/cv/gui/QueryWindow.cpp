@@ -19,7 +19,7 @@ namespace cv { namespace gui {
 
 QueryWindow::QueryWindow(QExplicitlySharedDataPointer<Session> pSharedSession,
                          const QString &targetNick)
-    : OutputWindow(targetNick)
+    : InputOutputWindow(targetNick)
 {
     m_pSharedSession = pSharedSession;
     m_targetNick = targetNick;
@@ -30,17 +30,17 @@ QueryWindow::QueryWindow(QExplicitlySharedDataPointer<Session> pSharedSession,
     m_pVLayout->setContentsMargins(2, 2, 2, 2);
     setLayout(m_pVLayout);
 
-    m_pSharedSession->getEventManager()->HookEvent("onNumericMessage", MakeDelegate(this, &QueryWindow::onNumericMessage));
-    m_pSharedSession->getEventManager()->HookEvent("onNickMessage", MakeDelegate(this, &QueryWindow::onNickMessage));
-    m_pSharedSession->getEventManager()->HookEvent("onPrivmsgMessage", MakeDelegate(this, &QueryWindow::onPrivmsgMessage));
+    m_pSharedSession->getEventManager()->hookEvent("onNumericMessage", MakeDelegate(this, &QueryWindow::onNumericMessage));
+    m_pSharedSession->getEventManager()->hookEvent("onNickMessage", MakeDelegate(this, &QueryWindow::onNickMessage));
+    m_pSharedSession->getEventManager()->hookEvent("onPrivmsgMessage", MakeDelegate(this, &QueryWindow::onPrivmsgMessage));
 }
 
 QueryWindow::~QueryWindow()
 {
     // todo: rewrite
-    m_pSharedSession->getEventManager()->UnhookEvent("onNumericMessage", MakeDelegate(this, &QueryWindow::onNumericMessage));
-    m_pSharedSession->getEventManager()->UnhookEvent("onNickMessage", MakeDelegate(this, &QueryWindow::onNickMessage));
-    m_pSharedSession->getEventManager()->UnhookEvent("onPrivmsgMessage", MakeDelegate(this, &QueryWindow::onPrivmsgMessage));
+    m_pSharedSession->getEventManager()->unhookEvent("onNumericMessage", MakeDelegate(this, &QueryWindow::onNumericMessage));
+    m_pSharedSession->getEventManager()->unhookEvent("onNickMessage", MakeDelegate(this, &QueryWindow::onNickMessage));
+    m_pSharedSession->getEventManager()->unhookEvent("onPrivmsgMessage", MakeDelegate(this, &QueryWindow::onPrivmsgMessage));
 }
 
 int QueryWindow::getIrcWindowType()

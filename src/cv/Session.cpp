@@ -23,29 +23,30 @@ Session::Session(const QString& nick)
     QObject::connect(m_pConn, SIGNAL(dataReceived(QString)), this, SLOT(onReceiveData(QString)));
 
     m_pEvtMgr = new EventManager;
-    m_pEvtMgr->CreateEvent("onConnect");
-    m_pEvtMgr->CreateEvent("onDisconnect");
-    m_pEvtMgr->CreateEvent("onReceiveData");
-    m_pEvtMgr->CreateEvent("onErrorMessage");
-    m_pEvtMgr->CreateEvent("onInviteMessage");
-    m_pEvtMgr->CreateEvent("onJoinMessage");
-    m_pEvtMgr->CreateEvent("onKickMessage");
-    m_pEvtMgr->CreateEvent("onModeMessage");
-    m_pEvtMgr->CreateEvent("onNickMessage");
-    m_pEvtMgr->CreateEvent("onNoticeMessage");
-    m_pEvtMgr->CreateEvent("onPartMessage");
-    m_pEvtMgr->CreateEvent("onPongMessage");
-    m_pEvtMgr->CreateEvent("onPrivmsgMessage");
-    m_pEvtMgr->CreateEvent("onQuitMessage");
-    m_pEvtMgr->CreateEvent("onTopicMessage");
-    m_pEvtMgr->CreateEvent("onWallopsMessage");
-    m_pEvtMgr->CreateEvent("onNumericMessage");
-    m_pEvtMgr->CreateEvent("onUnknownMessage");
+    m_pEvtMgr->createEvent("onConnect");
+    m_pEvtMgr->createEvent("onDisconnect");
+    m_pEvtMgr->createEvent("onReceiveData");
+    m_pEvtMgr->createEvent("onErrorMessage");
+    m_pEvtMgr->createEvent("onInviteMessage");
+    m_pEvtMgr->createEvent("onJoinMessage");
+    m_pEvtMgr->createEvent("onKickMessage");
+    m_pEvtMgr->createEvent("onModeMessage");
+    m_pEvtMgr->createEvent("onNickMessage");
+    m_pEvtMgr->createEvent("onNoticeMessage");
+    m_pEvtMgr->createEvent("onPartMessage");
+    m_pEvtMgr->createEvent("onPongMessage");
+    m_pEvtMgr->createEvent("onPrivmsgMessage");
+    m_pEvtMgr->createEvent("onQuitMessage");
+    m_pEvtMgr->createEvent("onTopicMessage");
+    m_pEvtMgr->createEvent("onWallopsMessage");
+    m_pEvtMgr->createEvent("onNumericMessage");
+    m_pEvtMgr->createEvent("onUnknownMessage");
 }
 
 Session::~Session()
 {
     delete m_pConn;
+    delete m_pEvtMgr;
 }
 
 void Session::connectToServer(const QString& host, int port = 6667)
@@ -230,7 +231,7 @@ void Session::processMessage(const Message &msg)
             }
         }
 
-        m_pEvtMgr->FireEvent("onNumericMessage", evt);
+        m_pEvtMgr->fireEvent("onNumericMessage", evt);
     }
     else
     {
@@ -238,32 +239,32 @@ void Session::processMessage(const Message &msg)
         {
             case IRC_COMMAND_ERROR:
             {
-                m_pEvtMgr->FireEvent("onErrorMessage", evt);
+                m_pEvtMgr->fireEvent("onErrorMessage", evt);
                 break;
             }
             case IRC_COMMAND_INVITE:
             {
-                m_pEvtMgr->FireEvent("onInviteMessage", evt);
+                m_pEvtMgr->fireEvent("onInviteMessage", evt);
                 break;
             }
             case IRC_COMMAND_JOIN:
             {
-                m_pEvtMgr->FireEvent("onJoinMessage", evt);
+                m_pEvtMgr->fireEvent("onJoinMessage", evt);
                 break;
             }
             case IRC_COMMAND_KICK:
             {
-                m_pEvtMgr->FireEvent("onKickMessage", evt);
+                m_pEvtMgr->fireEvent("onKickMessage", evt);
                 break;
             }
             case IRC_COMMAND_MODE:
             {
-                m_pEvtMgr->FireEvent("onModeMessage", evt);
+                m_pEvtMgr->fireEvent("onModeMessage", evt);
                 break;
             }
             case IRC_COMMAND_NICK:
             {
-                m_pEvtMgr->FireEvent("onNickMessage", evt);
+                m_pEvtMgr->fireEvent("onNickMessage", evt);
 
                 // update the user's nickname if he's the one changing it
                 QString oldNick = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
@@ -275,12 +276,12 @@ void Session::processMessage(const Message &msg)
             }
             case IRC_COMMAND_NOTICE:
             {
-                m_pEvtMgr->FireEvent("onNoticeMessage", evt);
+                m_pEvtMgr->fireEvent("onNoticeMessage", evt);
                 break;
             }
             case IRC_COMMAND_PART:
             {
-                m_pEvtMgr->FireEvent("onPartMessage", evt);
+                m_pEvtMgr->fireEvent("onPartMessage", evt);
                 break;
             }
             case IRC_COMMAND_PING:
@@ -290,32 +291,32 @@ void Session::processMessage(const Message &msg)
             }
             case IRC_COMMAND_PONG:
             {
-                m_pEvtMgr->FireEvent("onPongMessage", evt);
+                m_pEvtMgr->fireEvent("onPongMessage", evt);
                 break;
             }
             case IRC_COMMAND_PRIVMSG:
             {
-                m_pEvtMgr->FireEvent("onPrivmsgMessage", evt);
+                m_pEvtMgr->fireEvent("onPrivmsgMessage", evt);
                 break;
             }
             case IRC_COMMAND_QUIT:
             {
-                m_pEvtMgr->FireEvent("onQuitMessage", evt);
+                m_pEvtMgr->fireEvent("onQuitMessage", evt);
                 break;
             }
             case IRC_COMMAND_TOPIC:
             {
-                m_pEvtMgr->FireEvent("onTopicMessage", evt);
+                m_pEvtMgr->fireEvent("onTopicMessage", evt);
                 break;
             }
             case IRC_COMMAND_WALLOPS:
             {
-                m_pEvtMgr->FireEvent("onWallopsMessage", evt);
+                m_pEvtMgr->fireEvent("onWallopsMessage", evt);
                 break;
             }
             default:
             {
-                m_pEvtMgr->FireEvent("onUnknownMessage", evt);
+                m_pEvtMgr->fireEvent("onUnknownMessage", evt);
             }
         }
     }
@@ -330,13 +331,13 @@ void Session::onConnect()
     sendData(info);
 
     // todo: find out what to do with Event *
-    m_pEvtMgr->FireEvent("onConnect", NULL);
+    m_pEvtMgr->fireEvent("onConnect", NULL);
 }
 
 void Session::onDisconnect()
 {
     // todo: find out what to do with Event *
-    m_pEvtMgr->FireEvent("onDisconnect", NULL);
+    m_pEvtMgr->fireEvent("onDisconnect", NULL);
 }
 
 void Session::onReceiveData(const QString &data)
@@ -353,7 +354,7 @@ void Session::onReceiveData(const QString &data)
         m_prevData.remove(0, numChars);
 
         Event *evt = new DataEvent(msgData);
-        m_pEvtMgr->FireEvent("onReceiveData", evt);
+        m_pEvtMgr->fireEvent("onReceiveData", evt);
         delete evt;
 
         Message msg = parseData(msgData);

@@ -10,7 +10,7 @@
 
 #include <QString>
 #include "cv/ChannelUser.h"
-#include "cv/gui/OutputWindow.h"
+#include "cv/gui/InputOutputWindow.h"
 
 class QListWidget;
 class QSplitter;
@@ -21,7 +21,7 @@ namespace cv { namespace gui {
 // subject to change
 const unsigned int MAX_NICK_PRIORITY = 1;
 
-class ChannelWindow : public OutputWindow
+class ChannelWindow : public InputOutputWindow
 {
     Q_OBJECT
 

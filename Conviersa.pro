@@ -31,7 +31,8 @@ HEADERS += inc/cv/qext.h \
     inc/cv/gui/ChannelWindow.h \
     inc/cv/gui/ChannelTopicDelegate.h \
     inc/cv/gui/ChannelListWindow.h \
-    inc/cv/EventManager.h
+    inc/cv/EventManager.h \
+    inc/cv/gui/InputOutputWindow.h
 SOURCES += src/cv/main.cpp \
     src/cv/qext.cpp \
     src/cv/Connection.cpp \
@@ -53,4 +54,5 @@ SOURCES += src/cv/main.cpp \
     src/cv/gui/ChannelWindow.cpp \
     src/cv/gui/ChannelTopicDelegate.cpp \
     src/cv/gui/ChannelListWindow.cpp \
-    src/cv/EventManager.cpp
+    src/cv/EventManager.cpp \
+    src/cv/gui/InputOutputWindow.cpp

@@ -28,7 +28,7 @@ namespace cv { namespace gui {
 ChannelWindow::ChannelWindow(QExplicitlySharedDataPointer<Session> pSharedSession,
                              const QString &title/* = tr("Untitled")*/,
                              const QSize &size/* = QSize(500, 300)*/)
-    : OutputWindow(title, size),
+    : InputOutputWindow(title, size),
       m_inChannel(false)
 {
     m_pSharedSession = pSharedSession;
@@ -56,27 +56,27 @@ ChannelWindow::ChannelWindow(QExplicitlySharedDataPointer<Session> pSharedSessio
 
     setLayout(m_pVLayout);
 
-    m_pSharedSession->getEventManager()->HookEvent("onNumericMessage", MakeDelegate(this, &ChannelWindow::onNumericMessage));
-    m_pSharedSession->getEventManager()->HookEvent("onJoinMessage", MakeDelegate(this, &ChannelWindow::onJoinMessage));
-    m_pSharedSession->getEventManager()->HookEvent("onKickMessage", MakeDelegate(this, &ChannelWindow::onKickMessage));
-    m_pSharedSession->getEventManager()->HookEvent("onModeMessage", MakeDelegate(this, &ChannelWindow::onModeMessage));
-    m_pSharedSession->getEventManager()->HookEvent("onNickMessage", MakeDelegate(this, &ChannelWindow::onNickMessage));
-    m_pSharedSession->getEventManager()->HookEvent("onPartMessage", MakeDelegate(this, &ChannelWindow::onPartMessage));
-    m_pSharedSession->getEventManager()->HookEvent("onPrivmsgMessage", MakeDelegate(this, &ChannelWindow::onPrivmsgMessage));
-    m_pSharedSession->getEventManager()->HookEvent("onTopicMessage", MakeDelegate(this, &ChannelWindow::onTopicMessage));
+    m_pSharedSession->getEventManager()->hookEvent("onNumericMessage", MakeDelegate(this, &ChannelWindow::onNumericMessage));
+    m_pSharedSession->getEventManager()->hookEvent("onJoinMessage", MakeDelegate(this, &ChannelWindow::onJoinMessage));
+    m_pSharedSession->getEventManager()->hookEvent("onKickMessage", MakeDelegate(this, &ChannelWindow::onKickMessage));
+    m_pSharedSession->getEventManager()->hookEvent("onModeMessage", MakeDelegate(this, &ChannelWindow::onModeMessage));
+    m_pSharedSession->getEventManager()->hookEvent("onNickMessage", MakeDelegate(this, &ChannelWindow::onNickMessage));
+    m_pSharedSession->getEventManager()->hookEvent("onPartMessage", MakeDelegate(this, &ChannelWindow::onPartMessage));
+    m_pSharedSession->getEventManager()->hookEvent("onPrivmsgMessage", MakeDelegate(this, &ChannelWindow::onPrivmsgMessage));
+    m_pSharedSession->getEventManager()->hookEvent("onTopicMessage", MakeDelegate(this, &ChannelWindow::onTopicMessage));
 }
 
 ChannelWindow::~ChannelWindow()
 {
     // todo: rewrite
-    m_pSharedSession->getEventManager()->UnhookEvent("onNumericMessage", MakeDelegate(this, &ChannelWindow::onNumericMessage));
-    m_pSharedSession->getEventManager()->UnhookEvent("onJoinMessage", MakeDelegate(this, &ChannelWindow::onJoinMessage));
-    m_pSharedSession->getEventManager()->UnhookEvent("onKickMessage", MakeDelegate(this, &ChannelWindow::onKickMessage));
-    m_pSharedSession->getEventManager()->UnhookEvent("onModeMessage", MakeDelegate(this, &ChannelWindow::onModeMessage));
-    m_pSharedSession->getEventManager()->UnhookEvent("onNickMessage", MakeDelegate(this, &ChannelWindow::onNickMessage));
-    m_pSharedSession->getEventManager()->UnhookEvent("onPartMessage", MakeDelegate(this, &ChannelWindow::onPartMessage));
-    m_pSharedSession->getEventManager()->UnhookEvent("onPrivmsgMessage", MakeDelegate(this, &ChannelWindow::onPrivmsgMessage));
-    m_pSharedSession->getEventManager()->UnhookEvent("onTopicMessage", MakeDelegate(this, &ChannelWindow::onTopicMessage));
+    m_pSharedSession->getEventManager()->unhookEvent("onNumericMessage", MakeDelegate(this, &ChannelWindow::onNumericMessage));
+    m_pSharedSession->getEventManager()->unhookEvent("onJoinMessage", MakeDelegate(this, &ChannelWindow::onJoinMessage));
+    m_pSharedSession->getEventManager()->unhookEvent("onKickMessage", MakeDelegate(this, &ChannelWindow::onKickMessage));
+    m_pSharedSession->getEventManager()->unhookEvent("onModeMessage", MakeDelegate(this, &ChannelWindow::onModeMessage));
+    m_pSharedSession->getEventManager()->unhookEvent("onNickMessage", MakeDelegate(this, &ChannelWindow::onNickMessage));
+    m_pSharedSession->getEventManager()->unhookEvent("onPartMessage", MakeDelegate(this, &ChannelWindow::onPartMessage));
+    m_pSharedSession->getEventManager()->unhookEvent("onPrivmsgMessage", MakeDelegate(this, &ChannelWindow::onPrivmsgMessage));
+    m_pSharedSession->getEventManager()->unhookEvent("onTopicMessage", MakeDelegate(this, &ChannelWindow::onTopicMessage));
 }
 
 int ChannelWindow::getIrcWindowType()
@@ -264,7 +264,7 @@ void ChannelWindow::onJoinMessage(Event *evt)
         }
         else
         {
-            textToPrint = QString("%1 (%2) has joined %3")
+            textToPrint = QString("* %1 (%2) has joined %3")
                           .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName))
                           .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixUserAndHost))
                           .arg(msg.m_params[0]);

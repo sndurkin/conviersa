@@ -23,14 +23,19 @@ class OutputWindowScrollBar;
 
 //-----------------------------------//
 
-/**
- * IRC window interface. Windows can be divided into different types:
- *      - Status windows
- *      - Channel windows
- *      - Private windows
- * TODO: this needs a redesign. Looks messy to me. -- triton
+/*
+ *  IRC window interface
+ *  + indicates an abstract class
+ *
+ *  + Window
+ *      - ChannelListWindow
+ *      + OutputWindow
+ *          - DebugWindow
+ *          + InputOutputWindow
+ *              - StatusWindow
+ *              - ChannelWindow
+ *              - QueryWindow
  */
-
 class OutputWindow : public Window
 {
     Q_OBJECT
@@ -41,15 +46,12 @@ protected:
     int                     m_startOfText;
     QTextEdit *             m_pOutput;
     QTimer *                m_pResizeMarginTimer;
-    QPlainTextEdit *        m_pInput;
     QFont                   m_defaultFont;
 
     QExplicitlySharedDataPointer<Session>
                             m_pSharedSession;
 
     QTextCodec *            m_pCodec;
-
-    QList< QString >        m_pastCommands;
 
     // custom scroll bar for searching within an IRC window;
     // lines on which items are found will be draw inside
@@ -60,9 +62,6 @@ public:
     OutputWindow(const QString &title = tr("Untitled"),
                  const QSize &size = QSize(500, 300));
 
-    // misc functions
-    virtual void giveFocus();
-
     // window type functions
     virtual int getIrcWindowType() = 0;
 
@@ -72,23 +71,12 @@ public:
     void printDebug(const QString &text);
 
 protected:
-    // moves the input cursor to the end of the line
-    void moveCursorEnd();
-
-    // gets the text from the input control
-    QString getInputText();
-
     // imitates Google Chrome's search, with lines drawn in the scrollbar
     // and keywords highlighted in the document
     void search(const QString &textToFind);
 
     // handles child widget events
     bool eventFilter(QObject *obj, QEvent *event);
-
-    // handles the input for the window
-    void handleInput(const QString &inputText);
-
-    virtual void handleTab() = 0;
 
 public slots:
     // changes the vertical offset that ensures that the

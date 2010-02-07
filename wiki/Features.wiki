@@ -1,5 +1,5 @@
 #summary list of features
-
+<font size=3>
 We'll use this page to document all the features that will be put into the client. We can sort them into three groups: Beta, Release, Post-Release. We can use the strike-through tag (`<s></s>`) to indicate finished features as they are implemented.
 
 === Beta ===
@@ -7,8 +7,13 @@ We'll use this page to document all the features that will be put into the clien
 This will hold the core features that are typical of an IRC client. There won't be many features that distinguish this client from other IRC clients.
 
   * basic UI to connect to a server (with SSL capability) by specifying server and port
+    * the UI will be embedded into the server status window when disconnected
+    * when connected, there will be a small button at the top (just inside the output control) that you can click which will pop up the UI to connect to another 
+    * connect button should be somewhat transparent (and maybe it should be top left, instead?)
   * basic UI to manage configuration settings (a list of settings is needed)
+    * a better UI for the options dialog (and support for plugin options) can be decided on at a later stage
   * UI to access channel settings, such as topic, modes, bans, excepts, invites
+    * a simple dialog would do, but perhaps it's better to go with the theme of the transparent button in the top-left corner and the embedded UI
   * full implementation of the IRC protocol (including CTCP)
   * debug messages window, which prints out all raw messages to/from server
   * chat output control
@@ -42,7 +47,7 @@ This is the set of features that will distinguish the client from other IRC clie
   * smart nick completion
     * it assigns higher precedence to nicks that have spoken recently, so when performing nick completion with the tab button, you're more likely to get a nickname that you want; after the precedence, it is still ordered alphabetically
   * plugin API and scripting language integration (will need to be defined in much more detail later)
-    * event system, and hooking mechanism where plugins can have their functions called when a certain event takes place (either before or after the event)
+    * <s>event system, and hooking mechanism where plugins can have their functions called when a certain event takes place (either before or after the event)</s>
     * capability to manipulate any windows and containers (size and position)
     * capability to execute any commands that are possible via the input control (both general client commands and IRC commands)
       * we can probably just create functions that are exposed to the plugin API and which are also used by the chat input control for commands

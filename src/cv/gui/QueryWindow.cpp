@@ -10,7 +10,6 @@
 #include <QMutex>
 #include "cv/Session.h"
 #include "cv/ConfigManager.h"
-#include "cv/gui/types.h"
 #include "cv/gui/WindowManager.h"
 #include "cv/gui/QueryWindow.h"
 #include "cv/gui/StatusWindow.h"
@@ -41,11 +40,6 @@ QueryWindow::~QueryWindow()
     m_pSharedSession->getEventManager()->unhookEvent("onNumericMessage", MakeDelegate(this, &QueryWindow::onNumericMessage));
     m_pSharedSession->getEventManager()->unhookEvent("onNickMessage", MakeDelegate(this, &QueryWindow::onNickMessage));
     m_pSharedSession->getEventManager()->unhookEvent("onPrivmsgMessage", MakeDelegate(this, &QueryWindow::onPrivmsgMessage));
-}
-
-int QueryWindow::getIrcWindowType()
-{
-    return IRC_PRIV_WIN_TYPE;
 }
 
 // changes the nickname of the person we're chatting with
@@ -151,6 +145,26 @@ void QueryWindow::onPrivmsgMessage(Event *evt)
             printOutput(textToPrint, color);
         }
     }
+}
+
+// handles the printing/sending of the PRIVMSG message
+void QueryWindow::handleSay(const QString &text)
+{
+    QString textToPrint = QString("<%1> %2")
+                          .arg(m_pSharedSession->getNick())
+                          .arg(text);
+    printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "say")));
+    m_pSharedSession->sendPrivmsg(getWindowName(), text);
+}
+
+// handles the printing/sending of the PRIVMSG ACTION message
+void QueryWindow::handleAction(const QString &text)
+{
+    QString textToPrint = QString("* %1 %2")
+                          .arg(m_pSharedSession->getNick())
+                          .arg(text);
+    printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "action")));
+    m_pSharedSession->sendAction(getWindowName(), text);
 }
 
 void QueryWindow::handleTab()

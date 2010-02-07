@@ -74,6 +74,16 @@ void Session::sendData(const QString &data)
     m_pConn->send(data + "\r\n");
 }
 
+void Session::sendPrivmsg(const QString &target, const QString &msg)
+{
+    m_pConn->send("PRIVMSG " + target + " :" + msg + "\r\n");
+}
+
+void Session::sendAction(const QString &target, const QString &msg)
+{
+    m_pConn->send("PRIVMSG " + target + " :\1ACTION " + msg + "\1\r\n");
+}
+
 // sets the prefix rules supported by the server
 void Session::setPrefixRules(const QString &prefixRules)
 {

@@ -43,8 +43,6 @@ public:
 
     bool isChannelName(const QString &name) { return (name.compare(getWindowName(), Qt::CaseInsensitive) == 0); }
 
-    int getIrcWindowType();
-
     // lets the user know that he is back inside the channel,
     // whose window was already open when it was rejoined
     void joinChannel();
@@ -98,6 +96,12 @@ public:
     void onTopicMessage(Event *evt);
 
 protected:
+    // handles the printing/sending of the PRIVMSG message
+    void handleSay(const QString &text);
+
+    // handles the printing/sending of the PRIVMSG ACTION message
+    void handleAction(const QString &text);
+
     void handleTab();
     void closeEvent(QCloseEvent *event);
 

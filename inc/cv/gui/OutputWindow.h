@@ -62,9 +62,6 @@ public:
     OutputWindow(const QString &title = tr("Untitled"),
                  const QSize &size = QSize(500, 300));
 
-    // window type functions
-    virtual int getIrcWindowType() = 0;
-
     // printing functions
     void printOutput(const QString &text, const QColor &color = QColor(0, 0, 0));
     void printError(const QString &text);

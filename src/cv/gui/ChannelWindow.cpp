@@ -15,7 +15,6 @@
 #include "cv/Session.h"
 #include "cv/Connection.h"
 #include "cv/ConfigManager.h"
-#include "cv/gui/types.h"
 #include "cv/gui/WindowManager.h"
 #include "cv/gui/ChannelWindow.h"
 #include "cv/gui/StatusWindow.h"
@@ -77,11 +76,6 @@ ChannelWindow::~ChannelWindow()
     m_pSharedSession->getEventManager()->unhookEvent("onPartMessage", MakeDelegate(this, &ChannelWindow::onPartMessage));
     m_pSharedSession->getEventManager()->unhookEvent("onPrivmsgMessage", MakeDelegate(this, &ChannelWindow::onPrivmsgMessage));
     m_pSharedSession->getEventManager()->unhookEvent("onTopicMessage", MakeDelegate(this, &ChannelWindow::onTopicMessage));
-}
-
-int ChannelWindow::getIrcWindowType()
-{
-    return IRC_CHAN_WIN_TYPE;
 }
 
 // lets the user know that he is back inside the channel,
@@ -475,6 +469,26 @@ void ChannelWindow::onTopicMessage(Event *evt)
             setTitle(stripCodes(titleWithTopic));
         }
     }
+}
+
+// handles the printing/sending of the PRIVMSG message
+void ChannelWindow::handleSay(const QString &text)
+{
+    QString textToPrint = QString("<%1> %2")
+                          .arg(m_pSharedSession->getNick())
+                          .arg(text);
+    printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "say")));
+    m_pSharedSession->sendPrivmsg(getWindowName(), text);
+}
+
+// handles the printing/sending of the PRIVMSG ACTION message
+void ChannelWindow::handleAction(const QString &text)
+{
+    QString textToPrint = QString("* %1 %2")
+                          .arg(m_pSharedSession->getNick())
+                          .arg(text);
+    printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "action")));
+    m_pSharedSession->sendAction(getWindowName(), text);
 }
 
 void ChannelWindow::handleTab()

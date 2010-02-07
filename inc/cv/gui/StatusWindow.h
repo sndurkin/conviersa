@@ -34,8 +34,6 @@ public:
             const QSize &size = QSize(500, 300));
     ~StatusWindow();
 
-    int getIrcWindowType();
-
     // returns a pointer to the IIrcWindow if it exists,
     // 	and is a child of this status window (meaning
     //	it can only be a channel or PM window)
@@ -78,6 +76,12 @@ public:
     void onUnknownMessage(Event *evt);
 
 protected:
+    // handles the printing/sending of the PRIVMSG message
+    void handleSay(const QString &text);
+
+    // handles the printing/sending of the PRIVMSG ACTION message
+    void handleAction(const QString &text);
+
     void handleTab();
 
     // handles child widget events

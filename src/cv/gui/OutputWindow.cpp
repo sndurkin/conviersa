@@ -18,7 +18,6 @@
 #include "cv/Parser.h"
 #include "cv/Session.h"
 #include "cv/ConfigManager.h"
-#include "cv/gui/types.h"
 #include "cv/gui/OutputWindow.h"
 #include "cv/gui/OutputWindowScrollBar.h"
 

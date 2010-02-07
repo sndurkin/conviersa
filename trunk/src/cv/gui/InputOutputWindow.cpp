@@ -9,7 +9,6 @@
 #include <QApplication>
 #include "cv/ConfigManager.h"
 #include "cv/gui/InputOutputWindow.h"
-#include "cv/gui/types.h"
 
 namespace cv { namespace gui {
 
@@ -20,6 +19,7 @@ InputOutputWindow::InputOutputWindow(const QString &title/* = tr("Untitled")*/,
     m_pInput = new QPlainTextEdit;
     m_pInput->setLineWrapMode(QPlainTextEdit::NoWrap);
     m_pInput->setMaximumSize(QWIDGETSIZE_MAX, 25);
+    m_pInput->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_pInput->installEventFilter(this);
     setFocusProxy(m_pInput);
 }
@@ -40,122 +40,63 @@ void InputOutputWindow::handleInput(Event *evt)
     InputOutputWindow *pWindow = dynamic_cast<InputEvent *>(evt)->getWindow();
     Session *pSession = dynamic_cast<InputEvent *>(evt)->getSession();
     QString text = dynamic_cast<InputEvent *>(evt)->getInput();
-    QString textToPrint, textToSend;
     QColor color;
 
-    // todo: make this changeable
-    if(text[0] == '/')
+    // TODO: make the '/' changeable??
+    //
+    // handle commands that do not require sending the server data
+    //
+    // current format: /server <host> [port]
+    // todo: fix channel leaving
+    if(text.startsWith("/server ", Qt::CaseInsensitive))
     {
-        // remove the first character
-        text.remove(0, 1);
-
-        // handle any special commands
-        //
-        // current format: /server <host> [port]
-        // todo: fix channel leaving
-        if(text.startsWith("server ", Qt::CaseInsensitive))
+        QString host = text.section(' ', 1, 1, QString::SectionSkipEmpty);
+        bool ok;
+        int port = text.section(' ', 2, 2, QString::SectionSkipEmpty).toInt(&ok);
+        if(!ok)
         {
-            QString host = text.section(' ', 1, 1, QString::SectionSkipEmpty);
-            bool ok;
-            int port = text.section(' ', 2, 2, QString::SectionSkipEmpty).toInt(&ok);
-            if(!ok)
-            {
-                // TODO: change to use config
-                port = 6667;
-            }
+            // TODO: change to use config
+            port = 6667;
+        }
 
-            if(pSession->isConnected())
-                pSession->disconnectFromServer();
-            pSession->connectToServer(host, port);
+        if(pSession->isConnected())
+            pSession->disconnectFromServer();
+        pSession->connectToServer(host, port);
 
+        return;
+    }
+    else if(text.startsWith("/search ", Qt::CaseInsensitive))
+    {
+        text.remove(0, 8);
+        pWindow->search(text);
+        return;
+    }
+    else    // commands that interact with the server
+    {
+        if(!pSession->isConnected())
+        {
+            pWindow->printError("Not connected to a server.");
             return;
         }
-        else if(text.startsWith("search ", Qt::CaseInsensitive))
+
+        // regular say command
+        if(!text.startsWith('/') || text.startsWith("/say ", Qt::CaseInsensitive))
         {
-            text.remove(0, 7);
-            pWindow->search(text);
-            return;
+            if(text.startsWith('/'))
+                text.remove(0, 5);
+            pWindow->handleSay(text);
+        }
+        else if(text.startsWith("/me ", Qt::CaseInsensitive))
+        {
+            text.remove(0, 4);
+            pWindow->handleAction(text);
         }
         else
         {
-            if(!pSession->isConnected())
-            {
-                pWindow->printError("Not connected to a server.");
-                return;
-            }
-
-            if(text.startsWith("me ", Qt::CaseInsensitive))
-            {
-                if(pWindow->getIrcWindowType() == IRC_STATUS_WIN_TYPE)
-                {
-                    pWindow->printError("Can't send to server status window");
-                    return;
-                }
-
-                text.remove(0, 3);
-                textToPrint = "* ";
-                textToPrint += pSession->getNick();
-                textToPrint += " ";
-                textToPrint += text;
-                color.setNamedColor(g_pCfgManager->getOptionValue("colors.ini", "action"));
-
-                textToSend = "PRIVMSG ";
-                textToSend += pWindow->getWindowName();
-                textToSend += " :\1ACTION ";
-                textToSend += text;
-                textToSend += "\1";
-                goto print_and_send_text;
-            }
-            else if(text.startsWith("say ", Qt::CaseInsensitive))
-            {
-                if(pWindow->getIrcWindowType() == IRC_STATUS_WIN_TYPE)
-                {
-                    pWindow->printError("Can't send to server status window");
-                    return;
-                }
-
-                // falls through to get sent and printed
-                text.remove(0, 4);
-                color.setNamedColor(g_pCfgManager->getOptionValue("colors.ini", "say"));
-            }
-            else
-            {
-                textToSend = text;
-                goto send_text;
-            }
+            text.remove(0, 1);
+            pSession->sendData(text);
         }
     }
-
-    if(!pSession->isConnected())
-    {
-        pWindow->printError("Not connected to a server.");
-        return;
-    }
-
-    if(pWindow->getIrcWindowType() == IRC_STATUS_WIN_TYPE)
-    {
-        pWindow->printError("Can't send to server status window");
-        return;
-    }
-
-    textToPrint = "<";
-    textToPrint += pSession->getNick();
-    textToPrint += "> ";
-    textToPrint += text;
-    color.setNamedColor(g_pCfgManager->getOptionValue("colors.ini", "say"));
-
-    textToSend += "PRIVMSG ";
-    textToSend += pWindow->getWindowName();
-    textToSend += " :";
-    textToSend += text;
-
-print_and_send_text:
-    // print it
-    pWindow->printOutput(textToPrint, color);
-
-send_text:
-    // send it
-    pSession->sendData(textToSend);
 }
 
 //-----------------------------------//
@@ -163,7 +104,7 @@ send_text:
 void InputOutputWindow::moveCursorEnd()
 {
     QTextCursor cursor = m_pInput->textCursor();
-    cursor.setPosition(QTextCursor::End);
+    cursor.setPosition(QTextCursor::EndOfBlock);
     m_pInput->setTextCursor(cursor);
 }
 

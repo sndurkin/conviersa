@@ -54,6 +54,12 @@ public:
     static void handleInput(Event *evt);
 
 protected:
+    // handles the printing/sending of the PRIVMSG message
+    virtual void handleSay(const QString &msg) = 0;
+
+    // handles the printing/sending of the PRIVMSG ACTION message
+    virtual void handleAction(const QString &msg) = 0;
+
     // moves the input cursor to the end of the line
     void moveCursorEnd();
 

@@ -23,7 +23,6 @@ HEADERS += inc/cv/qext.h \
     inc/cv/gui/AltWindowContainer.h \
     inc/cv/gui/CLineEdit.h \
     inc/cv/gui/SearchBar.h \
-    inc/cv/gui/types.h \
     inc/cv/gui/OutputWindow.h \
     inc/cv/gui/OutputWindowScrollBar.h \
     inc/cv/gui/StatusWindow.h \

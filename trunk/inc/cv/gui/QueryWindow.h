@@ -24,8 +24,6 @@ public:
                 const QString &targetNick);
     ~QueryWindow();
 
-    int getIrcWindowType();
-
     // changes the nickname of the person we're chatting with
     void setTargetNick(const QString &nick);
 
@@ -41,6 +39,12 @@ public:
     void onPrivmsgMessage(Event *evt);
 
 protected:
+    // handles the printing/sending of the PRIVMSG message
+    void handleSay(const QString &text);
+
+    // handles the printing/sending of the PRIVMSG ACTION message
+    void handleAction(const QString &text);
+
     void handleTab();
     void closeEvent(QCloseEvent *event);
 

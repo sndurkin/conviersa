@@ -12,7 +12,6 @@
 #include "cv/qext.h"
 #include "cv/Session.h"
 #include "cv/ConfigManager.h"
-#include "cv/gui/types.h"
 #include "cv/gui/WindowManager.h"
 #include "cv/gui/StatusWindow.h"
 #include "cv/gui/ChannelListWindow.h"
@@ -59,11 +58,6 @@ StatusWindow::~StatusWindow()
 {
     //QObject::disconnect(m_pSharedSession.data(), 0, 0, 0);
     m_pSharedSession->disconnectFromServer();
-}
-
-int StatusWindow::getIrcWindowType()
-{
-    return IRC_STATUS_WIN_TYPE;
 }
 
 // returns a pointer to the OutputWindow if it exists
@@ -141,6 +135,18 @@ void StatusWindow::addQueryWindow(QueryWindow *pQueryWin)
 void StatusWindow::removeQueryWindow(QueryWindow *pPrivWin)
 {
     m_privList.removeOne(pPrivWin);
+}
+
+// handles the printing/sending of the PRIVMSG message
+void StatusWindow::handleSay(const QString &text)
+{
+    printError("Cannot send to status window");
+}
+
+// handles the printing/sending of the PRIVMSG ACTION message
+void StatusWindow::handleAction(const QString &text)
+{
+    printError("Cannot send to status window");
 }
 
 void StatusWindow::handleTab()

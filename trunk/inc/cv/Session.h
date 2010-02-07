@@ -53,7 +53,11 @@ public:
     void connectToServer(const QString &host, int port);
     void disconnectFromServer();
     bool isConnected() { return m_pConn->isConnected(); }
+
+    // public functions for sending messages
     void sendData(const QString &data);
+    void sendPrivmsg(const QString &target, const QString &msg);
+    void sendAction(const QString &target, const QString &msg);
 
     void setHost(const QString &host) { m_host = host; }
     QString getHost() { return m_host; }

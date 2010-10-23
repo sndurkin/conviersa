@@ -29,7 +29,7 @@ OutputWindow::OutputWindow(const QString &title/* = tr("Untitled")*/,
                            const QSize &size/* = QSize(500, 300)*/)
     : Window(title, size),
       // TODO: remove hardcode
-      m_defaultFont("Arial", 10)
+      m_defaultFont("Consolas", 10)
 {
     // TODO: Choose an appropriate system default font...
     setFont(m_defaultFont);
@@ -55,6 +55,8 @@ OutputWindow::OutputWindow(const QString &title/* = tr("Untitled")*/,
 
 void OutputWindow::printOutput(const QString &text, const QColor &color/* = QColor(0, 0, 0)*/)
 {
+    QTime time;
+    time.start();
     QTextCursor cursor(m_pOutput->document());
     cursor.movePosition(QTextCursor::End);
 
@@ -63,6 +65,7 @@ void OutputWindow::printOutput(const QString &text, const QColor &color/* = QCol
     if(!m_pOutput->document()->isEmpty())
         cursor.insertBlock();
     QString textToPrint = escapeEx(stripCodes(text));
+    qDebug("time: %d", time.elapsed());
 /*
     if(text.contains(m_pSharedSession->getNick()))
     {
@@ -82,19 +85,25 @@ void OutputWindow::printOutput(const QString &text, const QColor &color/* = QCol
     if(URL.exactMatch("lolm"))
         cursor.insertText("match\n");
 */
+    time.restart();
     cursor.insertHtml(m_pCodec->toUnicode(textToPrint.toAscii()));
+    qDebug("time: %d", time.elapsed());
 
     // sets the correct position of the cursor so that color
     // can be applied to the text just inserted
+    //time.restart();
     cursor.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
-    addColorsToText(text, cursor, color);
+    //addColorsToText(text, cursor, color);
+    //qDebug("time: %d", time.elapsed());
 
+    time.restart();
     if(atDocumentEnd && !m_pOutput->textCursor().hasSelection())
     {
         // scroll to the end of the output
         m_pOutput->moveCursor(QTextCursor::End);
         m_pOutput->ensureCursorVisible();
     }
+    qDebug("time: %d", time.elapsed());
 }
 
 //-----------------------------------//

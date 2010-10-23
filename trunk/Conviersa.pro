@@ -4,7 +4,7 @@ CONFIG += qt \
     windows \
     embed_manifest_exe
 INCLUDEPATH = inc/
-DESTDIR = ../bin/
+DESTDIR = bin/
 OTHER_FILES += todo.txt \
     doc/License.txt
 HEADERS += inc/cv/qext.h \

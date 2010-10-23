@@ -619,6 +619,8 @@ void addColorsToText(const QString &text, QTextCursor &cursor,
                 ++i;
                 for(int j = 0; j < 2; ++j, ++i)
                 {
+                    if(i >= text.size())
+                        goto end_color_spec;
                     if(!text[i].isDigit())
                     {
                         if(j > 0 && text[i] == ',')
@@ -628,14 +630,14 @@ void addColorsToText(const QString &text, QTextCursor &cursor,
                     firstNum += text[i];
                 }
 
-                if(text[i] != ',')
-                {
+                if(i >= text.size() || text[i] != ',')
                     goto end_color_spec;
-                }
 
                 ++i;
                 for(int j = 0; j < 2; ++j, ++i)
                 {
+                    if(i >= text.size())
+                        goto end_color_spec;
                     if(!text[i].isDigit())
                     {
                         goto end_color_spec;
@@ -644,7 +646,8 @@ void addColorsToText(const QString &text, QTextCursor &cursor,
                 }
 
             end_color_spec:
-                --i;
+                if(i < text.size())
+                    --i;
 
                 // get the foreground color
                 if(!firstNum.isEmpty())
@@ -721,6 +724,8 @@ QString stripCodes(const QString &text)
                 ++i;
                 for(int j = 0; j < 2; ++j, ++i)
                 {
+                    if(i >= text.size())
+                        goto end_color_spec;
                     if(!text[i].isDigit())
                     {
                         if(j > 0 && text[i] == ',')
@@ -729,7 +734,7 @@ QString stripCodes(const QString &text)
                     }
                 }
 
-                if(text[i] != ',')
+                if(i >= text.size() || text[i] != ',')
                 {
                     goto end_color_spec;
                 }
@@ -737,6 +742,8 @@ QString stripCodes(const QString &text)
                 ++i;
                 for(int j = 0; j < 2; ++j, ++i)
                 {
+                    if(i >= text.size())
+                        goto end_color_spec;
                     if(!text[i].isDigit())
                     {
                         goto end_color_spec;
@@ -744,7 +751,8 @@ QString stripCodes(const QString &text)
                 }
 
             end_color_spec:
-                --i;
+                if(i < text.size())
+                    --i;
                 break;
             }
             default:

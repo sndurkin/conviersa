@@ -142,6 +142,11 @@ void QueryWindow::onPrivmsgMessage(Event *evt)
                               .arg(msg.m_params[1]);
             }
 
+            if(!hasFocus())
+            {
+                QApplication::alert(this);
+            }
+
             printOutput(textToPrint, color);
         }
     }

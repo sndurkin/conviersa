@@ -9,7 +9,7 @@
 #pragma once
 
 #include <QString>
-#include <qapplication.h>
+#include <QApplication>
 #include "cv/ChannelUser.h"
 #include "cv/gui/InputOutputWindow.h"
 

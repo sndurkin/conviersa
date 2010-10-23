@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <QApplication>
 #include "cv/gui/InputOutputWindow.h"
 
 namespace cv { namespace gui {

@@ -413,6 +413,7 @@ void ChannelWindow::onPartMessage(Event *evt)
 void ChannelWindow::onPrivmsgMessage(Event *evt)
 {
     Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
+
     if(isChannelName(msg.m_params[0]))
     {
         QString fromNick = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
@@ -443,6 +444,14 @@ void ChannelWindow::onPrivmsgMessage(Event *evt)
             textToPrint = QString("<%1> %2")
                           .arg(fromNick)
                           .arg(msg.m_params[1]);
+        }
+
+        if(!hasFocus())
+        {
+            if(msg.m_params[1].toLower().contains(m_pSharedSession->getNick().toLower()))
+            {
+                QApplication::alert(this);
+            }
         }
 
         printOutput(textToPrint, color);

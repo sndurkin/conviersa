@@ -134,7 +134,7 @@ bool InputOutputWindow::eventFilter(QObject *obj, QEvent *event)
 
                 InputEvent *inputEvt = new InputEvent(this, m_pSharedSession, text);
                 g_pEvtManager->fireEvent("onInput", inputEvt);
-                delete inputEvt;
+                //delete inputEvt;
 
                 return true;
             }

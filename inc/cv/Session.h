@@ -11,6 +11,7 @@
 #include <QObject>
 #include <QString>
 #include <QSharedData>
+#include <QTime>
 #include "cv/Connection.h"
 #include "cv/Parser.h"
 #include "cv/EventManager.h"
@@ -107,12 +108,6 @@ public:
     // this will fire events for specific message types, and store
     // some information as a result of others (like numerics)
     void processMessage(const Message &msg);
-
-signals:
-    // these signals are emitted from Session at the respective times
-    void connected();
-    void disconnected();
-    void dataReceived(const QString &data);
 
 //    // when you are identified on the server
 //    void onIdentify();

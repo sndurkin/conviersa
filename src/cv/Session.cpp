@@ -6,20 +6,19 @@
 *
 ************************************************************************/
 
+#include <QCoreApplication>
 #include "cv/Session.h"
 #include "cv/Parser.h"
 
 namespace cv {
 
 Session::Session(const QString& nick)
-  : QSharedData(),
-    m_nick(nick),
+  : m_nick(nick),
     m_prevData("")
 {
     m_pConn = new Connection;
     QObject::connect(m_pConn, SIGNAL(connected()), this, SLOT(onConnect()));
     QObject::connect(m_pConn, SIGNAL(disconnected()), this, SLOT(onDisconnect()));
-    QObject::connect(m_pConn, SIGNAL(dataReceived(QString)), this, SIGNAL(dataReceived(QString)));
     QObject::connect(m_pConn, SIGNAL(dataReceived(QString)), this, SLOT(onReceiveData(QString)));
 
     m_pEvtMgr = new EventManager;
@@ -359,6 +358,9 @@ void Session::onReceiveData(const QString &data)
     int numChars;
     while((numChars = m_prevData.indexOf('\n') + 1) > 0)
     {
+        QTime time;
+        time.start();
+
         // retrieves the entire message up to and including the terminating '\n' character
         QString msgData = m_prevData.left(numChars);
         m_prevData.remove(0, numChars);
@@ -369,6 +371,8 @@ void Session::onReceiveData(const QString &data)
 
         Message msg = parseData(msgData);
         processMessage(msg);
+        qDebug("overall time: %d", time.elapsed());
+        QCoreApplication::processEvents(QEventLoop::ExcludeSocketNotifiers, 5);
     }
 }
 

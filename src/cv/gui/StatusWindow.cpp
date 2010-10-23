@@ -593,7 +593,7 @@ void StatusWindow::onPrivmsgMessage(Event *evt)
         QueryWindow *pQueryWin = new QueryWindow(m_pSharedSession, fromNick);
         addQueryWindow(pQueryWin);
 
-        // delegate to  window
+        // delegate to newly created query window
         pQueryWin->onPrivmsgMessage(evt);
     }
 }

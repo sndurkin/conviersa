@@ -41,21 +41,23 @@ class EventManager;
 
 struct EventInfo
 {
-    EventManager *       pChainedEvtMgr;
-    QList<EventCallback> callbacks;
+    EventManager *          pChainedEvtMgr;
+    QList<EventCallback>    callbacks;
+    bool                    firingEvent;
+    QList<EventCallback>    callbacksToAdd;
+    QList<EventCallback>    callbacksToRemove;
 };
 
 // TODO: make thread-safe, with maybe some sort of reference counting
 class EventManager
 {
-private:
-    QHash<QString, EventInfo> hash;
+    QHash<QString, EventInfo> m_hash;
 
 public:
     bool createEvent(const QString &name, EventManager *pEvtMgr = NULL);
     bool hookEvent(const QString &name, EventCallback callback);
     bool unhookEvent(const QString &name, EventCallback callback);
-    bool fireEvent(const QString &name, Event *evt);
+    void fireEvent(const QString &name, Event *evt);
 
 protected:
     CallbackReturnType execPluginCallbacks(Event *evt, HookType type);

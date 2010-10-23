@@ -499,38 +499,50 @@ void ChannelWindow::handleTab()
     // find the beginning of the word that the user is
     // trying to tab-complete
     while(idx >= 0 && text[idx] != ' ') --idx;
+    idx++;
 
     // now capture the word
-    QString word;
-    int idxSpace = text.indexOf(' ', idx);
-    if(idxSpace < 0)
-    {
-        word = text.mid(idx);
-    }
-    else
-    {
-        word = text.mid(idx, idxSpace - idx);
-    }
+    QString word = text.mid(idx);
 
-    // if there is no word to complete, then exit
     if(word.isEmpty())
     {
         // todo: beep?
         return;
     }
 
-    // now search in the user list for the name
-    for(int i = MAX_NICK_PRIORITY; i >= 0; --i)
-    {
-        for(int j = 0; j < m_users.size(); ++j)
-        {
-            if(m_users[j]->getPriority() == i)
-            {
+    QList<QString> possibleNickNames;
 
-            }
+    for(int j = 0; j < m_users.size(); ++j)
+    {
+        if(m_users[j]->getNickname().toLower().startsWith(word.toLower()))
+        {
+            possibleNickNames.append(m_users[j]->getNickname());
         }
     }
+
+    if(possibleNickNames.size() == 0)
+    {
+        // TODO: Beep?
+        return;
+    }
+    else if(possibleNickNames.size() == 1)
+    {
+        QString s = text.mid(0, idx);
+
+        m_pInput->clear();
+        m_pInput->insertPlainText(s + possibleNickNames[0]);
+    }
+    else
+    {
+        m_pOutput->append("Possibilities:\n");
+        for(int i = 0; i < possibleNickNames.size(); ++i)
+        {
+            m_pOutput->insertPlainText(possibleNickNames[i] + " ");
+        }
+        m_pOutput->insertPlainText("\n");
+    }
 }
+
 
 void ChannelWindow::closeEvent(QCloseEvent *event)
 {

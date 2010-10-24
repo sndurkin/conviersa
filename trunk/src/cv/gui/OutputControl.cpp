@@ -803,7 +803,7 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
                         // store information for text run
                         TextRun *currTextRun = currLine.firstTextRun();
                         int currTextRunIdx = 0;
-                        QFont font(font());
+                        QFont font(this->font());
                         QFontMetrics *fm = new QFontMetrics(font);
 
                         // this boolean allows us to keep track of whether
@@ -916,7 +916,7 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
                         // store information for text run
                         TextRun *currTextRun = currLine.firstTextRun();
                         int currTextRunIdx = 0;
-                        QFont font(font());
+                        QFont font(this->font());
                         QFontMetrics *fm = new QFontMetrics(font);
 
                         // this boolean allows us to keep track of whether
@@ -1041,7 +1041,7 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
                         // store information for text run
                         TextRun *currTextRun = currLine.firstTextRun();
                         int currTextRunIdx = 0;
-                        QFont font(font());
+                        QFont font(this->font());
                         QFontMetrics *fm = new QFontMetrics(font);
 
                         // this boolean allows us to keep track of whether
@@ -1303,7 +1303,7 @@ void OutputControl::paintEvent(QPaintEvent *event)
             font.setBold(currTextRun->isBold());
             font.setUnderline(currTextRun->isUnderline());
             painter.setFont(font);
-            QFontMetrics &fm = painter.fontMetrics();
+            QFontMetrics fm = painter.fontMetrics();
 
             // we have to draw long text runs (text runs that span a split index)
             // in fragments

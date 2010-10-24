@@ -68,7 +68,7 @@ void InputOutputWindow::handleInput(Event *evt)
     else if(text.startsWith("/search ", Qt::CaseInsensitive))
     {
         text.remove(0, 8);
-        pWindow->search(text);
+        //pWindow->search(text);
         return;
     }
     else    // commands that interact with the server

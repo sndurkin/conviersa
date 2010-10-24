@@ -13,6 +13,7 @@
 #include "cv/gui/WindowManager.h"
 #include "cv/gui/QueryWindow.h"
 #include "cv/gui/StatusWindow.h"
+#include "cv/gui/OutputControl.h"
 
 namespace cv { namespace gui {
 
@@ -70,7 +71,7 @@ void QueryWindow::onNumericMessage(Event *evt)
             // msg.m_params[2]: "No such nick/channel"
             if(msg.m_params[1].compare(getWindowName(), Qt::CaseInsensitive) == 0)
             {
-                printOutput(getNumericText(msg));
+                printOutput(getNumericText(msg), COLOR_INFO);
             }
         }
     }
@@ -90,7 +91,8 @@ void QueryWindow::onNickMessage(Event *evt)
     QString nickColor = g_pCfgManager->getOptionValue("colors.ini", "nick");
     if(m_pSharedSession->isMyNick(oldNick))
     {
-        printOutput(textToPrint, nickColor);
+        //printOutput(textToPrint, nickColor);
+        printOutput(textToPrint, COLOR_NICK);
     }
     else
     {
@@ -100,7 +102,8 @@ void QueryWindow::onNickMessage(Event *evt)
         if(isTargetNick(oldNick) && !queryWindowExists)
         {
             setTargetNick(msg.m_params[0]);
-            printOutput(textToPrint, nickColor);
+            //printOutput(textToPrint, nickColor);
+            printOutput(textToPrint, COLOR_NICK);
         }
     }
 }
@@ -114,7 +117,8 @@ void QueryWindow::onPrivmsgMessage(Event *evt)
         if(isTargetNick(fromNick))
         {
             QString textToPrint;
-            QColor color;
+            //QColor color;
+            OutputColor color;
 
             CtcpRequestType requestType = getCtcpRequestType(msg);
             if(requestType != RequestTypeInvalid)
@@ -128,7 +132,8 @@ void QueryWindow::onPrivmsgMessage(Event *evt)
                     // first 8 characters and last 1 character need to be excluded
                     // so we'll take the mid, starting at index 8 and going until every
                     // character but the last is included
-                    color.setNamedColor(g_pCfgManager->getOptionValue("colors.ini", "action"));
+                    //color.setNamedColor(g_pCfgManager->getOptionValue("colors.ini", "action"));
+                    color = COLOR_ACTION;
                     textToPrint = QString("* %1 %2")
                                   .arg(fromNick)
                                   .arg(action.mid(8, action.size()-9));
@@ -136,7 +141,8 @@ void QueryWindow::onPrivmsgMessage(Event *evt)
             }
             else
             {
-                color.setNamedColor(g_pCfgManager->getOptionValue("colors.ini", "say"));
+                //color.setNamedColor(g_pCfgManager->getOptionValue("colors.ini", "say"));
+                color = COLOR_CHAT_FOREGROUND;
                 textToPrint = QString("<%1> %2")
                               .arg(fromNick)
                               .arg(msg.m_params[1]);
@@ -158,7 +164,8 @@ void QueryWindow::handleSay(const QString &text)
     QString textToPrint = QString("<%1> %2")
                           .arg(m_pSharedSession->getNick())
                           .arg(text);
-    printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "say")));
+    //printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "say")));
+    printOutput(textToPrint, COLOR_CHAT_SELF);
     m_pSharedSession->sendPrivmsg(getWindowName(), text);
 }
 
@@ -168,7 +175,8 @@ void QueryWindow::handleAction(const QString &text)
     QString textToPrint = QString("* %1 %2")
                           .arg(m_pSharedSession->getNick())
                           .arg(text);
-    printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "action")));
+    //printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "action")));
+    printOutput(textToPrint, COLOR_ACTION);
     m_pSharedSession->sendAction(getWindowName(), text);
 }
 

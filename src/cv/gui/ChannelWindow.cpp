@@ -18,6 +18,7 @@
 #include "cv/gui/WindowManager.h"
 #include "cv/gui/ChannelWindow.h"
 #include "cv/gui/StatusWindow.h"
+#include "cv/gui/OutputControl.h"
 
 #include <QScrollBar>
 #include <QTextEdit>
@@ -217,9 +218,10 @@ void ChannelWindow::onNumericMessage(Event *evt)
                                          .arg(stripCodes(msg.m_params[2]));
                 setTitle(titleWithTopic);
 
-                QColor topicColor(g_pCfgManager->getOptionValue("colors.ini", "topic"));
+                //QColor topicColor(g_pCfgManager->getOptionValue("colors.ini", "topic"));
                 QString textToPrint = QString("* Topic is: %1").arg(msg.m_params[2]);
-                printOutput(textToPrint, topicColor);
+                //printOutput(textToPrint, topicColor);
+                printOutput(textToPrint, COLOR_TOPIC);
             }
 
             break;
@@ -236,7 +238,8 @@ void ChannelWindow::onNumericMessage(Event *evt)
                                       .arg(msg.m_params[2])
                                       .arg(getDate(msg.m_params[3]))
                                       .arg(getTime(msg.m_params[3]));
-                printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "topic")));
+                //printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "topic")));
+                printOutput(textToPrint, COLOR_TOPIC);
             }
 
             break;
@@ -265,7 +268,8 @@ void ChannelWindow::onJoinMessage(Event *evt)
             addUser(nickJoined);
         }
 
-        printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "join")));
+        //printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "join")));
+        printOutput(textToPrint, COLOR_JOIN);
     }
 }
 
@@ -291,10 +295,11 @@ void ChannelWindow::onKickMessage(Event *evt)
         bool hasReason = (msg.m_paramsNum > 2 && !msg.m_params[2].isEmpty());
         if(hasReason)
         {
-            textToPrint += QString(" (%1)").arg(msg.m_params[2]);
+            textToPrint += QString(" (%1%2)").arg(msg.m_params[2]).arg(QString::fromUtf8("\xF"));
         }
 
-        printOutput(textToPrint, g_pCfgManager->getOptionValue("colors.ini", "kick"));
+        //printOutput(textToPrint, g_pCfgManager->getOptionValue("colors.ini", "kick"));
+        printOutput(textToPrint, COLOR_KICK);
     }
 }
 
@@ -357,7 +362,8 @@ void ChannelWindow::onModeMessage(Event *evt)
             }
         }
 
-        printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "mode")));
+        //printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "mode")));
+        printOutput(textToPrint, COLOR_MODE);
     }
 }
 
@@ -372,7 +378,8 @@ void ChannelWindow::onNickMessage(Event *evt)
         QString textToPrint = QString("* %1 is now known as %2")
                               .arg(oldNick)
                               .arg(msg.m_params[0]);
-        printOutput(textToPrint, g_pCfgManager->getOptionValue("colors.ini", "nick"));
+        //printOutput(textToPrint, g_pCfgManager->getOptionValue("colors.ini", "nick"));
+        printOutput(textToPrint, COLOR_NICK);
     }
 }
 
@@ -402,11 +409,10 @@ void ChannelWindow::onPartMessage(Event *evt)
         // if there's a part message
         bool hasReason = (msg.m_paramsNum > 1 && !msg.m_params[1].isEmpty());
         if(hasReason)
-        {
-            textToPrint += QString(" (%1)").arg(msg.m_params[1]);
-        }
+            textToPrint += QString(" (%1%2)").arg(msg.m_params[1]).arg(QString::fromUtf8("\xF"));
 
-        printOutput(textToPrint, g_pCfgManager->getOptionValue("colors.ini", "part"));
+        //printOutput(textToPrint, g_pCfgManager->getOptionValue("colors.ini", "part"));
+        printOutput(textToPrint, COLOR_PART);
     }
 }
 
@@ -418,7 +424,8 @@ void ChannelWindow::onPrivmsgMessage(Event *evt)
     {
         QString fromNick = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
         QString textToPrint;
-        QColor color;
+        //QColor color;
+        OutputColor color;
 
         CtcpRequestType requestType = getCtcpRequestType(msg);
         if(requestType != RequestTypeInvalid)
@@ -432,7 +439,8 @@ void ChannelWindow::onPrivmsgMessage(Event *evt)
                 // first 8 characters and last 1 character need to be excluded
                 // so we'll take the mid, starting at index 8 and going until every
                 // character but the last is included
-                color.setNamedColor(g_pCfgManager->getOptionValue("colors.ini", "action"));
+                //color.setNamedColor(g_pCfgManager->getOptionValue("colors.ini", "action"));
+                color = COLOR_ACTION;
                 textToPrint = QString("* %1 %2")
                               .arg(fromNick)
                               .arg(action.mid(8, action.size()-9));
@@ -440,7 +448,8 @@ void ChannelWindow::onPrivmsgMessage(Event *evt)
         }
         else
         {
-            color.setNamedColor(g_pCfgManager->getOptionValue("colors.ini", "say"));
+            //color.setNamedColor(g_pCfgManager->getOptionValue("colors.ini", "say"));
+            color = COLOR_CHAT_FOREGROUND;
             textToPrint = QString("<%1> %2")
                           .arg(fromNick)
                           .arg(msg.m_params[1]);
@@ -466,8 +475,9 @@ void ChannelWindow::onTopicMessage(Event *evt)
         QString textToPrint = QString("* %1 changes topic to: %2")
                     .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName))
                     .arg(msg.m_params[1]);
-        QColor topicColor(g_pCfgManager->getOptionValue("colors.ini", "topic"));
-        printOutput(textToPrint, topicColor);
+        //QColor topicColor(g_pCfgManager->getOptionValue("colors.ini", "topic"));
+        //printOutput(textToPrint, topicColor);
+        printOutput(textToPrint, COLOR_TOPIC);
 
         if(m_pManager)
         {
@@ -486,7 +496,8 @@ void ChannelWindow::handleSay(const QString &text)
     QString textToPrint = QString("<%1> %2")
                           .arg(m_pSharedSession->getNick())
                           .arg(text);
-    printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "say")));
+    //printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "say")));
+    printOutput(textToPrint, COLOR_CHAT_SELF);
     m_pSharedSession->sendPrivmsg(getWindowName(), text);
 }
 
@@ -496,7 +507,8 @@ void ChannelWindow::handleAction(const QString &text)
     QString textToPrint = QString("* %1 %2")
                           .arg(m_pSharedSession->getNick())
                           .arg(text);
-    printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "action")));
+    //printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "action")));
+    printOutput(textToPrint, COLOR_ACTION);
     m_pSharedSession->sendAction(getWindowName(), text);
 }
 
@@ -541,6 +553,7 @@ void ChannelWindow::handleTab()
         m_pInput->clear();
         m_pInput->insertPlainText(s + possibleNickNames[0]);
     }
+    /*
     else
     {
         m_pOutput->append("Possibilities:\n");
@@ -550,6 +563,7 @@ void ChannelWindow::handleTab()
         }
         m_pOutput->insertPlainText("\n");
     }
+    */
 }
 
 

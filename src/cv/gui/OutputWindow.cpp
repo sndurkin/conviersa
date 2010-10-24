@@ -7,7 +7,6 @@
 ************************************************************************/
 
 #include <QApplication>
-#include <QTimer>
 #include <QTextCursor>
 #include <QTextBlock>
 #include <QTextLine>
@@ -38,10 +37,7 @@ OutputWindow::OutputWindow(const QString &title/* = tr("Untitled")*/,
 
     m_pVLayout = new QVBoxLayout;
 
-    m_pResizeMarginTimer = new QTimer;
-    m_pResizeMarginTimer->setSingleShot(true);
-    //connect(m_pResizeMarginTimer, SIGNAL(timeout()), this, SLOT(ResizeTopMargin()));
-
+    /*
     m_pOutput = new QTextEdit;
     m_pOutput->setTabChangesFocus(true);
     m_pOutput->setReadOnly(true);
@@ -49,31 +45,17 @@ OutputWindow::OutputWindow(const QString &title/* = tr("Untitled")*/,
 
     m_pScrollBar = new OutputWindowScrollBar(this);
     m_pOutput->setVerticalScrollBar(m_pScrollBar);
+    */
+    m_pOutput = new OutputControl;
 }
 
 //-----------------------------------//
 
-void OutputWindow::printOutput(const QString &text, const QColor &color/* = QColor(0, 0, 0)*/)
+void OutputWindow::printOutput(const QString &text, OutputColor defaultMsgColor/* = COLOR_CHAT_FOREGROUND*/)
 {
-    QTime time;
-    time.start();
-    QTextCursor cursor(m_pOutput->document());
-    cursor.movePosition(QTextCursor::End);
+    m_pOutput->appendMessage(text, defaultMsgColor);
 
-    bool atDocumentEnd = (m_pScrollBar->maximum() - m_pScrollBar->value() <= 5);
-
-    if(!m_pOutput->document()->isEmpty())
-        cursor.insertBlock();
-    QString textToPrint = escapeEx(stripCodes(text));
-    qDebug("time: %d", time.elapsed());
-/*
-    if(text.contains(m_pSharedSession->getNick()))
-    {
-        textToPrint.prepend("<b>");
-        textToPrint.append("</b>");
-        QApplication::beep();
-    }
-
+    /*
     QRegExp URL("lol(([\\w:]+)[/]{2})?(\\w|.)+");
 
     if(URL.exactMatch("http://www.google.com"))
@@ -84,26 +66,7 @@ void OutputWindow::printOutput(const QString &text, const QColor &color/* = QCol
         cursor.insertText("match\n");
     if(URL.exactMatch("lolm"))
         cursor.insertText("match\n");
-*/
-    time.restart();
-    cursor.insertHtml(m_pCodec->toUnicode(textToPrint.toAscii()));
-    qDebug("time: %d", time.elapsed());
-
-    // sets the correct position of the cursor so that color
-    // can be applied to the text just inserted
-    //time.restart();
-    cursor.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
-    //addColorsToText(text, cursor, color);
-    //qDebug("time: %d", time.elapsed());
-
-    time.restart();
-    if(atDocumentEnd && !m_pOutput->textCursor().hasSelection())
-    {
-        // scroll to the end of the output
-        m_pOutput->moveCursor(QTextCursor::End);
-        m_pOutput->ensureCursorVisible();
-    }
-    qDebug("time: %d", time.elapsed());
+    */
 }
 
 //-----------------------------------//
@@ -112,7 +75,7 @@ void OutputWindow::printError(const QString &text)
 {
     QString error = "[ERROR] ";
     error += text;
-    printOutput(error);
+    printOutput(error, COLOR_ERROR);
 }
 
 //-----------------------------------//
@@ -121,11 +84,11 @@ void OutputWindow::printDebug(const QString &text)
 {
     QString debug = "[DEBUG] ";
     debug += text;
-    printOutput(debug);
+    printOutput(debug, COLOR_DEBUG);
 }
 
 //-----------------------------------//
-
+/*
 // imitates Google Chrome's search, with lines drawn in the scrollbar
 // and keywords highlighted in the document
 void OutputWindow::search(const QString &textToFind)
@@ -178,7 +141,7 @@ void OutputWindow::search(const QString &textToFind)
 
     m_pOutput->setExtraSelections(list);
 }
-
+*/
 //-----------------------------------//
 
 // handles child widget events

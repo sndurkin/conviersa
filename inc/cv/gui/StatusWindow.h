@@ -75,6 +75,8 @@ public:
     void onNumericMessage(Event *evt);
     void onUnknownMessage(Event *evt);
 
+    void processOutputEvent(OutputEvent *evt);
+
 protected:
     // handles the printing/sending of the PRIVMSG message
     void handleSay(const QString &text);

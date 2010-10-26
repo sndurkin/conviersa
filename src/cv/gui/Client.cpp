@@ -51,6 +51,8 @@ Client::Client(const QString &title)
     g_pEvtManager = new EventManager;
     g_pEvtManager->createEvent("onInput");
     g_pEvtManager->hookEvent("onInput", &InputOutputWindow::handleInput);
+    g_pEvtManager->createEvent("onOutput");
+    g_pEvtManager->hookEvent("onOutput", &OutputWindow::handleOutput);
 }
 
 //-----------------------------------//

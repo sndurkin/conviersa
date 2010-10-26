@@ -38,15 +38,11 @@ OutputWindow::OutputWindow(const QString &title/* = tr("Untitled")*/,
     m_pVLayout = new QVBoxLayout;
 
     /*
-    m_pOutput = new QTextEdit;
-    m_pOutput->setTabChangesFocus(true);
-    m_pOutput->setReadOnly(true);
-    m_pOutput->installEventFilter(this);
-
     m_pScrollBar = new OutputWindowScrollBar(this);
     m_pOutput->setVerticalScrollBar(m_pScrollBar);
     */
     m_pOutput = new OutputControl;
+    m_pOutput->setParentWindow(this);
 }
 
 //-----------------------------------//
@@ -85,6 +81,15 @@ void OutputWindow::printDebug(const QString &text)
     QString debug = "[DEBUG] ";
     debug += text;
     printOutput(debug, COLOR_DEBUG);
+}
+
+// this static function delegates the task of processing each
+// OutputEvent to the specific instance of OutputWindow that
+// contains the OutputControl instance that fired the event
+void OutputWindow::handleOutput(Event *evt)
+{
+    OutputEvent *outputEvt = dynamic_cast<OutputEvent *>(evt);
+    outputEvt->getParentWindow()->processOutputEvent(outputEvt);
 }
 
 //-----------------------------------//

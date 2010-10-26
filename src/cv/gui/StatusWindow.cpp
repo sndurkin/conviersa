@@ -661,4 +661,9 @@ void StatusWindow::onUnknownMessage(Event *evt)
     // todo: decide what to do here
 }
 
+void StatusWindow::processOutputEvent(OutputEvent *evt)
+{
+
+}
+
 } } // end namespaces

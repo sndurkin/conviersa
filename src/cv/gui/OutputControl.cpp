@@ -63,49 +63,24 @@ OutputControl::OutputControl(QWidget *parent/*= NULL*/)
       m_lastVisibleLineIdx(-1),
       m_totalWrappedLines(0),
       m_hoveredLineIdx(-1),
-      m_hoveredLink(NULL)
+      m_hoveredLink(NULL),
+      m_pParentWindow(NULL)
 {
     setFont(QFont("Consolas", 10));
     viewport()->setMouseTracking(true);
+
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     verticalScrollBar()->setSingleStep(1);
     QObject::connect(verticalScrollBar(), SIGNAL(valueChanged(int)), this, SLOT(updateScrollbarValue(int)));
+
+    // set pointers for the blocks of memory
+    m_pFM = m_fmBlock;
+    m_pEvt = m_evtBlock;
 }
 
 QSize OutputControl::sizeHint() const
 {
     return QSize(800, 500);
-}
-
-void OutputControl::appendLine(OutputLine &line)
-{
-    if(m_lastVisibleLineIdx < 0)
-    {
-        m_lastVisibleLineIdx = 0;
-        m_lastVisibleWrappedLine = 0;
-        verticalScrollBar()->setRange(1, 1);
-        verticalScrollBar()->setPageStep(50);
-    }
-
-    // calculate line wraps for this line
-    QLinkedList<int> splits;
-    calculateLineWraps(line, splits, viewport()->width(), this->font());
-    m_totalWrappedLines += splits.count() + 1;
-    line.setSplitsAndClearList(splits);
-
-    m_lines.append(line);
-
-    // reset the scrollbar range and scrollbar value
-    bool atBottom = verticalScrollBar()->maximum() == verticalScrollBar()->value();
-    verticalScrollBar()->setRange(1, m_totalWrappedLines);
-    if(atBottom)
-    {
-        int scrollbarValue = m_totalWrappedLines + m_lastVisibleWrappedLine;
-        verticalScrollBar()->setValue(scrollbarValue);
-    }
-
-    // then repaint
-    viewport()->update();
 }
 
 void OutputControl::appendMessage(const QString &msg, OutputColor defaultMsgColor)
@@ -227,10 +202,6 @@ void OutputControl::appendMessage(const QString &msg, OutputColor defaultMsgColo
         } // switch
     } // for
 
-    //
-    // optionally have callbacks tweak message at this point???
-    //
-
     // iterate through to split into appropriate word chunks
     WordChunk *currChunk = new WordChunk();
     line.setFirstWordChunk(currChunk);
@@ -239,21 +210,26 @@ void OutputControl::appendMessage(const QString &msg, OutputColor defaultMsgColo
         currTotalWidth = TEXT_START_POS;
     QFont font = this->font();
     font.setBold(currTextRun->isBold());
+    QFontMetrics *fm = new(m_pFM) QFontMetrics(font);
     QString &text = line.text();
     for(int i = 0, j = 0, textLen = text.length(); i < textLen; ++i, ++j)
     {
         if(j >= currTextRun->getLength())
         {
             currTextRun = currTextRun->nextTextRun();
-            font.setBold(currTextRun->isBold());
+            if(font.bold() != currTextRun->isBold())
+            {
+                font.setBold(currTextRun->isBold());
+                fm->~QFontMetrics();
+                fm = new(m_pFM) QFontMetrics(font);
+            }
             j = 0;
         }
 
         if(text[i] == '\t' || text[i] == ' ')
         {
             currChunk->incrementLength();
-            QFontMetrics fm(font);
-            currWidth += fm.width(text[i]);
+            currWidth += fm->width(text[i]);
 
             if(currChunk->getChunkType() == UNKNOWN)
             {
@@ -292,25 +268,32 @@ void OutputControl::appendMessage(const QString &msg, OutputColor defaultMsgColo
                 }
             }
 
-            QFontMetrics fm(font);
-            currWidth += fm.width(text[i]);
+            currWidth += fm->width(text[i]);
             currChunk->incrementLength();
         }
     }
 
     currChunk->setWidth(currWidth);
 
-    // iterate through text to find hyperlinks
-    int idx, lastEndIdx = 0;
-    int width = 0;
-    Link *currentLink = NULL;
-    int currTextRunIdx = 0;
-    currTextRun = line.firstTextRun();
-    QFontMetrics *fm = new QFontMetrics(font);
-    while((idx = line.text().indexOf("seand", lastEndIdx)) >= 0)
+    // fire onOutput event for callbacks to use for adding links
+    // to the text
+    OutputEvent *evt = new(m_pEvt) OutputEvent(line.text(), m_pParentWindow);
+    g_pEvtManager->fireEvent("onOutput", evt);
+
+    // iterate through the OutputEvent to add the links given the
+    // LinkInfo
+    QList<LinkInfo>::const_iterator iter;
+    font = this->font();
+    fm->~QFontMetrics();
+    fm = new(m_pFM) QFontMetrics(font);
+    for(iter = evt->getLinkInfoList().begin(); iter != evt->getLinkInfoList().end(); ++iter)
     {
-        lastEndIdx = idx + 4;
-        for(int i = idx; i <= lastEndIdx; ++i)
+        int width = 0;
+        Link *prevLink = NULL;
+        int currTextRunIdx = 0;
+        currTextRun = line.firstTextRun();
+        LinkInfo linkInfo = *iter;
+        for(int i = linkInfo.startIdx; i <= linkInfo.endIdx; ++i)
         {
             // update the current text run
             for(; currTextRun != NULL; currTextRun = currTextRun->nextTextRun())
@@ -325,24 +308,57 @@ void OutputControl::appendMessage(const QString &msg, OutputColor defaultMsgColo
             if(font.bold() != currTextRun->isBold())
             {
                 font.setBold(currTextRun->isBold());
-                delete fm;
-                fm = new QFontMetrics(font);
+                fm->~QFontMetrics();
+                fm = new(m_pFM) QFontMetrics(font);
             }
 
             // calculate the width of the next character
             width += fm->width(line.text()[i]);
         }
 
-        Link *link = new Link(idx, lastEndIdx, width);
-        if(currentLink == NULL)
+        Link *link = new Link(linkInfo.startIdx, linkInfo.endIdx, width);
+        if(prevLink == NULL)
             line.setFirstLink(link);
         else
-            currentLink->setNextLink(link);
-        currentLink = link;
+            prevLink->setNextLink(link);
+        prevLink = link;
     }
-    delete fm;
+    fm->~QFontMetrics();
+    evt->~OutputEvent();
 
     appendLine(line);
+}
+
+void OutputControl::appendLine(OutputLine &line)
+{
+    // if we're appending the first line
+    if(m_lastVisibleLineIdx < 0)
+    {
+        m_lastVisibleLineIdx = 0;
+        m_lastVisibleWrappedLine = 0;
+        verticalScrollBar()->setRange(1, 1);
+        verticalScrollBar()->setPageStep(50);
+    }
+
+    // calculate line wraps for this line
+    QLinkedList<int> splits;
+    calculateLineWraps(line, splits, viewport()->width(), this->font());
+    m_totalWrappedLines += splits.count() + 1;
+    line.setSplitsAndClearList(splits);
+
+    m_lines.append(line);
+
+    // reset the scrollbar range and scrollbar value
+    bool atBottom = verticalScrollBar()->maximum() == verticalScrollBar()->value();
+    verticalScrollBar()->setRange(1, m_totalWrappedLines);
+    if(atBottom)
+    {
+        int scrollbarValue = m_totalWrappedLines + m_lastVisibleWrappedLine;
+        verticalScrollBar()->setValue(scrollbarValue);
+    }
+
+    // then repaint
+    viewport()->update();
 }
 
 void OutputControl::resizeEvent(QResizeEvent *event)
@@ -402,7 +418,7 @@ void OutputControl::calculateLineWraps(OutputLine &currLine, QLinkedList<int> &s
               *firstChunk = currLine.firstChunk();
 
     font.setBold(currTextRun->isBold());
-    QFontMetrics *fm = new QFontMetrics(font);
+    QFontMetrics *fm = new(m_pFM) QFontMetrics(font);
 
     for(currChunk = firstChunk; currChunk != NULL; currChunk = currChunk->nextChunk())
     {
@@ -426,8 +442,8 @@ void OutputControl::calculateLineWraps(OutputLine &currLine, QLinkedList<int> &s
                 if(font.bold() != currTextRun->isBold()) \
                 { \
                     font.setBold(currTextRun->isBold()); \
-                    delete fm; \
-                    fm = new QFontMetrics(font); \
+                    fm->~QFontMetrics(); \
+                    fm = new(m_pFM) QFontMetrics(font); \
                 } \
                 \
                 /* determine if width of next character fits or not */ \
@@ -541,8 +557,8 @@ void OutputControl::calculateLineWraps(OutputLine &currLine, QLinkedList<int> &s
         }
 
         font.setBold(currTextRun->isBold());
-        delete fm;
-        fm = new QFontMetrics(font);
+        fm->~QFontMetrics();
+        fm = new(m_pFM) QFontMetrics(font);
 
         while(currLink != NULL)
         {
@@ -560,8 +576,8 @@ void OutputControl::calculateLineWraps(OutputLine &currLine, QLinkedList<int> &s
             if(font.bold() != currTextRun->isBold())
             {
                 font.setBold(currTextRun->isBold());
-                delete fm;
-                fm = new QFontMetrics(font);
+                fm->~QFontMetrics();
+                fm = new(m_pFM) QFontMetrics(font);
             }
 
             while(currTextIdx < currLink->getStartIdx())
@@ -583,8 +599,8 @@ void OutputControl::calculateLineWraps(OutputLine &currLine, QLinkedList<int> &s
                     if(currTextRun != NULL && font.bold() != currTextRun->isBold())
                     {
                         font.setBold(currTextRun->isBold());
-                        delete fm;
-                        fm = new QFontMetrics(font);
+                        fm->~QFontMetrics();
+                        fm = new(m_pFM) QFontMetrics(font);
                     }
                 }
                 // if the text run doesn't fit
@@ -625,8 +641,8 @@ void OutputControl::calculateLineWraps(OutputLine &currLine, QLinkedList<int> &s
                     if(currTextRun != NULL && font.bold() != currTextRun->isBold())
                     {
                         font.setBold(currTextRun->isBold());
-                        delete fm;
-                        fm = new QFontMetrics(font);
+                        fm->~QFontMetrics();
+                        fm = new(m_pFM) QFontMetrics(font);
                     }
                 }
                 // if the text run doesn't fit...
@@ -696,7 +712,7 @@ void OutputControl::calculateLineWraps(OutputLine &currLine, QLinkedList<int> &s
     }
 
     // clean up the memory for the font metrics object
-    delete fm;
+    fm->~QFontMetrics();
 }
 
 void OutputControl::mousePressEvent(QMouseEvent *event)
@@ -715,7 +731,7 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
         m_dragEndPos = event->pos();
 
         int currHeight = viewport()->height() - 2 - PADDING;
-        QFontMetrics fontMetrics(font());
+        QFontMetrics fontMetrics(this->font());
         int lineSpacing = fontMetrics.lineSpacing(),
             ascent = fontMetrics.ascent(),
             descent = fontMetrics.descent();
@@ -804,7 +820,7 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
                         TextRun *currTextRun = currLine.firstTextRun();
                         int currTextRunIdx = 0;
                         QFont font(this->font());
-                        QFontMetrics *fm = new QFontMetrics(font);
+                        QFontMetrics *fm = new(m_pFM) QFontMetrics(font);
 
                         // this boolean allows us to keep track of whether
                         // we found the drag position within the line (so
@@ -833,8 +849,8 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
                             if(font.bold() != currTextRun->isBold())
                             {
                                 font.setBold(currTextRun->isBold());
-                                delete fm;
-                                fm = new QFontMetrics(font);
+                                fm->~QFontMetrics();
+                                fm = new(m_pFM) QFontMetrics(font);
                             }
 
                             // calculate the width of the next character
@@ -884,6 +900,8 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
                                 currLine.unsetSelectionRange();
                             }
                         }
+
+                        fm->~QFontMetrics();
                     }
                     else if(dragStartInWrappedLine || dragEndInWrappedLine)
                     {
@@ -917,7 +935,7 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
                         TextRun *currTextRun = currLine.firstTextRun();
                         int currTextRunIdx = 0;
                         QFont font(this->font());
-                        QFontMetrics *fm = new QFontMetrics(font);
+                        QFontMetrics *fm = new(m_pFM) QFontMetrics(font);
 
                         // this boolean allows us to keep track of whether
                         // we found the drag position within the line (so
@@ -946,8 +964,8 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
                             if(font.bold() != currTextRun->isBold())
                             {
                                 font.setBold(currTextRun->isBold());
-                                delete fm;
-                                fm = new QFontMetrics(font);
+                                fm->~QFontMetrics();
+                                fm = new(m_pFM) QFontMetrics(font);
                             }
 
                             // calculate the width of the next character
@@ -994,6 +1012,8 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
                                 firstPosIndex = currTextIdx;
                             }
                         }
+
+                        fm->~QFontMetrics();
                     }
 
                     if(foundBothPos)
@@ -1042,7 +1062,7 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
                         TextRun *currTextRun = currLine.firstTextRun();
                         int currTextRunIdx = 0;
                         QFont font(this->font());
-                        QFontMetrics *fm = new QFontMetrics(font);
+                        QFontMetrics *fm = new(m_pFM) QFontMetrics(font);
 
                         // this boolean allows us to keep track of whether
                         // we found the drag position within the line (so
@@ -1071,8 +1091,8 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
                             if(font.bold() != currTextRun->isBold())
                             {
                                 font.setBold(currTextRun->isBold());
-                                delete fm;
-                                fm = new QFontMetrics(font);
+                                fm->~QFontMetrics();
+                                fm = new(m_pFM) QFontMetrics(font);
                             }
 
                             // calculate the width of the next character
@@ -1128,6 +1148,7 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
                             }
                         }
 
+                        fm->~QFontMetrics();
                         break;
                     }
                 }
@@ -1152,11 +1173,10 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
     {
         // find which OutputLine the cursor is within
         int currHeight = viewport()->height()/* - 2 - PADDING*/;
-        QFontMetrics fm(font());
-        int lineSpacing = fm.lineSpacing();
+        QFontMetrics *fm = new(m_pFM) QFontMetrics(this->font());
+        int lineSpacing = fm->lineSpacing();
         for(int i = m_lastVisibleLineIdx; i >= 0 && currHeight > 0; --i)
         {
-
             OutputLine &currLine = m_lines[i];
             int *splitsArray = currLine.getSplitsArray();
             int numSplits = currLine.getNumSplits();
@@ -1222,6 +1242,7 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
             return;
         }
 
+        fm->~QFontMetrics();
         m_hoveredLineIdx = -1;
         m_hoveredLink = NULL;
         viewport()->setCursor(Qt::ArrowCursor);
@@ -1234,7 +1255,7 @@ repaint_viewport:
 void OutputControl::mouseReleaseEvent(QMouseEvent *event)
 {
     m_isMouseDown = false;
-    viewport()->repaint();
+    viewport()->update();
 }
 
 // this algorithm is complex, so it was broken down into parts:

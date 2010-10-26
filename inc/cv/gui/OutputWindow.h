@@ -67,6 +67,10 @@ public:
     void printError(const QString &text);
     void printDebug(const QString &text);
 
+    static void handleOutput(Event *evt);
+
+    virtual void processOutputEvent(OutputEvent *evt) = 0;
+
 protected:
     // imitates Google Chrome's search, with lines drawn in the scrollbar
     // and keywords highlighted in the document

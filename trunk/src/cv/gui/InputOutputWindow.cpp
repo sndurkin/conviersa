@@ -37,10 +37,10 @@ void InputOutputWindow::giveFocus()
 void InputOutputWindow::handleInput(Event *evt)
 {
     // todo: change when colors are added
-    InputOutputWindow *pWindow = dynamic_cast<InputEvent *>(evt)->getWindow();
-    Session *pSession = dynamic_cast<InputEvent *>(evt)->getSession();
-    QString text = dynamic_cast<InputEvent *>(evt)->getInput();
-    QColor color;
+    InputEvent *inputEvt = dynamic_cast<InputEvent *>(evt);
+    InputOutputWindow *pWindow = inputEvt->getWindow();
+    Session *pSession = inputEvt->getSession();
+    QString text = inputEvt->getInput();
 
     // TODO: make the '/' changeable??
     //

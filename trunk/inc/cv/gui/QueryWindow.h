@@ -39,6 +39,8 @@ public:
     void onNickMessage(Event *evt);
     void onPrivmsgMessage(Event *evt);
 
+    void processOutputEvent(OutputEvent *evt);
+
 protected:
     // handles the printing/sending of the PRIVMSG message
     void handleSay(const QString &text);

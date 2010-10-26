@@ -490,6 +490,16 @@ void ChannelWindow::onTopicMessage(Event *evt)
     }
 }
 
+void ChannelWindow::processOutputEvent(OutputEvent *evt)
+{
+    int lastIdx = 0, idx;
+    while((idx = evt->getText().indexOf("seand", lastIdx)) >= 0)
+    {
+        lastIdx = idx + 4;
+        evt->addLinkInfo(idx, lastIdx);
+    }
+}
+
 // handles the printing/sending of the PRIVMSG message
 void ChannelWindow::handleSay(const QString &text)
 {

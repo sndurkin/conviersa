@@ -13,6 +13,7 @@
 #include <QLinkedList>
 #include <QMouseEvent>
 #include <QPoint>
+#include "cv/EventManager.h"
 
 #if defined(_MSC_VER)
     #define FORCE_INLINE __forceinline
@@ -23,6 +24,61 @@
 #endif
 
 namespace cv { namespace gui {
+
+class OutputWindow;
+
+
+struct LinkInfo {
+    int startIdx;
+    int endIdx;
+};
+
+// event that is used for the "onOutput" event; allows
+// callbacks to add actionable links before the line
+// is displayed in the control
+class OutputEvent : public Event
+{
+    QString         m_text;
+    QList<LinkInfo> m_linkInfoList;
+    OutputWindow *  m_pParentWindow;
+
+public:
+    OutputEvent(const QString &text, OutputWindow *pParentWin)
+      : m_text(text),
+        m_pParentWindow(pParentWin)
+    { }
+    ~OutputEvent() { }
+
+    // accessors
+    QString getText() { return m_text; }
+    OutputWindow *getParentWindow() { return m_pParentWindow; }
+    const QList<LinkInfo> &getLinkInfoList() { return m_linkInfoList; }
+
+    // modifiers
+    void addLinkInfo(int startIdx, int endIdx)
+    {
+        LinkInfo linkInfo;
+        linkInfo.startIdx = startIdx;
+        linkInfo.endIdx = endIdx;
+
+        // a new LinkInfo will get added ONLY
+        // if it doesn't conflict with any other links
+        if(!m_linkInfoList.isEmpty())
+        {
+            QList<LinkInfo>::iterator iter = m_linkInfoList.begin();
+            while(iter != m_linkInfoList.end() && startIdx > (*iter).endIdx);
+
+            if(iter == m_linkInfoList.end())
+                m_linkInfoList.append(linkInfo);
+            else if(endIdx < (*iter).startIdx)
+                m_linkInfoList.insert(iter, linkInfo);
+        }
+        else
+        {
+            m_linkInfoList.append(linkInfo);
+        }
+    }
+};
 
 enum OutputColor {
     COLOR_CHAT_FOREGROUND = 0,
@@ -305,6 +361,8 @@ class OutputControl : public QAbstractScrollArea
 {
     Q_OBJECT
 
+    OutputWindow *      m_pParentWindow;
+
     QList<OutputLine>   m_lines;
     int                 m_lastVisibleLineIdx;
     int                 m_lastVisibleWrappedLine;
@@ -321,6 +379,15 @@ class OutputControl : public QAbstractScrollArea
     int                 m_hoveredLineIdx;
     Link *              m_hoveredLink;
 
+
+    // variables used instance-wide; they are used as reusable
+    // blocks of memory so we don't have to call new/delete within
+    // large loops
+    char                m_fmBlock[sizeof(QFontMetrics)];
+    char                m_evtBlock[sizeof(OutputEvent)];
+    void *              m_pFM;
+    void *              m_pEvt;
+
 public:
     static const int PADDING = 2;
     static const int TEXT_START_POS = PADDING + 1;
@@ -330,6 +397,7 @@ public:
     static QColor    COLORS[36];
 
     OutputControl(QWidget *parent = NULL);
+    void setParentWindow(OutputWindow *pParentWin) { m_pParentWindow = pParentWin; }
     void appendMessage(const QString &msg, OutputColor defaultMsgColor);
 
 protected:

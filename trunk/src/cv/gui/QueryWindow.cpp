@@ -158,6 +158,11 @@ void QueryWindow::onPrivmsgMessage(Event *evt)
     }
 }
 
+void QueryWindow::processOutputEvent(OutputEvent *evt)
+{
+
+}
+
 // handles the printing/sending of the PRIVMSG message
 void QueryWindow::handleSay(const QString &text)
 {

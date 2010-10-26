@@ -96,6 +96,8 @@ public:
     void onPrivmsgMessage(Event *evt);
     void onTopicMessage(Event *evt);
 
+    void processOutputEvent(OutputEvent *evt);
+
 protected:
     // handles the printing/sending of the PRIVMSG message
     void handleSay(const QString &text);

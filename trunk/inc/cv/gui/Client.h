@@ -40,8 +40,6 @@ private:
     QMenu *             m_pFileMenu;
     QDockWidget *       m_pDock;
 
-    QTreeWidgetItem *   m_irc;
-
 public:
     Client(const QString &title);
 

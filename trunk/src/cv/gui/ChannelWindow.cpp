@@ -26,12 +26,14 @@
 namespace cv { namespace gui {
 
 ChannelWindow::ChannelWindow(QExplicitlySharedDataPointer<Session> pSharedSession,
+                             QExplicitlySharedDataPointer<ServerConnectionPanel> pSharedServerConnPanel,
                              const QString &title/* = tr("Untitled")*/,
                              const QSize &size/* = QSize(500, 300)*/)
     : InputOutputWindow(title, size),
       m_inChannel(false)
 {
     m_pSharedSession = pSharedSession;
+    m_pSharedServerConnPanel = pSharedServerConnPanel;
 
     m_pSplitter = new QSplitter(this);
     m_pUserList = new QListWidget;
@@ -55,6 +57,9 @@ ChannelWindow::ChannelWindow(QExplicitlySharedDataPointer<Session> pSharedSessio
     m_pVLayout->setContentsMargins(2, 2, 2, 2);
 
     setLayout(m_pVLayout);
+
+    m_pOpenButton = m_pSharedServerConnPanel->addOpenButton(m_pOutput, "Connect", 80, 30);
+    m_pOutput->installEventFilter(this);
 
     m_pSharedSession->getEventManager()->hookEvent("onNumericMessage", MakeDelegate(this, &ChannelWindow::onNumericMessage));
     m_pSharedSession->getEventManager()->hookEvent("onJoinMessage", MakeDelegate(this, &ChannelWindow::onJoinMessage));

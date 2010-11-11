@@ -19,6 +19,7 @@
 #include "cv/gui/QueryWindow.h"
 #include "cv/gui/OutputWindowScrollBar.h"
 #include "cv/gui/OutputControl.h"
+#include "cv/gui/OverlayPanel.h"
 
 #define DEBUG_MESSAGES 0
 
@@ -35,6 +36,12 @@ StatusWindow::StatusWindow(const QString &title/* = tr("Server Window")*/,
     m_pVLayout->setSpacing(5);
     m_pVLayout->setContentsMargins(2, 2, 2, 2);
     setLayout(m_pVLayout);
+
+    m_pSharedServerConnPanel = new ServerConnectionPanel(m_pOutput);
+    QObject::connect(m_pSharedServerConnPanel.data(), SIGNAL(connect(QString,int,QString,QString,QString)),
+                     this, SLOT(connectToServer(QString,int,QString,QString,QString)));
+    m_pOpenButton = m_pSharedServerConnPanel->addOpenButton(m_pOutput, "Connect", 80, 30);
+    m_pOutput->installEventFilter(this);
 
     m_pSharedSession = new Session("conviersa");
     EventManager *pEvtMgr = m_pSharedSession->getEventManager();
@@ -136,6 +143,13 @@ void StatusWindow::addQueryWindow(QueryWindow *pQueryWin)
 void StatusWindow::removeQueryWindow(QueryWindow *pPrivWin)
 {
     m_privList.removeOne(pPrivWin);
+}
+
+void StatusWindow::connectToServer(QString server, int port, QString name, QString nick, QString altNick)
+{
+    if(m_pSharedSession->isConnected())
+        m_pSharedSession->disconnectFromServer();
+    m_pSharedSession->connectToServer(server, port, name, nick);
 }
 
 // handles the printing/sending of the PRIVMSG message
@@ -452,7 +466,7 @@ void StatusWindow::onJoinMessage(Event *evt)
     if(m_pSharedSession->isMyNick(nickJoined) && !childIrcWindowExists(msg.m_params[0]))
     {
         // create the channel and post the message to it
-        ChannelWindow *pChanWin = new (std::nothrow) ChannelWindow(m_pSharedSession, msg.m_params[0]);
+        ChannelWindow *pChanWin = new (std::nothrow) ChannelWindow(m_pSharedSession, m_pSharedServerConnPanel, msg.m_params[0]);
         if(!pChanWin)
         {
             printError("Allocation of a new channel window failed.");
@@ -597,7 +611,7 @@ void StatusWindow::onPrivmsgMessage(Event *evt)
     // if the target is me, then it's a PM from someone
     if(m_pSharedSession->isMyNick(msg.m_params[0]) && !childIrcWindowExists(fromNick))
     {
-        QueryWindow *pQueryWin = new QueryWindow(m_pSharedSession, fromNick);
+        QueryWindow *pQueryWin = new QueryWindow(m_pSharedSession, m_pSharedServerConnPanel, fromNick);
         addQueryWindow(pQueryWin);
 
         // delegate to newly created query window

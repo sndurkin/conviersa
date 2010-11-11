@@ -7,6 +7,7 @@
 ************************************************************************/
 
 #include <QApplication>
+#include <QPushButton>
 #include "cv/ConfigManager.h"
 #include "cv/gui/InputOutputWindow.h"
 
@@ -167,6 +168,10 @@ bool InputOutputWindow::eventFilter(QObject *obj, QEvent *event)
         }
 
         return false;
+    }
+    else if(obj == m_pOutput && event->type() == QEvent::Resize)
+    {
+        m_pSharedServerConnPanel->realignPanel(m_pOpenButton);
     }
 
 done:

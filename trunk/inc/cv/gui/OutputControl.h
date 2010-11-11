@@ -57,6 +57,10 @@ public:
     // modifiers
     void addLinkInfo(int startIdx, int endIdx)
     {
+        // do bounds checking on indices
+        if(startIdx > endIdx || startIdx < 0 || endIdx >= m_text.length())
+            return;
+
         LinkInfo linkInfo;
         linkInfo.startIdx = startIdx;
         linkInfo.endIdx = endIdx;

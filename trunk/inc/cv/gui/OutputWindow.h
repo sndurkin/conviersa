@@ -44,7 +44,6 @@ protected:
     QVBoxLayout *           m_pVLayout;
 
     int                     m_startOfText;
-    //QTextEdit *             m_pOutput;
     OutputControl *         m_pOutput;
     QFont                   m_defaultFont;
 

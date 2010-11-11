@@ -61,7 +61,7 @@ public:
     //
     // returns: true if successful,
     //          false otherwise
-    bool addWindow(Window *pWin, QTreeWidgetItem *pParent);
+    bool addWindow(Window *pWin, QTreeWidgetItem *pParent = NULL);
 
     // removes the respective item in the treeview, but has
     // to let the window close itself due to Qt's design

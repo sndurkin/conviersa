@@ -32,7 +32,9 @@ HEADERS += inc/cv/qext.h \
     inc/cv/gui/ChannelListWindow.h \
     inc/cv/EventManager.h \
     inc/cv/gui/InputOutputWindow.h \
-    inc/cv/gui/OutputControl.h
+    inc/cv/gui/OutputControl.h \
+    inc/cv/gui/OverlayPanel.h \
+    inc/cv/gui/ServerConnectionPanel.h
 SOURCES += src/cv/main.cpp \
     src/cv/qext.cpp \
     src/cv/Connection.cpp \
@@ -56,4 +58,6 @@ SOURCES += src/cv/main.cpp \
     src/cv/gui/ChannelListWindow.cpp \
     src/cv/EventManager.cpp \
     src/cv/gui/InputOutputWindow.cpp \
-    src/cv/gui/OutputControl.cpp
+    src/cv/gui/OutputControl.cpp \
+    src/cv/gui/OverlayPanel.cpp \
+    src/cv/gui/ServerConnectionPanel.cpp

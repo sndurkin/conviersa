@@ -7,11 +7,25 @@
 ************************************************************************/
 
 #include <new>
+#include <QProxyStyle>
+#include <QStringBuilder>
 #include "cv/gui/WindowManager.h"
 #include "cv/gui/AltWindowContainer.h"
 #include "cv/gui/Window.h"
 
 namespace cv { namespace gui {
+
+class EntireRowSelectionStyle : public QProxyStyle
+{
+public:
+    int styleHint(StyleHint hint, const QStyleOption *option = 0,
+                  const QWidget *widget = 0, QStyleHintReturn *returnData = 0) const
+    {
+        if(hint == QStyle::SH_ItemView_ShowDecorationSelected)
+            return int(true);
+        return QProxyStyle::styleHint(hint, option, widget, returnData);
+    }
+};
 
 WindowManager::WindowManager(QWidget *pParent, WindowContainer *pMainContainer)
     : QTreeWidget(pParent),
@@ -19,6 +33,14 @@ WindowManager::WindowManager(QWidget *pParent, WindowContainer *pMainContainer)
 {
     // properties
     setHeaderHidden(true);
+    setStyle(new EntireRowSelectionStyle());
+
+    QString css = QString("QTreeWidget { ") %
+                  QString("selection-background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, ") %
+                  QString("stop:0.4 #c3cbfa, stop:1 #a6b1e6); }") %
+                  QString("QTreeWidget::item { ") %
+                  QString("padding: 5px; } ");
+    setStyleSheet(css);
 
     // context menu stuff
     setupContextMenu();
@@ -61,16 +83,6 @@ QSize WindowManager::sizeHint() const
     return QSize(175, 200);
 }
 
-// adds a top-level item to the treeview
-QTreeWidgetItem *WindowManager::addTreeGroup(const char *title)
-{
-    QTreeWidgetItem *pNewItem = new (std::nothrow) QTreeWidgetItem(QStringList(tr(title)));
-    if(!pNewItem)
-        return NULL;
-    addTopLevelItem(pNewItem);
-    return pNewItem;
-}
-
 // manages a WindowContainer; it will handle
 // deallocation when the WindowManager is destroyed
 void WindowManager::addContainer(WindowContainer *pCont)
@@ -96,10 +108,10 @@ void WindowManager::removeContainer(WindowContainer *pCont)
 //
 // returns: true if successful,
 //		false otherwise
-bool WindowManager::addWindow(Window *pWin, QTreeWidgetItem *pParent)
+bool WindowManager::addWindow(Window *pWin, QTreeWidgetItem *pParent/* = NULL*/)
 {
-    // rudimentary checking to make sure parameters are valid
-    if(!pWin || !pParent)
+    // rudimentary checking to make sure window is valid
+    if(!pWin)
         return false;
 
     pWin->m_pManager = this;
@@ -109,16 +121,18 @@ bool WindowManager::addWindow(Window *pWin, QTreeWidgetItem *pParent)
     tempInfo.m_pWindow = pWin;
 
     // add the item to the tree
-    QTreeWidgetItem *pNewItem = new (std::nothrow) QTreeWidgetItem(QStringList(pWin->windowTitle()));
-    if(!pNewItem)
-        return false;
+    QTreeWidgetItem *pNewItem = new QTreeWidgetItem(QStringList(pWin->windowTitle()));
 
-    if(pParent)
+    if(pParent == NULL)
+    {
+        addTopLevelItem(pNewItem);
+    }
+    else
     {
         pParent->addChild(pNewItem);
-        setCurrentItem(pNewItem);
         pParent->setExpanded(true);
     }
+    setCurrentItem(pNewItem);
 
     tempInfo.m_pTreeItem = pNewItem;
 
@@ -147,7 +161,10 @@ void WindowManager::removeWindow(Window *pWin)
 
     // remove the treeview item
     QTreeWidgetItem *pItem = m_winList[index].m_pTreeItem;
-    pItem->parent()->removeChild(pItem);
+    if(pItem->parent() != NULL)
+        pItem->parent()->removeChild(pItem);
+    else
+        removeItemWidget(pItem, 0);
     delete pItem;
 
     // remove it from the list
@@ -381,15 +398,6 @@ void WindowManager::contextMenuEvent(QContextMenuEvent *event)
     QTreeWidgetItem *pItem = itemAt(event->pos());
     if(pItem)
     {
-        for(int i = 0; i < invisibleRootItem()->childCount(); ++i)
-        {
-            if(invisibleRootItem()->child(i) == pItem)
-            {
-                // it's a top-level item, such as "IRC"
-                return;
-            }
-        }
-
         int index = getIndexFromItem(pItem);
         if(index >= 0)
         {

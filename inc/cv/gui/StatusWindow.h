@@ -10,6 +10,7 @@
 
 #include "cv/Parser.h"
 #include "cv/gui/InputOutputWindow.h"
+#include "cv/gui/ServerConnectionPanel.h"
 
 namespace cv { namespace gui {
 
@@ -103,6 +104,8 @@ public slots:
 
     // removes a PM window from the list
     void removeQueryWindow(QueryWindow *pChanWin);
+
+    void connectToServer(QString server, int port, QString name, QString nick, QString altNick);
 };
 
 } } // end namespaces

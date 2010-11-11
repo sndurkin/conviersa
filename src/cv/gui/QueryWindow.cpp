@@ -18,10 +18,12 @@
 namespace cv { namespace gui {
 
 QueryWindow::QueryWindow(QExplicitlySharedDataPointer<Session> pSharedSession,
+                         QExplicitlySharedDataPointer<ServerConnectionPanel> pSharedServerConnPanel,
                          const QString &targetNick)
     : InputOutputWindow(targetNick)
 {
     m_pSharedSession = pSharedSession;
+    m_pSharedServerConnPanel = pSharedServerConnPanel;
     m_targetNick = targetNick;
 
     m_pVLayout->addWidget(m_pOutput);
@@ -29,6 +31,9 @@ QueryWindow::QueryWindow(QExplicitlySharedDataPointer<Session> pSharedSession,
     m_pVLayout->setSpacing(5);
     m_pVLayout->setContentsMargins(2, 2, 2, 2);
     setLayout(m_pVLayout);
+
+    m_pOpenButton = m_pSharedServerConnPanel->addOpenButton(m_pOutput, "Connect", 80, 30);
+    m_pOutput->installEventFilter(this);
 
     m_pSharedSession->getEventManager()->hookEvent("onNumericMessage", MakeDelegate(this, &QueryWindow::onNumericMessage));
     m_pSharedSession->getEventManager()->hookEvent("onNickMessage", MakeDelegate(this, &QueryWindow::onNickMessage));

@@ -10,6 +10,9 @@
 
 #include <QPlainTextEdit>
 #include "cv/gui/OutputWindow.h"
+#include "cv/gui/ServerConnectionPanel.h"
+
+class QPushButton;
 
 namespace cv { namespace gui {
 
@@ -44,6 +47,10 @@ class InputOutputWindow : public OutputWindow
 protected:
     QPlainTextEdit *    m_pInput;
     QList<QString>      m_pastCommands;
+
+    QExplicitlySharedDataPointer<ServerConnectionPanel>
+                        m_pSharedServerConnPanel;
+    QPushButton *       m_pOpenButton;
 
 public:
     InputOutputWindow(const QString &title = tr("Untitled"),

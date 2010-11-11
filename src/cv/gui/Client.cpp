@@ -41,7 +41,7 @@ Client::Client(const QString &title)
     m_pDock->setWidget(m_pManager);
     addDockWidget(Qt::LeftDockWidgetArea, m_pDock);
 
-    m_irc = m_pManager->addTreeGroup("IRC");
+    // create new irc server window on client start
     onNewIrcServerWindow();
 
     g_pCfgManager = new ConfigManager;
@@ -107,7 +107,7 @@ void Client::setupColorConfig()
 void Client::onNewIrcServerWindow()
 {
     StatusWindow *pWin = new StatusWindow();
-    m_pManager->addWindow(pWin, m_irc);
+    m_pManager->addWindow(pWin);
     pWin->showMaximized();
 }
 

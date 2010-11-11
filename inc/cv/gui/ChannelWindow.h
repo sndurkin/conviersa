@@ -36,6 +36,7 @@ protected:
 
 public:
     ChannelWindow(QExplicitlySharedDataPointer<Session> pSharedSession,
+                  QExplicitlySharedDataPointer<ServerConnectionPanel> pSharedServerConnPanel,
                   const QString &title = tr("Untitled"),
                   const QSize &size = QSize(500, 300));
     ~ChannelWindow();

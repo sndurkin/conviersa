@@ -22,6 +22,7 @@ private:
 
 public:
     QueryWindow(QExplicitlySharedDataPointer<Session> pSharedSession,
+                QExplicitlySharedDataPointer<ServerConnectionPanel> pSharedServerConnPanel,
                 const QString &targetNick);
     ~QueryWindow();
 

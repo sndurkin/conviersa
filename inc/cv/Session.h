@@ -47,11 +47,52 @@ class Session : public QObject, public QSharedData
 {
     Q_OBJECT
 
+private:
+    // the actual connection to the server
+    Connection *    m_pConn;
+
+    // event manager for the session object
+    EventManager *  m_pEvtMgr;
+
+    // stores the user's nickname
+    QString         m_nick;
+
+    // stores the name of the host that we are connected to
+    QString         m_host;
+
+    // stores the port number of the server we're connected to
+    int             m_port;
+
+    // stores the user's name (used for USER message)
+    QString         m_name;
+
+    // format: <mode1><prefix1><mode2><prefix2>[<mode3><prefix3>] ...
+    // default value: o@v+
+    QString         m_prefixRules;
+
+    // this comes from the 005 numeric, CHANMODES, which specifies
+    // which channel modes the server supports, and which ones take
+    // a parameter and which don't
+    //
+    // format: typeA,typeB,typeC,typeD
+    QString         m_chanModes;
+
+    // this comes from the 005 numeric, MODES, which dictates
+    // the maximum number of modes with parameters that may be set with
+    // one message
+    int             m_modeNum;
+
+    // this acts as a more persistent buffer for receiving data from
+    // the Connection object, so that it can be separated by '\n' and
+    // then parsed
+    QString         m_prevData;
+
 public:
     Session(const QString& nick);
     ~Session();
 
     void connectToServer(const QString &host, int port);
+    void connectToServer(const QString &host, int port, const QString &name, const QString &nick);
     void disconnectFromServer();
     bool isConnected() { return m_pConn->isConnected(); }
 
@@ -133,43 +174,6 @@ public slots:
     void onConnect();
     void onDisconnect();
     void onReceiveData(const QString &data);
-
-private:
-    // the actual connection to the server
-    Connection *    m_pConn;
-
-    // event manager for the session object
-    EventManager *  m_pEvtMgr;
-
-    // stores the user's nickname
-    QString         m_nick;
-
-    // stores the name of the host that we are connected to
-    QString         m_host;
-
-    // stores the port number of the server we're connected to
-    int             m_port;
-
-    // format: <mode1><prefix1><mode2><prefix2>[<mode3><prefix3>] ...
-    // default value: o@v+
-    QString         m_prefixRules;
-
-    // this comes from the 005 numeric, CHANMODES, which specifies
-    // which channel modes the server supports, and which ones take
-    // a parameter and which don't
-    //
-    // format: typeA,typeB,typeC,typeD
-    QString         m_chanModes;
-
-    // this comes from the 005 numeric, MODES, which dictates
-    // the maximum number of modes with parameters that may be set with
-    // one message
-    int             m_modeNum;
-
-    // this acts as a more persistent buffer for receiving data from
-    // the Connection object, so that it can be separated by '\n' and
-    // then parsed
-    QString         m_prevData;
 };
 
 } // end namespace

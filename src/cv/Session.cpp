@@ -48,8 +48,15 @@ Session::~Session()
     delete m_pEvtMgr;
 }
 
-void Session::connectToServer(const QString& host, int port = 6667)
+void Session::connectToServer(const QString& host, int port)
 {
+    connectToServer(host, port, "Ronnie Reagan", "conviersa");
+}
+
+void Session::connectToServer(const QString &host, int port, const QString &name, const QString &nick)
+{
+    m_name = name;
+    m_nick = nick;
     m_host = host;
     m_port = port;
 
@@ -336,7 +343,7 @@ void Session::processMessage(const Message &msg)
 void Session::onConnect()
 {
     // todo: use options
-    QString info = "PASS hello\r\nNICK " + m_nick + "\r\nUSER guest tolmoon tolsun :Ronnie Reagan";
+    QString info = "PASS hello\r\nNICK " + m_nick + "\r\nUSER " + m_nick + " tolmoon tolsun :" + m_name;
     sendData(info);
 
     // todo: find out what to do with Event *

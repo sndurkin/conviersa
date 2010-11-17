@@ -12,7 +12,7 @@
   * a way to provide default functionality in response to an event
   * a way for plugins to override or modify that default functionality
 </font>
-<font size=3>Fulfilling those general goals aren't difficult, but problems arise when we get into specifics. For example, every `Session` object (represnts a connection to an IRC server) fires events for messages it receives. The relevant `Window` instances have hooked the events they need to provide default functionality, such as displaying chat and other messages. The problem is that if, for example, there is an "onPrivmsgMessage" event and possibly several `Session` instances, there needs to be a way to map specific instances to callbacks.</font>
+<font size=3>Fulfilling those general goals isn't that difficult, but problems arise when we get into specifics. For example, every `Session` object (represnts a connection to an IRC server) fires events for messages it receives. The relevant `Window` instances have hooked the events they need to provide default functionality, such as displaying chat and other messages. The problem is that if, for example, there is an "onPrivmsgMessage" event and possibly several `Session` instances, there needs to be a way to map specific instances to callbacks.</font>
 <br>
 <br>
 ===The Solution===
@@ -20,7 +20,7 @@
 
  http://imgur.com/4WjwR.png
 
-<font size=3>With the system outlined above, the client can add an event with default handling on a per-instance level (i.e. a specific instance of `Session` fires the "onPrivmsgMessage" event, and two `ChannelWindow`s and a `QueryWindow` can hook the event for that `Session` to handle it.</font>
+<font size=3>With the system outlined above, the client can add an event with default handling on a per-instance level (i.e. a specific instance of `Session` fires the "onPrivmsgMessage" event, and two `ChannelWindow`s and a `QueryWindow` can hook the event (under that `Session`) to handle it.</font>
 <br>
 <br>
 <font size=3>This event system also supports global plugin callbacks, which means a plugin can hook the "onPrivmsgMessage" event regardless of which `Session` instance fires it, modifying the default functionality provided in the core client. For example, if a plugin wanted to add auto channel re-join capability to the client, it could hook the "onKickMessage" event globally, and in the callback function it would automatically send a JOIN message back to the server, to try to rejoin the channel.</font>

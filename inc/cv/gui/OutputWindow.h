@@ -23,6 +23,42 @@ class OutputControl;
 
 //-----------------------------------//
 
+
+enum OutputMessageType {
+
+    // IRC types
+    MESSAGE_IRC_SAY,
+    MESSAGE_IRC_SAY_SELF,
+    MESSAGE_IRC_ACTION,
+    MESSAGE_IRC_CTCP,
+
+    MESSAGE_IRC_ERROR,
+    MESSAGE_IRC_INVITE,
+    MESSAGE_IRC_JOIN,
+    MESSAGE_IRC_KICK,
+    MESSAGE_IRC_MODE,
+    MESSAGE_IRC_NICK,
+    MESSAGE_IRC_NOTICE,
+    MESSAGE_IRC_PART,
+    MESSAGE_IRC_PING,
+    MESSAGE_IRC_PONG,
+    MESSAGE_IRC_QUIT,
+    MESSAGE_IRC_TOPIC,
+    MESSAGE_IRC_WALLOPS,
+
+    MESSAGE_IRC_NUMERIC,
+
+    // general client types
+    MESSAGE_INFO,
+    MESSAGE_ERROR,
+    MESSAGE_DEBUG,
+
+    // custom type
+    MESSAGE_CUSTOM
+
+};
+
+
 /*
  *  IRC window interface
  *  + indicates an abstract class
@@ -50,6 +86,13 @@ protected:
     QExplicitlySharedDataPointer<Session>
                             m_pSharedSession;
 
+    // this variable holds the most important level
+    // of output alert for a window not in focus; this is
+    // used to determine what color to make an OutputWindow's
+    // item in the WindowManager when it receives text
+    // and isn't in focus
+    int                     m_outputAlertLevel;
+
     QTextCodec *            m_pCodec;
 
     // custom scroll bar for searching within an IRC window;
@@ -62,12 +105,14 @@ public:
                  const QSize &size = QSize(500, 300));
 
     // printing functions
-    void printOutput(const QString &text, OutputColor defaultMsgColor = COLOR_CHAT_FOREGROUND);
+    void printOutput(const QString &text, OutputMessageType msgType);
     void printError(const QString &text);
     void printDebug(const QString &text);
 
     static void handleOutput(Event *evt);
+    static void handleDoubleClickLink(Event *evt);
 
+    void focusedInTree();
     virtual void processOutputEvent(OutputEvent *evt) = 0;
 
 protected:

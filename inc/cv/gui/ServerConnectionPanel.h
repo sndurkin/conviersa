@@ -51,7 +51,6 @@ signals:
 
 public slots:
     void onCloseClicked();
-    void onPanelOpened();
     void onEnter();
 
 protected:

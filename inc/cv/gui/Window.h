@@ -60,7 +60,12 @@ public:
 
     bool hasContainer() const { return m_pContainer != NULL; }
 
+    // called when the user clicks the corresponding item in the WindowManager
     virtual void giveFocus() = 0;
+
+    // called when the corresponding item in the WindowManager becomes
+    // focused
+    virtual void focusedInTree() { }
 
 protected:
     virtual void closeEvent(QCloseEvent *event);

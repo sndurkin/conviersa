@@ -19,6 +19,7 @@
 #include "cv/ConfigManager.h"
 #include "cv/gui/OutputWindow.h"
 #include "cv/gui/OutputWindowScrollBar.h"
+#include "cv/gui/WindowManager.h"
 
 namespace cv { namespace gui {
 
@@ -28,7 +29,8 @@ OutputWindow::OutputWindow(const QString &title/* = tr("Untitled")*/,
                            const QSize &size/* = QSize(500, 300)*/)
     : Window(title, size),
       // TODO: remove hardcode
-      m_defaultFont("Consolas", 10)
+      m_defaultFont("Consolas", 10),
+      m_outputAlertLevel(0)
 {
     // TODO: Choose an appropriate system default font...
     setFont(m_defaultFont);
@@ -47,9 +49,126 @@ OutputWindow::OutputWindow(const QString &title/* = tr("Untitled")*/,
 
 //-----------------------------------//
 
-void OutputWindow::printOutput(const QString &text, OutputColor defaultMsgColor/* = COLOR_CHAT_FOREGROUND*/)
+void OutputWindow::printOutput(const QString &text, OutputMessageType msgType)
 {
+    OutputColor defaultMsgColor;
+    int outputAlertLevel = 0;
+    switch(msgType)
+    {
+        case MESSAGE_IRC_SAY:
+        {
+            if(text.contains(m_pSharedSession->getNick(), Qt::CaseInsensitive))
+            {
+                defaultMsgColor = COLOR_HIGHLIGHT;
+                outputAlertLevel = 3;
+            }
+            else
+            {
+                defaultMsgColor = COLOR_CHAT_FOREGROUND;
+                outputAlertLevel = 2;
+            }
+            break;
+        }
+        case MESSAGE_IRC_SAY_SELF:
+            defaultMsgColor = COLOR_CHAT_SELF;
+            break;
+        case MESSAGE_IRC_ACTION:
+        {
+            if(text.contains(m_pSharedSession->getNick(), Qt::CaseInsensitive))
+            {
+                defaultMsgColor = COLOR_HIGHLIGHT;
+                outputAlertLevel = 3;
+            }
+            else
+            {
+                defaultMsgColor = COLOR_ACTION;
+                outputAlertLevel = 2;
+            }
+            break;
+        }
+        case MESSAGE_IRC_CTCP:
+            defaultMsgColor = COLOR_CTCP;
+            outputAlertLevel = 2;
+            break;
+        case MESSAGE_IRC_ERROR:
+            defaultMsgColor = COLOR_ERROR;
+            outputAlertLevel = 1;
+            break;
+        case MESSAGE_IRC_INVITE:
+            defaultMsgColor = COLOR_INVITE;
+            outputAlertLevel = 1;
+            break;
+        case MESSAGE_IRC_JOIN:
+            defaultMsgColor = COLOR_JOIN;
+            outputAlertLevel = 1;
+            break;
+        case MESSAGE_IRC_KICK:
+            defaultMsgColor = COLOR_KICK;
+            outputAlertLevel = 1;
+            break;
+        case MESSAGE_IRC_MODE:
+            defaultMsgColor = COLOR_MODE;
+            outputAlertLevel = 1;
+            break;
+        case MESSAGE_IRC_NICK:
+            defaultMsgColor = COLOR_NICK;
+            outputAlertLevel = 1;
+            break;
+        case MESSAGE_IRC_NOTICE:
+            defaultMsgColor = COLOR_NOTICE;
+            outputAlertLevel = 1;
+            break;
+        case MESSAGE_IRC_PART:
+            defaultMsgColor = COLOR_PART;
+            outputAlertLevel = 1;
+            break;
+        case MESSAGE_IRC_PING:
+        case MESSAGE_IRC_PONG:
+        case MESSAGE_IRC_NUMERIC:
+            defaultMsgColor = COLOR_INFO;
+            outputAlertLevel = 1;
+            break;
+        case MESSAGE_IRC_QUIT:
+            defaultMsgColor = COLOR_QUIT;
+            outputAlertLevel = 1;
+            break;
+        case MESSAGE_IRC_TOPIC:
+            defaultMsgColor = COLOR_TOPIC;
+            outputAlertLevel = 1;
+            break;
+        case MESSAGE_IRC_WALLOPS:
+            defaultMsgColor = COLOR_WALLOPS;
+            outputAlertLevel = 2;
+            break;
+        default:
+            defaultMsgColor = COLOR_CHAT_FOREGROUND;
+    }
+
     m_pOutput->appendMessage(text, defaultMsgColor);
+
+    QTreeWidgetItem *pItem = m_pManager->getItemFromWindow(this);
+    if(pItem != NULL && !pItem->isSelected())
+    {
+        if(m_outputAlertLevel < outputAlertLevel)
+        {
+            m_outputAlertLevel = outputAlertLevel;
+            QString color;
+            switch(m_outputAlertLevel)
+            {
+                case 1:
+                    color = "gray";
+                    break;
+                case 2:
+                    color = "red";
+                    break;
+                case 3:
+                    color = "green";
+                    break;
+            }
+
+            pItem->setForeground(0, QBrush(QColor(color), Qt::SolidPattern));
+        }
+    }
 
     /*
     QRegExp URL("lol(([\\w:]+)[/]{2})?(\\w|.)+");
@@ -71,7 +190,7 @@ void OutputWindow::printError(const QString &text)
 {
     QString error = "[ERROR] ";
     error += text;
-    printOutput(error, COLOR_ERROR);
+    printOutput(error, MESSAGE_ERROR);
 }
 
 //-----------------------------------//
@@ -80,16 +199,28 @@ void OutputWindow::printDebug(const QString &text)
 {
     QString debug = "[DEBUG] ";
     debug += text;
-    printOutput(debug, COLOR_DEBUG);
+    printOutput(debug, MESSAGE_DEBUG);
 }
 
 // this static function delegates the task of processing each
 // OutputEvent to the specific instance of OutputWindow that
 // contains the OutputControl instance that fired the event
+//
+// it also ensures that the correct color is used for the text
+// in the WindowManager, if it's not the currently selected Window
 void OutputWindow::handleOutput(Event *evt)
 {
     OutputEvent *outputEvt = dynamic_cast<OutputEvent *>(evt);
     outputEvt->getParentWindow()->processOutputEvent(outputEvt);
+}
+
+//-----------------------------------//
+
+void OutputWindow::handleDoubleClickLink(Event *evt)
+{
+    DoubleClickLinkEvent *dblClickLinkEvt = dynamic_cast<DoubleClickLinkEvent *>(evt);
+    //dblClickLinkEvt->getParentWindow()->processDoubleClickLinkEvent(dblClickLinkEvt);
+    QMessageBox::information(NULL, "Hi", "You double-clicked a link!");
 }
 
 //-----------------------------------//
@@ -147,6 +278,15 @@ void OutputWindow::search(const QString &textToFind)
     m_pOutput->setExtraSelections(list);
 }
 */
+//-----------------------------------//
+
+void OutputWindow::focusedInTree()
+{
+    m_outputAlertLevel = 0;
+    QTreeWidgetItem *pItem = m_pManager->getItemFromWindow(this);
+    pItem->setForeground(0, QBrush(QColor("black"), Qt::SolidPattern));
+}
+
 //-----------------------------------//
 
 // handles child widget events

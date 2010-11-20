@@ -11,7 +11,6 @@
 #include <QAbstractScrollArea>
 #include <QList>
 #include <QLinkedList>
-#include <QMouseEvent>
 #include <QPoint>
 #include "cv/EventManager.h"
 
@@ -22,6 +21,9 @@
 #else
     #error
 #endif
+
+class QTimer;
+class QMouseEvent;
 
 namespace cv { namespace gui {
 
@@ -70,7 +72,7 @@ public:
         if(!m_linkInfoList.isEmpty())
         {
             QList<LinkInfo>::iterator iter = m_linkInfoList.begin();
-            while(iter != m_linkInfoList.end() && startIdx > (*iter).endIdx);
+            while(iter != m_linkInfoList.end() && startIdx > (*iter).endIdx) { ++iter; }
 
             if(iter == m_linkInfoList.end())
                 m_linkInfoList.append(linkInfo);
@@ -82,6 +84,24 @@ public:
             m_linkInfoList.append(linkInfo);
         }
     }
+};
+
+// event that is used for the "onDoubleClickLink" event
+class DoubleClickLinkEvent : public Event
+{
+    QString         m_text;
+    OutputWindow *  m_pParentWindow;
+
+public:
+    DoubleClickLinkEvent(const QString &text, OutputWindow *pParentWin)
+      : m_text(text),
+        m_pParentWindow(pParentWin)
+    { }
+    ~DoubleClickLinkEvent() { }
+
+    // accessors
+    QString getText() { return m_text; }
+    OutputWindow *getParentWindow() { return m_pParentWindow; }
 };
 
 enum OutputColor {
@@ -329,7 +349,7 @@ public:
     bool hasTextSelection() const { return m_selStartIdx != -1; }
     int getTextSelectionStart() const { return m_selStartIdx; }
     int getTextSelectionEnd() const { return m_selEndIdx; }
-    int getTextSelectionLength() const { return m_selEndIdx - m_selStartIdx; }
+    int getTextSelectionLength() const { return m_selEndIdx - m_selStartIdx + 1; }
     int getNumSplits() const { return m_numSplits; }
     int *getSplitsArray() const { return m_splits; }
 
@@ -365,6 +385,7 @@ class OutputControl : public QAbstractScrollArea
 {
     Q_OBJECT
 
+    // used for firing the OutputEvent
     OutputWindow *      m_pParentWindow;
 
     QList<OutputLine>   m_lines;
@@ -392,6 +413,11 @@ class OutputControl : public QAbstractScrollArea
     void *              m_pFM;
     void *              m_pEvt;
 
+    // used to minimize drawing of the viewport to a certain
+    // number of lines
+    QTimer *            m_pPaintTimer;
+    int                 m_numLinesQueued;
+
 public:
     static const int PADDING = 2;
     static const int TEXT_START_POS = PADDING + 1;
@@ -407,14 +433,17 @@ public:
 protected:
     void appendLine(OutputLine &line);
     void calculateLineWraps(OutputLine &currLine, QLinkedList<int> &splits, int vpWidth, QFont font);
+    bool linkHitTest(int x, int y, int &lineIdx, Link *&link);
     QSize sizeHint() const;
     void resizeEvent(QResizeEvent *event);
     void paintEvent(QPaintEvent *event);
     void mousePressEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
+    void mouseDoubleClickEvent(QMouseEvent *event);
 
 public slots:
+    void flushOutputLines();
     void updateScrollbarValue(int value);
 };
 

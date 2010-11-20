@@ -39,7 +39,8 @@ StatusWindow::StatusWindow(const QString &title/* = tr("Server Window")*/,
 
     m_pSharedServerConnPanel = new ServerConnectionPanel(m_pOutput);
     QObject::connect(m_pSharedServerConnPanel.data(), SIGNAL(connect(QString,int,QString,QString,QString)),
-                     this, SLOT(connectToServer(QString,int,QString,QString,QString)));
+                     this, SLOT(connectToServer(QString,int,QString,QString,QString)),
+                     Qt::QueuedConnection);
     m_pOpenButton = m_pSharedServerConnPanel->addOpenButton(m_pOutput, "Connect", 80, 30);
     m_pOutput->installEventFilter(this);
 
@@ -60,12 +61,6 @@ StatusWindow::StatusWindow(const QString &title/* = tr("Server Window")*/,
     pEvtMgr->hookEvent("onWallopsMessage", MakeDelegate(this, &StatusWindow::onWallopsMessage));
     pEvtMgr->hookEvent("onNumericMessage", MakeDelegate(this, &StatusWindow::onNumericMessage));
     pEvtMgr->hookEvent("onUnknownMessage", MakeDelegate(this, &StatusWindow::onUnknownMessage));
-}
-
-StatusWindow::~StatusWindow()
-{
-    //QObject::disconnect(m_pSharedSession.data(), 0, 0, 0);
-    m_pSharedSession->disconnectFromServer();
 }
 
 // returns a pointer to the OutputWindow if it exists
@@ -182,6 +177,12 @@ bool StatusWindow::eventFilter(QObject *obj, QEvent *event)
     return InputOutputWindow::eventFilter(obj, event);
 }
 
+void StatusWindow::closeEvent(QCloseEvent *event)
+{
+    m_pSharedSession->disconnectFromServer();
+    InputOutputWindow::closeEvent(event);
+}
+
 void StatusWindow::handle321Numeric(const Message &msg)
 {
     if(!m_pChanListWin)
@@ -257,7 +258,7 @@ void StatusWindow::handle353Numeric(const Message &msg)
     // RPL_NAMREPLY was sent as a result of a NAMES command
     else
     {
-        printOutput(getNumericText(msg), COLOR_INFO);
+        printOutput(getNumericText(msg), MESSAGE_IRC_NUMERIC);
     }
 }
 
@@ -271,7 +272,7 @@ void StatusWindow::handle366Numeric(const Message &msg)
     if(!childIrcWindowExists(msg.m_params[1]))
     {
         //printOutput(ConvertDataToHtml(getNumericText(msg)));
-        printOutput(getNumericText(msg), COLOR_INFO);
+        printOutput(getNumericText(msg), MESSAGE_IRC_NUMERIC);
     }
 }
 
@@ -279,7 +280,7 @@ void StatusWindow::onServerConnect(Event *evt) { }
 
 void StatusWindow::onServerDisconnect(Event *evt)
 {
-    printOutput("* Disconnected", COLOR_INFO);
+    printOutput("* Disconnected", MESSAGE_INFO);
     setTitle("Server Window");
     setWindowName("Server Window");
 }
@@ -316,7 +317,7 @@ void StatusWindow::onNumericMessage(Event *evt)
             QString textToPrint = QString("%1 is away: %2")
                                   .arg(msg.m_params[1])
                                   .arg(convertDataToHtml(msg.m_params[2]));
-            printOutput(textToPrint, COLOR_INFO);
+            printOutput(textToPrint, MESSAGE_IRC_NUMERIC);
 
             break;
         }
@@ -338,7 +339,7 @@ void StatusWindow::onNumericMessage(Event *evt)
             QString textToPrint = QString("%1 has been idle %2")
                                   .arg(msg.m_params[1])
                                   .arg(getIdleTextFrom317(msg));
-            printOutput(textToPrint, COLOR_INFO);
+            printOutput(textToPrint, MESSAGE_IRC_NUMERIC);
             break;
         }
         // RPL_LISTSTART
@@ -370,7 +371,7 @@ void StatusWindow::onNumericMessage(Event *evt)
                                   .arg(msg.m_params[1])
                                   .arg(msg.m_params[3])
                                   .arg(msg.m_params[2]);
-            printOutput(textToPrint, COLOR_INFO);
+            printOutput(textToPrint, MESSAGE_IRC_NUMERIC);
             break;
         }
         // RPL_TOPIC
@@ -381,7 +382,7 @@ void StatusWindow::onNumericMessage(Event *evt)
             // msg.m_params[2]: topic
             if(!childIrcWindowExists(msg.m_params[1]))
             {
-                printOutput(getNumericText(msg), COLOR_INFO);
+                printOutput(getNumericText(msg), MESSAGE_IRC_NUMERIC);
             }
             break;
         }
@@ -399,7 +400,7 @@ void StatusWindow::onNumericMessage(Event *evt)
                                       .arg(msg.m_params[2])
                                       .arg(getDate(msg.m_params[3]))
                                       .arg(getTime(msg.m_params[3]));
-                printOutput(textToPrint, COLOR_INFO);
+                printOutput(textToPrint, MESSAGE_IRC_NUMERIC);
             }
 
             break;
@@ -424,7 +425,7 @@ void StatusWindow::onNumericMessage(Event *evt)
             // msg.m_params[2]: "No such nick/channel"
             if(!childIrcWindowExists(msg.m_params[1]))
             {
-                printOutput(getNumericText(msg), COLOR_INFO);
+                printOutput(getNumericText(msg), MESSAGE_IRC_NUMERIC);
             }
             break;
         }
@@ -437,7 +438,7 @@ void StatusWindow::onNumericMessage(Event *evt)
             // 	305
             // 	306
             //printOutput(convertDataToHtml(getNumericText(msg)));
-            printOutput(getNumericText(msg), COLOR_INFO);
+            printOutput(getNumericText(msg), MESSAGE_IRC_NUMERIC);
         }
     }
 }
@@ -445,7 +446,7 @@ void StatusWindow::onNumericMessage(Event *evt)
 void StatusWindow::onErrorMessage(Event *evt)
 {
     Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
-    printOutput(msg.m_params[0], COLOR_INFO);
+    printOutput(msg.m_params[0], MESSAGE_IRC_ERROR);
 }
 
 void StatusWindow::onInviteMessage(Event *evt)
@@ -455,7 +456,7 @@ void StatusWindow::onInviteMessage(Event *evt)
                           .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName))
                           .arg(msg.m_params[1]);
     //printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "invite")));
-    printOutput(textToPrint, COLOR_INVITE);
+    printOutput(textToPrint, MESSAGE_IRC_INVITE);
 }
 
 void StatusWindow::onJoinMessage(Event *evt)
@@ -477,7 +478,7 @@ void StatusWindow::onJoinMessage(Event *evt)
         m_populatingUserList = true;
         QString textToPrint = QString("* You have joined %1").arg(msg.m_params[0]);
         //pChanWin->printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "join")));
-        pChanWin->printOutput(textToPrint, COLOR_JOIN);
+        pChanWin->printOutput(textToPrint, MESSAGE_IRC_JOIN);
     }
 }
 
@@ -496,7 +497,7 @@ void StatusWindow::onModeMessage(Event *evt)
         }
 
         //printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "mode")));
-        printOutput(textToPrint, COLOR_MODE);
+        printOutput(textToPrint, MESSAGE_IRC_MODE);
     }
 }
 
@@ -511,7 +512,7 @@ void StatusWindow::onNickMessage(Event *evt)
                               .arg(oldNick)
                               .arg(msg.m_params[0]);
         //printOutput(textToPrint, g_pCfgManager->getOptionValue("colors.ini", "nick"));
-        printOutput(textToPrint, COLOR_NICK);
+        printOutput(textToPrint, MESSAGE_IRC_NICK);
     }
 }
 
@@ -533,7 +534,7 @@ void StatusWindow::onNoticeMessage(Event *evt)
                           .arg(source)
                           .arg(msg.m_params[1]);
     //printOutput(textToPrint, g_pCfgManager->getOptionValue("colors.ini", "notice"));
-    printOutput(textToPrint, COLOR_NOTICE);
+    printOutput(textToPrint, MESSAGE_IRC_NOTICE);
 }
 
 void StatusWindow::onPongMessage(Event *evt)
@@ -550,7 +551,7 @@ void StatusWindow::onPongMessage(Event *evt)
     QString textToPrint = QString("* PONG from %1: %2")
                           .arg(msg.m_prefix)
                           .arg(msg.m_params[1]);
-    printOutput(textToPrint, COLOR_INFO);
+    printOutput(textToPrint, MESSAGE_IRC_PONG);
 }
 
 void StatusWindow::onPrivmsgMessage(Event *evt)
@@ -604,7 +605,7 @@ void StatusWindow::onPrivmsgMessage(Event *evt)
                               .arg(requestTypeStr)
                               .arg(fromNick);
         //printOutput(textToPrint, g_pCfgManager->getOptionValue("colors.ini", "ctcp"));
-        printOutput(textToPrint, COLOR_CTCP);
+        printOutput(textToPrint, MESSAGE_IRC_CTCP);
         return;
     }
 
@@ -640,7 +641,7 @@ void StatusWindow::onQuitMessage(Event *evt)
         {
             m_chanList[i]->removeUser(user);
             //m_chanList[i]->printOutput(textToPrint, quitColor);
-            m_chanList[i]->printOutput(textToPrint, COLOR_QUIT);
+            m_chanList[i]->printOutput(textToPrint, MESSAGE_IRC_QUIT);
         }
     }
 
@@ -652,7 +653,7 @@ void StatusWindow::onQuitMessage(Event *evt)
         if(user.compare(m_privList[i]->getTargetNick(), Qt::CaseInsensitive) == 0)
         {
             //m_privList[i]->printOutput(textToPrint, quitColor);
-            m_privList[i]->printOutput(textToPrint, COLOR_QUIT);
+            m_privList[i]->printOutput(textToPrint, MESSAGE_IRC_QUIT);
             break;
         }
     }
@@ -664,7 +665,7 @@ void StatusWindow::onWallopsMessage(Event *evt)
     QString textToPrint = QString("* WALLOPS from %1: %2")
                 .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName))
                 .arg(msg.m_params[0]);
-    printOutput(textToPrint, COLOR_WALLOPS);
+    printOutput(textToPrint, MESSAGE_IRC_WALLOPS);
 }
 
 void StatusWindow::onUnknownMessage(Event *evt)

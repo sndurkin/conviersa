@@ -33,7 +33,7 @@ protected:
 public:
     StatusWindow(const QString &title = tr("Server Window"),
             const QSize &size = QSize(500, 300));
-    ~StatusWindow();
+    ~StatusWindow() { }
 
     // returns a pointer to the IIrcWindow if it exists,
     // 	and is a child of this status window (meaning
@@ -89,6 +89,8 @@ protected:
 
     // handles child widget events
     bool eventFilter(QObject *obj, QEvent *event);
+
+    void closeEvent(QCloseEvent *event);
 
 private:
     // numeric messages

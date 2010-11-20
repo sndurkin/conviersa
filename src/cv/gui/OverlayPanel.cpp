@@ -291,6 +291,11 @@ void OverlayPanel::toggle(bool animate/* = true*/)
         open(animate);
 }
 
+bool OverlayPanel::isOpen(QWidget *pParent)
+{
+    return (m_state == OPEN && pParent == parentWidget());
+}
+
 void OverlayPanel::onOpenClicked(QWidget *pButton)
 {
     // if the button clicked is not inside the same widget

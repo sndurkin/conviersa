@@ -49,10 +49,13 @@ protected:
 private:
     void setupMenu();
     void setupColorConfig();
+    void setupServerConfig();
 
 public slots:
     // creates a blank IRC server window
     void onNewIrcServerWindow();
+
+    void loadQSS();
 };
 
 //-----------------------------------//

@@ -35,13 +35,6 @@ WindowManager::WindowManager(QWidget *pParent, WindowContainer *pMainContainer)
     setHeaderHidden(true);
     setStyle(new EntireRowSelectionStyle());
 
-    QString css = QString("QTreeWidget { ") %
-                  QString("selection-background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, ") %
-                  QString("stop:0.4 #c3cbfa, stop:1 #a6b1e6); }") %
-                  QString("QTreeWidget::item { ") %
-                  QString("padding: 5px; } ");
-    setStyleSheet(css);
-
     // context menu stuff
     setupContextMenu();
 
@@ -133,6 +126,7 @@ bool WindowManager::addWindow(Window *pWin, QTreeWidgetItem *pParent/* = NULL*/)
         pParent->setExpanded(true);
     }
     setCurrentItem(pNewItem);
+    pWin->giveFocus();
 
     tempInfo.m_pTreeItem = pNewItem;
 
@@ -328,6 +322,7 @@ void WindowManager::onSubWindowActivated(QMdiSubWindow *pSubWin)
         if(m_winList[i].m_pWindow->m_pSubWindow == pSubWin)
         {
             setCurrentItem(m_winList[i].m_pTreeItem);
+            m_winList[i].m_pWindow->focusedInTree();
             break;
         }
     }
@@ -366,7 +361,6 @@ void WindowManager::mousePressEvent(QMouseEvent *event)
     }
     else if(event->button() == Qt::LeftButton)
     {
-        // todo: do stuff to select window
         QTreeWidgetItem *pItem = itemAt(event->pos());
         if(pItem)
         {
@@ -385,6 +379,7 @@ void WindowManager::mousePressEvent(QMouseEvent *event)
                 }
 
                 pWin->giveFocus();
+                pWin->focusedInTree();
             }
         }
 

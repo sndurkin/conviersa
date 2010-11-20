@@ -23,13 +23,17 @@ InputOutputWindow::InputOutputWindow(const QString &title/* = tr("Untitled")*/,
     m_pInput->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_pInput->installEventFilter(this);
     setFocusProxy(m_pInput);
+    m_pOutput->setFocusProxy(m_pInput);
 }
 
 //-----------------------------------//
 
 void InputOutputWindow::giveFocus()
 {
-    m_pInput->setFocus();
+    if(m_pSharedServerConnPanel->isOpen(m_pOutput))
+        m_pSharedServerConnPanel->setFocus();
+    else
+        m_pInput->setFocus();
 }
 
 //-----------------------------------//

@@ -6,11 +6,14 @@
 *
 ************************************************************************/
 
+#include <QApplication>
+#include <QClipboard>
 #include <QPainter>
 #include <QScrollBar>
 #include <QPalette>
 #include <QLinkedList>
-#include <QDebug>
+#include <QMouseEvent>
+#include <QTimer>
 #include "cv/gui/OutputControl.h"
 
 namespace cv { namespace gui {
@@ -76,6 +79,11 @@ OutputControl::OutputControl(QWidget *parent/*= NULL*/)
     // set pointers for the blocks of memory
     m_pFM = m_fmBlock;
     m_pEvt = m_evtBlock;
+
+    m_numLinesQueued = 0;
+    m_pPaintTimer = new QTimer;
+    m_pPaintTimer->setInterval(30);
+    QObject::connect(m_pPaintTimer, SIGNAL(timeout()), this, SLOT(flushOutputLines()));
 }
 
 QSize OutputControl::sizeHint() const
@@ -348,17 +356,32 @@ void OutputControl::appendLine(OutputLine &line)
 
     m_lines.append(line);
 
-    // reset the scrollbar range and scrollbar value
-    bool atBottom = verticalScrollBar()->maximum() == verticalScrollBar()->value();
-    verticalScrollBar()->setRange(1, m_totalWrappedLines);
-    if(atBottom)
-    {
-        int scrollbarValue = m_totalWrappedLines + m_lastVisibleWrappedLine;
-        verticalScrollBar()->setValue(scrollbarValue);
-    }
+    // we queue OutputLines to be displayed until
+    // we get 2 of them (or 30ms has passed), and
+    // then call flushOutputLines() to reset the
+    // scrollbar, which causes a repaint
+    if(++m_numLinesQueued == 2)
+        flushOutputLines();
+    else if(!m_pPaintTimer->isActive())
+        m_pPaintTimer->start();
+}
 
-    // then repaint
-    viewport()->update();
+void OutputControl::flushOutputLines()
+{
+    m_pPaintTimer->stop();
+    if(m_numLinesQueued > 0)
+    {
+        // reset the scrollbar range and scrollbar value
+        bool atBottom = verticalScrollBar()->maximum() == verticalScrollBar()->value();
+        verticalScrollBar()->setRange(1, m_totalWrappedLines);
+        if(atBottom)
+        {
+            int scrollbarValue = m_totalWrappedLines + m_lastVisibleWrappedLine;
+            verticalScrollBar()->setValue(scrollbarValue);
+        }
+
+        m_numLinesQueued = 0;
+    }
 }
 
 void OutputControl::resizeEvent(QResizeEvent *event)
@@ -1171,91 +1194,167 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
     // if mouse is not down
     else
     {
-        // find which OutputLine the cursor is within
-        int currHeight = viewport()->height()/* - 2 - PADDING*/;
-        QFontMetrics *fm = new(m_pFM) QFontMetrics(this->font());
-        int lineSpacing = fm->lineSpacing();
-        for(int i = m_lastVisibleLineIdx; i >= 0 && currHeight > 0; --i)
+        int lineIdx;
+        Link *link;
+        bool hitTestResult = linkHitTest(event->pos().x(), event->pos().y(), lineIdx, link);
+        if(hitTestResult)
         {
-            OutputLine &currLine = m_lines[i];
-            int *splitsArray = currLine.getSplitsArray();
-            int numSplits = currLine.getNumSplits();
-
-            // determine the current height of the OutputLine
-            if(i == m_lastVisibleLineIdx && m_lastVisibleWrappedLine <= numSplits)
-                currHeight -= lineSpacing * (m_lastVisibleWrappedLine + 1);
-            else
-                currHeight -= lineSpacing * (numSplits + 1);
-
-            // check if the mouse position is inside the current OutputLine
-            if(event->pos().y() >= currHeight)
+            if(m_hoveredLink == link)
             {
-                if(currLine.hasLinks())
-                {
-                    // mouseY is an offset value from the beginning
-                    // of the OutputLine
-                    int mouseX = event->pos().x();
-                    int mouseY = event->pos().y() - currHeight;
-
-                    // iterate through each link
-                    Link *currLink = currLine.firstLink();
-                    while(currLink != NULL)
-                    {
-                        // iterate through each fragment in the link, checking if the mouse
-                        // position is inside any of them
-                        LinkFragment *currFragment = currLink->firstLinkFragment();
-                        while(currFragment != NULL)
-                        {
-                            // check y coord
-                            if(currFragment->y() <= mouseY && mouseY < currFragment->y() + lineSpacing)
-                            {
-                                // check x coord
-                                if(currFragment->x() <= mouseX && mouseX < currFragment->x() + currFragment->getWidth())
-                                {
-                                    if(m_hoveredLink == currLink)
-                                    {
-                                        // nothing changed, so just exit
-                                        return;
-                                    }
-
-                                    viewport()->setCursor(Qt::PointingHandCursor);
-                                    m_hoveredLineIdx = i;
-                                    m_hoveredLink = currLink;
-                                    goto repaint_viewport;
-                                }
-                            }
-
-                            currFragment = currFragment->nextLinkFragment();
-                        }
-
-                        currLink = currLink->nextLink();
-                    }
-                }
-
-                break;
+                // nothing changed, so just exit
+                return;
             }
-        }
 
-        if(m_hoveredLink == NULL)
+            viewport()->setCursor(Qt::PointingHandCursor);
+            m_hoveredLineIdx = lineIdx;
+            m_hoveredLink = link;
+        }
+        else
         {
-            // nothing changed, so just exit
-            return;
-        }
+            if(m_hoveredLink == NULL)
+            {
+                // nothing changed, so just exit
+                return;
+            }
 
-        fm->~QFontMetrics();
-        m_hoveredLineIdx = -1;
-        m_hoveredLink = NULL;
-        viewport()->setCursor(Qt::ArrowCursor);
+            m_hoveredLineIdx = -1;
+            m_hoveredLink = NULL;
+            viewport()->setCursor(Qt::ArrowCursor);
+        }
     }
 
-repaint_viewport:
     viewport()->update();
+}
+
+bool OutputControl::linkHitTest(int x, int y, int &lineIdx, Link *&link)
+{
+    // find which OutputLine the cursor is within
+    int currHeight = viewport()->height()/* - 2 - PADDING*/;
+    QFontMetrics *fm = new(m_pFM) QFontMetrics(this->font());
+    int lineSpacing = fm->lineSpacing();
+    for(int i = m_lastVisibleLineIdx; i >= 0 && currHeight > 0; --i)
+    {
+        OutputLine &currLine = m_lines[i];
+        int numSplits = currLine.getNumSplits();
+
+        // determine the current height of the OutputLine
+        if(i == m_lastVisibleLineIdx && m_lastVisibleWrappedLine <= numSplits)
+            currHeight -= lineSpacing * (m_lastVisibleWrappedLine + 1);
+        else
+            currHeight -= lineSpacing * (numSplits + 1);
+
+        // check if the mouse position is inside the current OutputLine
+        if(y >= currHeight)
+        {
+            if(currLine.hasLinks())
+            {
+                // mouseY is an offset value from the beginning
+                // of the OutputLine
+                int mouseX = x;
+                int mouseY = y - currHeight;
+
+                // iterate through each link
+                Link *currLink = currLine.firstLink();
+                while(currLink != NULL)
+                {
+                    // iterate through each fragment in the link, checking if the mouse
+                    // position is inside any of them
+                    LinkFragment *currFragment = currLink->firstLinkFragment();
+                    while(currFragment != NULL)
+                    {
+                        // check y coord
+                        if(currFragment->y() <= mouseY && mouseY < currFragment->y() + lineSpacing)
+                        {
+                            // check x coord
+                            if(currFragment->x() <= mouseX && mouseX < currFragment->x() + currFragment->getWidth())
+                            {
+                                lineIdx = i;
+                                link = currLink;
+                                fm->~QFontMetrics();
+                                return true;
+                            }
+                        }
+
+                        currFragment = currFragment->nextLinkFragment();
+                    }
+
+                    currLink = currLink->nextLink();
+                }
+            }
+
+            break;
+        }
+    }
+
+    fm->~QFontMetrics();
+    return false;
 }
 
 void OutputControl::mouseReleaseEvent(QMouseEvent *event)
 {
     m_isMouseDown = false;
     viewport()->update();
+
+    // iterate through the visible OutputLines to find the current selection
+    // (if any), and copy the text to clipboard
+    bool inSelection = false;
+    int i = m_lastVisibleLineIdx,
+        currHeight = viewport()->height() - 2 - PADDING,
+        lineSpacing = QFontMetrics(font()).lineSpacing();
+    for(; i >= 0 && currHeight > 0; --i)
+    {
+        OutputLine &currLine = m_lines[i];
+
+        int numSplits = currLine.getNumSplits();
+        if(i == m_lastVisibleLineIdx && m_lastVisibleWrappedLine <= numSplits)
+            currHeight -= lineSpacing * m_lastVisibleWrappedLine;
+        else
+            currHeight -= lineSpacing * numSplits;
+
+        if(currLine.hasTextSelection() && !inSelection)
+        {
+            inSelection = true;
+        }
+        else if(inSelection  && !currLine.hasTextSelection())
+        {
+            ++i;
+            break;
+        }
+    }
+
+    if(inSelection)
+    {
+        if(i < 0) i = 0;
+
+        // iterate through all OutputLines which are selected and append
+        // them to create the total selected text
+        QString selectedText;
+        while(i <= m_lastVisibleLineIdx && m_lines[i].hasTextSelection())
+        {
+            selectedText += m_lines[i].text().mid(m_lines[i].getTextSelectionStart(),
+                                                  m_lines[i].getTextSelectionLength());
+            selectedText += '\n';
+            ++i;
+        }
+
+        // remove last appended newline character
+        selectedText.remove(selectedText.length() - 1, 1);
+
+        QApplication::clipboard()->setText(selectedText);
+    }
+}
+
+void OutputControl::mouseDoubleClickEvent(QMouseEvent *event)
+{
+    int lineIdx;
+    Link *link;
+    if(linkHitTest(event->pos().x(), event->pos().y(), lineIdx, link))
+    {
+        QString text = m_lines[lineIdx].text().mid(link->getStartIdx(), link->getEndIdx() - link->getStartIdx() + 1);
+        DoubleClickLinkEvent *evt = new DoubleClickLinkEvent(text, m_pParentWindow);
+        g_pEvtManager->fireEvent("onDoubleClickLink", evt);
+        delete evt;
+    }
 }
 
 // this algorithm is complex, so it was broken down into parts:

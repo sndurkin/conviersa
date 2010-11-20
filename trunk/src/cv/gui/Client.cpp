@@ -6,6 +6,7 @@
 *
 ************************************************************************/
 
+#include <QFile>
 #include "cv/ConfigManager.h"
 #include "cv/gui/Client.h"
 #include "cv/gui/WindowManager.h"
@@ -37,15 +38,18 @@ Client::Client(const QString &title)
     m_pDock = new QDockWidget(tr("Window Manager"));
     m_pDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 
+    loadQSS();
+
     m_pManager = new WindowManager(m_pDock, m_pMainContainer);
     m_pDock->setWidget(m_pManager);
     addDockWidget(Qt::LeftDockWidgetArea, m_pDock);
 
-    // create new irc server window on client start
-    onNewIrcServerWindow();
-
     g_pCfgManager = new ConfigManager;
     setupColorConfig();
+    setupServerConfig();
+
+    // create new irc server window on client start
+    onNewIrcServerWindow();
 
     // TODO: fill in with events
     g_pEvtManager = new EventManager;
@@ -53,6 +57,8 @@ Client::Client(const QString &title)
     g_pEvtManager->hookEvent("onInput", &InputOutputWindow::handleInput);
     g_pEvtManager->createEvent("onOutput");
     g_pEvtManager->hookEvent("onOutput", &OutputWindow::handleOutput);
+    g_pEvtManager->createEvent("onDoubleClickLink");
+    g_pEvtManager->hookEvent("onDoubleClickLink", &OutputWindow::handleDoubleClickLink);
 }
 
 //-----------------------------------//
@@ -71,11 +77,14 @@ void Client::setupMenu()
     m_pFileMenu = menuBar()->addMenu(tr("&File"));
 
     QAction *pNewIrcWinAct = m_pFileMenu->addAction(tr("&New IRC Server"));
+    m_pFileMenu->addSeparator();
+    QAction *pRefreshQSS = m_pFileMenu->addAction(tr("Refresh QSS"));
     QList<QKeySequence> list;
     QKeySequence keysq("Ctrl+T");
     list.append(keysq);
     pNewIrcWinAct->setShortcuts(list);
-    QObject::connect(pNewIrcWinAct, SIGNAL(triggered(bool)), this, SLOT(onNewIrcServerWindow()));
+    QObject::connect(pNewIrcWinAct, SIGNAL(triggered()), this, SLOT(onNewIrcServerWindow()));
+    QObject::connect(pRefreshQSS, SIGNAL(triggered()), this, SLOT(loadQSS()));
 
     m_pFileMenu->addSeparator();
 }
@@ -103,12 +112,35 @@ void Client::setupColorConfig()
 
 //-----------------------------------//
 
+void Client::setupServerConfig()
+{
+    // no default options
+    QList<ConfigOption> defOptions;
+    defOptions.append(ConfigOption("name", ""));
+    defOptions.append(ConfigOption("nick", ""));
+    defOptions.append(ConfigOption("altNick", ""));
+    g_pCfgManager->setupConfigFile("server.ini", defOptions);
+}
+
+//-----------------------------------//
+
 // creates a blank IRC server window
 void Client::onNewIrcServerWindow()
 {
     StatusWindow *pWin = new StatusWindow();
     m_pManager->addWindow(pWin);
     pWin->showMaximized();
+}
+
+void Client::loadQSS()
+{
+    QFile qss("conviersa.qss");
+    qss.open(QIODevice::ReadOnly);
+    if(qss.isOpen())
+    {
+        qApp->setStyleSheet(qss.readAll());
+        qss.close();
+    }
 }
 
 //-----------------------------------//

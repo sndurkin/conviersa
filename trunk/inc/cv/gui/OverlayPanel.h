@@ -89,6 +89,7 @@ public:
     void open(bool animate = true);
     void close(bool animate = true);
     void toggle(bool animate = true);
+    bool isOpen(QWidget *pParent);
 
 signals:
     void panelOpened();

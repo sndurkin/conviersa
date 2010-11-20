@@ -13,6 +13,7 @@
 #include <QPushButton>
 #include <QPropertyAnimation>
 #include <QStringBuilder>
+#include "cv/ConfigManager.h"
 #include "cv/gui/ServerConnectionPanel.h"
 
 namespace cv { namespace gui {
@@ -30,7 +31,7 @@ ServerConnectionPanel::ServerConnectionPanel(QWidget *parent)
     setInitialState(OPEN);
     resize(360, 215);
     initialize();
-    QObject::connect(this, SIGNAL(panelOpened()), this, SLOT(onPanelOpened()));
+    QObject::connect(this, SIGNAL(panelOpened()), this, SLOT(setFocus()));
 
     QString css = QString("cv--gui--ServerConnectionPanel { ") %
                   QString("border-bottom-left-radius: 10px; ") %
@@ -43,6 +44,7 @@ ServerConnectionPanel::ServerConnectionPanel(QWidget *parent)
     setStyleSheet(css);
 
     createForm();
+    setFocusProxy(m_pServerInput);
 }
 
 // if all fields are valid:
@@ -92,16 +94,18 @@ void ServerConnectionPanel::validateAndConnect()
     // emit the signal so that the window can connect
     // to the server
     emit connect(m_pServerInput->text(), port, m_pNameInput->text(), m_pNickInput->text(), m_pAltNickInput->text());
+
+    // save the name, nick, and alternate nick in the config
+    // (and write it to the file)
+    g_pCfgManager->setOptionValue("server.ini", "name", m_pNameInput->text());
+    g_pCfgManager->setOptionValue("server.ini", "nick", m_pNickInput->text());
+    g_pCfgManager->setOptionValue("server.ini", "altNick", m_pAltNickInput->text());
+    g_pCfgManager->writeToFile("server.ini");
 }
 
 void ServerConnectionPanel::onCloseClicked()
 {
     close();
-}
-
-void ServerConnectionPanel::onPanelOpened()
-{
-    m_pServerInput->setFocus();
 }
 
 void ServerConnectionPanel::onEnter()
@@ -124,6 +128,7 @@ void ServerConnectionPanel::createForm()
     m_pServerLbl->move(LABEL_START, rowY);
     m_pServerLbl->resize(LABEL_WIDTH, CONTROL_HEIGHT);
     m_pServerLbl->setAlignment(Qt::AlignRight | Qt::AlignCenter);
+    m_pServerLbl->setFont(font());
     m_pServerInput = new QLineEdit(this);
     m_pServerInput->move(LABEL_START + LABEL_WIDTH + SPACING, rowY);
     m_pServerInput->resize(200, CONTROL_HEIGHT);
@@ -136,6 +141,7 @@ void ServerConnectionPanel::createForm()
     m_pPortLbl->move(LABEL_START, rowY);
     m_pPortLbl->resize(LABEL_WIDTH, CONTROL_HEIGHT);
     m_pPortLbl->setAlignment(Qt::AlignRight | Qt::AlignCenter);
+    m_pPortLbl->setFont(font());
     m_pPortInput = new QLineEdit(this);
     m_pPortInput->move(LABEL_START + LABEL_WIDTH + SPACING, rowY);
     m_pPortInput->resize(50, CONTROL_HEIGHT);
@@ -149,10 +155,12 @@ void ServerConnectionPanel::createForm()
     m_pNameLbl->move(LABEL_START, rowY);
     m_pNameLbl->resize(LABEL_WIDTH, CONTROL_HEIGHT);
     m_pNameLbl->setAlignment(Qt::AlignRight | Qt::AlignCenter);
+    m_pNameLbl->setFont(font());
     m_pNameInput = new QLineEdit(this);
     m_pNameInput->move(LABEL_START + LABEL_WIDTH + SPACING, rowY);
     m_pNameInput->resize(150, CONTROL_HEIGHT);
     m_pNameInput->setFont(font());
+    m_pNameInput->setText(g_pCfgManager->getOptionValue("server.ini", "name"));
     QObject::connect(m_pNameInput, SIGNAL(returnPressed()), this, SLOT(onEnter()));
 
     rowY += CONTROL_HEIGHT + 5;
@@ -161,10 +169,12 @@ void ServerConnectionPanel::createForm()
     m_pNickLbl->move(LABEL_START, rowY);
     m_pNickLbl->resize(LABEL_WIDTH, CONTROL_HEIGHT);
     m_pNickLbl->setAlignment(Qt::AlignRight | Qt::AlignCenter);
+    m_pNickLbl->setFont(font());
     m_pNickInput = new QLineEdit(this);
     m_pNickInput->move(LABEL_START + LABEL_WIDTH + SPACING, rowY);
     m_pNickInput->resize(150, CONTROL_HEIGHT);
     m_pNickInput->setFont(font());
+    m_pNickInput->setText(g_pCfgManager->getOptionValue("server.ini", "nick"));
     QObject::connect(m_pNickInput, SIGNAL(returnPressed()), this, SLOT(onEnter()));
 
     rowY += CONTROL_HEIGHT + 5;
@@ -173,22 +183,26 @@ void ServerConnectionPanel::createForm()
     m_pAltNickLbl->move(LABEL_START, rowY);
     m_pAltNickLbl->resize(LABEL_WIDTH, CONTROL_HEIGHT);
     m_pAltNickLbl->setAlignment(Qt::AlignRight | Qt::AlignCenter);
+    m_pAltNickLbl->setFont(font());
     m_pAltNickInput = new QLineEdit(this);
     m_pAltNickInput->move(LABEL_START + LABEL_WIDTH + SPACING, rowY);
     m_pAltNickInput->resize(150, CONTROL_HEIGHT);
     m_pAltNickInput->setFont(font());
+    m_pAltNickInput->setText(g_pCfgManager->getOptionValue("server.ini", "altNick"));
     QObject::connect(m_pAltNickInput, SIGNAL(returnPressed()), this, SLOT(onEnter()));
 
     m_pConnectButton = new QPushButton(this);
     m_pConnectButton->setText("Connect");
     m_pConnectButton->resize(BUTTON_WIDTH, BUTTON_HEIGHT);
     m_pConnectButton->move(width() - (2 * BUTTON_WIDTH) - 25, height() - BUTTON_HEIGHT - 15);
+    m_pConnectButton->setFont(font());
     QObject::connect(m_pConnectButton, SIGNAL(clicked()), this, SLOT(onEnter()));
 
     m_pCloseButton = new QPushButton(this);
     m_pCloseButton->setText("Close");
     m_pCloseButton->resize(BUTTON_WIDTH, BUTTON_HEIGHT);
     m_pCloseButton->move(width() - BUTTON_WIDTH - 15, height() - BUTTON_HEIGHT - 15);
+    m_pCloseButton->setFont(font());
     QObject::connect(m_pCloseButton, SIGNAL(clicked()), this, SLOT(onCloseClicked()));
 }
 

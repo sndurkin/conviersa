@@ -76,7 +76,7 @@ void QueryWindow::onNumericMessage(Event *evt)
             // msg.m_params[2]: "No such nick/channel"
             if(msg.m_params[1].compare(getWindowName(), Qt::CaseInsensitive) == 0)
             {
-                printOutput(getNumericText(msg), COLOR_INFO);
+                printOutput(getNumericText(msg), MESSAGE_IRC_NUMERIC);
             }
         }
     }
@@ -97,7 +97,7 @@ void QueryWindow::onNickMessage(Event *evt)
     if(m_pSharedSession->isMyNick(oldNick))
     {
         //printOutput(textToPrint, nickColor);
-        printOutput(textToPrint, COLOR_NICK);
+        printOutput(textToPrint, MESSAGE_IRC_NICK);
     }
     else
     {
@@ -108,7 +108,7 @@ void QueryWindow::onNickMessage(Event *evt)
         {
             setTargetNick(msg.m_params[0]);
             //printOutput(textToPrint, nickColor);
-            printOutput(textToPrint, COLOR_NICK);
+            printOutput(textToPrint, MESSAGE_IRC_NICK);
         }
     }
 }
@@ -123,7 +123,7 @@ void QueryWindow::onPrivmsgMessage(Event *evt)
         {
             QString textToPrint;
             //QColor color;
-            OutputColor color;
+            OutputMessageType msgType;
 
             CtcpRequestType requestType = getCtcpRequestType(msg);
             if(requestType != RequestTypeInvalid)
@@ -138,7 +138,7 @@ void QueryWindow::onPrivmsgMessage(Event *evt)
                     // so we'll take the mid, starting at index 8 and going until every
                     // character but the last is included
                     //color.setNamedColor(g_pCfgManager->getOptionValue("colors.ini", "action"));
-                    color = COLOR_ACTION;
+                    msgType = MESSAGE_IRC_ACTION;
                     textToPrint = QString("* %1 %2")
                                   .arg(fromNick)
                                   .arg(action.mid(8, action.size()-9));
@@ -147,7 +147,7 @@ void QueryWindow::onPrivmsgMessage(Event *evt)
             else
             {
                 //color.setNamedColor(g_pCfgManager->getOptionValue("colors.ini", "say"));
-                color = COLOR_CHAT_FOREGROUND;
+                msgType = MESSAGE_IRC_SAY;
                 textToPrint = QString("<%1> %2")
                               .arg(fromNick)
                               .arg(msg.m_params[1]);
@@ -158,7 +158,7 @@ void QueryWindow::onPrivmsgMessage(Event *evt)
                 QApplication::alert(this);
             }
 
-            printOutput(textToPrint, color);
+            printOutput(textToPrint, msgType);
         }
     }
 }
@@ -175,7 +175,7 @@ void QueryWindow::handleSay(const QString &text)
                           .arg(m_pSharedSession->getNick())
                           .arg(text);
     //printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "say")));
-    printOutput(textToPrint, COLOR_CHAT_SELF);
+    printOutput(textToPrint, MESSAGE_IRC_SAY_SELF);
     m_pSharedSession->sendPrivmsg(getWindowName(), text);
 }
 
@@ -186,7 +186,7 @@ void QueryWindow::handleAction(const QString &text)
                           .arg(m_pSharedSession->getNick())
                           .arg(text);
     //printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "action")));
-    printOutput(textToPrint, COLOR_ACTION);
+    printOutput(textToPrint, MESSAGE_IRC_ACTION);
     m_pSharedSession->sendAction(getWindowName(), text);
 }
 

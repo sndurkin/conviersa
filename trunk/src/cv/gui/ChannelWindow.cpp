@@ -226,7 +226,7 @@ void ChannelWindow::onNumericMessage(Event *evt)
                 //QColor topicColor(g_pCfgManager->getOptionValue("colors.ini", "topic"));
                 QString textToPrint = QString("* Topic is: %1").arg(msg.m_params[2]);
                 //printOutput(textToPrint, topicColor);
-                printOutput(textToPrint, COLOR_TOPIC);
+                printOutput(textToPrint, MESSAGE_IRC_TOPIC);
             }
 
             break;
@@ -244,7 +244,7 @@ void ChannelWindow::onNumericMessage(Event *evt)
                                       .arg(getDate(msg.m_params[3]))
                                       .arg(getTime(msg.m_params[3]));
                 //printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "topic")));
-                printOutput(textToPrint, COLOR_TOPIC);
+                printOutput(textToPrint, MESSAGE_IRC_TOPIC);
             }
 
             break;
@@ -274,7 +274,7 @@ void ChannelWindow::onJoinMessage(Event *evt)
         }
 
         //printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "join")));
-        printOutput(textToPrint, COLOR_JOIN);
+        printOutput(textToPrint, MESSAGE_IRC_JOIN);
     }
 }
 
@@ -304,7 +304,7 @@ void ChannelWindow::onKickMessage(Event *evt)
         }
 
         //printOutput(textToPrint, g_pCfgManager->getOptionValue("colors.ini", "kick"));
-        printOutput(textToPrint, COLOR_KICK);
+        printOutput(textToPrint, MESSAGE_IRC_KICK);
     }
 }
 
@@ -368,7 +368,7 @@ void ChannelWindow::onModeMessage(Event *evt)
         }
 
         //printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "mode")));
-        printOutput(textToPrint, COLOR_MODE);
+        printOutput(textToPrint, MESSAGE_IRC_MODE);
     }
 }
 
@@ -384,7 +384,7 @@ void ChannelWindow::onNickMessage(Event *evt)
                               .arg(oldNick)
                               .arg(msg.m_params[0]);
         //printOutput(textToPrint, g_pCfgManager->getOptionValue("colors.ini", "nick"));
-        printOutput(textToPrint, COLOR_NICK);
+        printOutput(textToPrint, MESSAGE_IRC_NICK);
     }
 }
 
@@ -417,7 +417,7 @@ void ChannelWindow::onPartMessage(Event *evt)
             textToPrint += QString(" (%1%2)").arg(msg.m_params[1]).arg(QString::fromUtf8("\xF"));
 
         //printOutput(textToPrint, g_pCfgManager->getOptionValue("colors.ini", "part"));
-        printOutput(textToPrint, COLOR_PART);
+        printOutput(textToPrint, MESSAGE_IRC_PART);
     }
 }
 
@@ -430,7 +430,7 @@ void ChannelWindow::onPrivmsgMessage(Event *evt)
         QString fromNick = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
         QString textToPrint;
         //QColor color;
-        OutputColor color;
+        OutputMessageType msgType;
 
         CtcpRequestType requestType = getCtcpRequestType(msg);
         if(requestType != RequestTypeInvalid)
@@ -445,7 +445,7 @@ void ChannelWindow::onPrivmsgMessage(Event *evt)
                 // so we'll take the mid, starting at index 8 and going until every
                 // character but the last is included
                 //color.setNamedColor(g_pCfgManager->getOptionValue("colors.ini", "action"));
-                color = COLOR_ACTION;
+                msgType = MESSAGE_IRC_ACTION;
                 textToPrint = QString("* %1 %2")
                               .arg(fromNick)
                               .arg(action.mid(8, action.size()-9));
@@ -454,12 +454,12 @@ void ChannelWindow::onPrivmsgMessage(Event *evt)
         else
         {
             //color.setNamedColor(g_pCfgManager->getOptionValue("colors.ini", "say"));
-            color = COLOR_CHAT_FOREGROUND;
+            msgType = MESSAGE_IRC_SAY;
             textToPrint = QString("<%1> %2")
                           .arg(fromNick)
                           .arg(msg.m_params[1]);
         }
-
+/*
         if(!hasFocus())
         {
             if(msg.m_params[1].toLower().contains(m_pSharedSession->getNick().toLower()))
@@ -467,8 +467,8 @@ void ChannelWindow::onPrivmsgMessage(Event *evt)
                 QApplication::alert(this);
             }
         }
-
-        printOutput(textToPrint, color);
+*/
+        printOutput(textToPrint, msgType);
     }
 }
 
@@ -482,7 +482,7 @@ void ChannelWindow::onTopicMessage(Event *evt)
                     .arg(msg.m_params[1]);
         //QColor topicColor(g_pCfgManager->getOptionValue("colors.ini", "topic"));
         //printOutput(textToPrint, topicColor);
-        printOutput(textToPrint, COLOR_TOPIC);
+        printOutput(textToPrint, MESSAGE_IRC_TOPIC);
 
         if(m_pManager)
         {
@@ -512,7 +512,7 @@ void ChannelWindow::handleSay(const QString &text)
                           .arg(m_pSharedSession->getNick())
                           .arg(text);
     //printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "say")));
-    printOutput(textToPrint, COLOR_CHAT_SELF);
+    printOutput(textToPrint, MESSAGE_IRC_SAY_SELF);
     m_pSharedSession->sendPrivmsg(getWindowName(), text);
 }
 
@@ -523,7 +523,7 @@ void ChannelWindow::handleAction(const QString &text)
                           .arg(m_pSharedSession->getNick())
                           .arg(text);
     //printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "action")));
-    printOutput(textToPrint, COLOR_ACTION);
+    printOutput(textToPrint, MESSAGE_IRC_ACTION);
     m_pSharedSession->sendAction(getWindowName(), text);
 }
 

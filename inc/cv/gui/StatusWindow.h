@@ -33,7 +33,7 @@ protected:
 public:
     StatusWindow(const QString &title = tr("Server Window"),
             const QSize &size = QSize(500, 300));
-    ~StatusWindow() { }
+    ~StatusWindow();
 
     // returns a pointer to the IIrcWindow if it exists,
     // 	and is a child of this status window (meaning
@@ -60,6 +60,8 @@ public:
     void addQueryWindow(QueryWindow *pPriv);
 
     // events
+    void onServerConnecting(Event *evt);
+    void onServerConnectFailed(Event *evt);
     void onServerConnect(Event *evt);
     void onServerDisconnect(Event *evt);
     void onReceiveData(Event *evt);
@@ -68,7 +70,6 @@ public:
     void onJoinMessage(Event *evt);
     void onModeMessage(Event *evt);
     void onNickMessage(Event *evt);
-    void onNoticeMessage(Event *evt);
     void onPongMessage(Event *evt);
     void onPrivmsgMessage(Event *evt);
     void onQuitMessage(Event *evt);
@@ -89,8 +90,6 @@ protected:
 
     // handles child widget events
     bool eventFilter(QObject *obj, QEvent *event);
-
-    void closeEvent(QCloseEvent *event);
 
 private:
     // numeric messages

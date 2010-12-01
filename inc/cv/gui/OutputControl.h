@@ -413,25 +413,23 @@ class OutputControl : public QAbstractScrollArea
     void *              m_pFM;
     void *              m_pEvt;
 
-    // used to minimize drawing of the viewport to a certain
-    // number of lines
-    QTimer *            m_pPaintTimer;
-    int                 m_numLinesQueued;
-
 public:
-    static const int PADDING = 2;
-    static const int TEXT_START_POS = PADDING + 1;
-    static const int WRAPPED_TEXT_START_POS = 25;
+    static const int    PADDING = 3;
+    static const int    TEXT_START_POS = PADDING;
+    static const int    WRAPPED_TEXT_START_POS = 25;
 
     // color reference array; see OutputColor enum
-    static QColor    COLORS[36];
+    static QColor       COLORS[36];
 
     OutputControl(QWidget *parent = NULL);
     void setParentWindow(OutputWindow *pParentWin) { m_pParentWindow = pParentWin; }
     void appendMessage(const QString &msg, OutputColor defaultMsgColor);
+    void changeFont(const QFont &font);
+    void refreshLinks();
 
 protected:
     void appendLine(OutputLine &line);
+    void flushOutputLines();
     void calculateLineWraps(OutputLine &currLine, QLinkedList<int> &splits, int vpWidth, QFont font);
     bool linkHitTest(int x, int y, int &lineIdx, Link *&link);
     QSize sizeHint() const;
@@ -443,7 +441,6 @@ protected:
     void mouseDoubleClickEvent(QMouseEvent *event);
 
 public slots:
-    void flushOutputLines();
     void updateScrollbarValue(int value);
 };
 

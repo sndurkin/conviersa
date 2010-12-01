@@ -10,7 +10,6 @@
 #include <QAction>
 #include <QListWidget>
 #include <QSplitter>
-#include <QMutex>
 #include "cv/ChannelUser.h"
 #include "cv/Session.h"
 #include "cv/Connection.h"
@@ -61,46 +60,34 @@ ChannelWindow::ChannelWindow(QExplicitlySharedDataPointer<Session> pSharedSessio
     m_pOpenButton = m_pSharedServerConnPanel->addOpenButton(m_pOutput, "Connect", 80, 30);
     m_pOutput->installEventFilter(this);
 
-    m_pSharedSession->getEventManager()->hookEvent("onNumericMessage", MakeDelegate(this, &ChannelWindow::onNumericMessage));
-    m_pSharedSession->getEventManager()->hookEvent("onJoinMessage", MakeDelegate(this, &ChannelWindow::onJoinMessage));
-    m_pSharedSession->getEventManager()->hookEvent("onKickMessage", MakeDelegate(this, &ChannelWindow::onKickMessage));
-    m_pSharedSession->getEventManager()->hookEvent("onModeMessage", MakeDelegate(this, &ChannelWindow::onModeMessage));
-    m_pSharedSession->getEventManager()->hookEvent("onNickMessage", MakeDelegate(this, &ChannelWindow::onNickMessage));
-    m_pSharedSession->getEventManager()->hookEvent("onPartMessage", MakeDelegate(this, &ChannelWindow::onPartMessage));
-    m_pSharedSession->getEventManager()->hookEvent("onPrivmsgMessage", MakeDelegate(this, &ChannelWindow::onPrivmsgMessage));
-    m_pSharedSession->getEventManager()->hookEvent("onTopicMessage", MakeDelegate(this, &ChannelWindow::onTopicMessage));
+    EventManager *pEvtMgr = m_pSharedSession->getEventManager();
+    pEvtMgr->hookEvent("onNumericMessage",  MakeDelegate(this, &ChannelWindow::onNumericMessage));
+    pEvtMgr->hookEvent("onJoinMessage",     MakeDelegate(this, &ChannelWindow::onJoinMessage));
+    pEvtMgr->hookEvent("onKickMessage",     MakeDelegate(this, &ChannelWindow::onKickMessage));
+    pEvtMgr->hookEvent("onModeMessage",     MakeDelegate(this, &ChannelWindow::onModeMessage));
+    pEvtMgr->hookEvent("onNoticeMessage",   MakeDelegate(this, &ChannelWindow::onNoticeMessage));
+    pEvtMgr->hookEvent("onNickMessage",     MakeDelegate(this, &ChannelWindow::onNickMessage));
+    pEvtMgr->hookEvent("onPartMessage",     MakeDelegate(this, &ChannelWindow::onPartMessage));
+    pEvtMgr->hookEvent("onPrivmsgMessage",  MakeDelegate(this, &ChannelWindow::onPrivmsgMessage));
+    pEvtMgr->hookEvent("onTopicMessage",    MakeDelegate(this, &ChannelWindow::onTopicMessage));
 }
 
 ChannelWindow::~ChannelWindow()
 {
     // todo: rewrite
-    m_pSharedSession->getEventManager()->unhookEvent("onNumericMessage", MakeDelegate(this, &ChannelWindow::onNumericMessage));
-    m_pSharedSession->getEventManager()->unhookEvent("onJoinMessage", MakeDelegate(this, &ChannelWindow::onJoinMessage));
-    m_pSharedSession->getEventManager()->unhookEvent("onKickMessage", MakeDelegate(this, &ChannelWindow::onKickMessage));
-    m_pSharedSession->getEventManager()->unhookEvent("onModeMessage", MakeDelegate(this, &ChannelWindow::onModeMessage));
-    m_pSharedSession->getEventManager()->unhookEvent("onNickMessage", MakeDelegate(this, &ChannelWindow::onNickMessage));
-    m_pSharedSession->getEventManager()->unhookEvent("onPartMessage", MakeDelegate(this, &ChannelWindow::onPartMessage));
-    m_pSharedSession->getEventManager()->unhookEvent("onPrivmsgMessage", MakeDelegate(this, &ChannelWindow::onPrivmsgMessage));
-    m_pSharedSession->getEventManager()->unhookEvent("onTopicMessage", MakeDelegate(this, &ChannelWindow::onTopicMessage));
-}
+    EventManager *pEvtMgr = m_pSharedSession->getEventManager();
+    pEvtMgr->unhookEvent("onNumericMessage",    MakeDelegate(this, &ChannelWindow::onNumericMessage));
+    pEvtMgr->unhookEvent("onJoinMessage",       MakeDelegate(this, &ChannelWindow::onJoinMessage));
+    pEvtMgr->unhookEvent("onKickMessage",       MakeDelegate(this, &ChannelWindow::onKickMessage));
+    pEvtMgr->unhookEvent("onModeMessage",       MakeDelegate(this, &ChannelWindow::onModeMessage));
+    pEvtMgr->unhookEvent("onNickMessage",       MakeDelegate(this, &ChannelWindow::onNickMessage));
+    pEvtMgr->unhookEvent("onNoticeMessage",     MakeDelegate(this, &ChannelWindow::onNoticeMessage));
+    pEvtMgr->unhookEvent("onPartMessage",       MakeDelegate(this, &ChannelWindow::onPartMessage));
+    pEvtMgr->unhookEvent("onPrivmsgMessage",    MakeDelegate(this, &ChannelWindow::onPrivmsgMessage));
+    pEvtMgr->unhookEvent("onTopicMessage",      MakeDelegate(this, &ChannelWindow::onTopicMessage));
 
-// lets the user know that he is back inside the channel,
-// whose window was already open when it was rejoined
-void ChannelWindow::joinChannel()
-{
-    m_inChannel = true;
-}
-
-// lets the user know that he is no longer in the channel,
-// but still has the window open
-void ChannelWindow::leaveChannel()
-{
-    m_inChannel = false;
-    while(m_users.size() > 0)
-    {
-        delete m_users.takeAt(0);
-        m_pUserList->takeItem(0);
-    }
+    m_pSharedSession.reset();
+    m_pSharedServerConnPanel.reset();
 }
 
 // returns true if the user is in the channel,
@@ -119,13 +106,7 @@ bool ChannelWindow::hasUser(const QString &user)
 // returns false otherwise
 bool ChannelWindow::addUser(const QString &user)
 {
-    ChannelUser *pNewUser = new (std::nothrow) ChannelUser(m_pSharedSession, user);
-    if(!pNewUser)
-    {
-        printError("Allocation of a new user failed.");
-        return false;
-    }
-
+    ChannelUser *pNewUser = new ChannelUser(m_pSharedSession, user);
     if(!addUser(pNewUser))
     {
         delete pNewUser;
@@ -159,10 +140,7 @@ void ChannelWindow::changeUserNick(const QString &oldNick, const QString &newNic
     if(!pNewUser)
         return;
 
-    ChannelUser *pUser = new (std::nothrow) ChannelUser(m_pSharedSession, newNick);
-    if(!pUser)
-        return;
-
+    ChannelUser *pUser = new ChannelUser(m_pSharedSession, newNick);
     for(int i = 0; i < m_users.size(); ++i)
     {
         if(m_users[i] == pNewUser)
@@ -184,7 +162,6 @@ void ChannelWindow::addPrefixToUser(const QString &user, const QChar &prefixToAd
     ChannelUser *pUser = findUser(user);
     if(pUser)
     {
-        // could be faster, but whatever; i'm lazy with my own API
         removeUser(pUser);
         pUser->addPrefix(prefixToAdd);
         addUser(pUser);
@@ -198,7 +175,6 @@ void ChannelWindow::removePrefixFromUser(const QString &user, const QChar &prefi
     ChannelUser *pUser = findUser(user);
     if(pUser)
     {
-        // again, i'm lazy
         removeUser(pUser);
         pUser->removePrefix(prefixToRemove);
         addUser(pUser);
@@ -223,10 +199,13 @@ void ChannelWindow::onNumericMessage(Event *evt)
                                          .arg(stripCodes(msg.m_params[2]));
                 setTitle(titleWithTopic);
 
-                //QColor topicColor(g_pCfgManager->getOptionValue("colors.ini", "topic"));
-                QString textToPrint = QString("* Topic is: %1").arg(msg.m_params[2]);
-                //printOutput(textToPrint, topicColor);
-                printOutput(textToPrint, MESSAGE_IRC_TOPIC);
+                QString textToPrint = g_pCfgManager->getOptionValue("messages.ini", "332")
+                                        .arg(msg.m_params[2]);
+
+                if(m_inChannel)
+                    printOutput(textToPrint, MESSAGE_IRC_TOPIC);
+                else
+                    enqueueMessage(textToPrint, MESSAGE_IRC_TOPIC);
             }
 
             break;
@@ -239,14 +218,43 @@ void ChannelWindow::onNumericMessage(Event *evt)
             // msg.m_params[3]: unix time
             if(isChannelName(msg.m_params[1]))
             {
-                QString textToPrint = QString("* Topic set by %1 on %2 %3")
+                QString textToPrint = g_pCfgManager->getOptionValue("messages.ini", "333-channel")
                                       .arg(msg.m_params[2])
                                       .arg(getDate(msg.m_params[3]))
                                       .arg(getTime(msg.m_params[3]));
-                //printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "topic")));
-                printOutput(textToPrint, MESSAGE_IRC_TOPIC);
+                if(m_inChannel)
+                    printOutput(textToPrint, MESSAGE_IRC_TOPIC);
+                else
+                    enqueueMessage(textToPrint, MESSAGE_IRC_TOPIC);
             }
 
+            break;
+        }
+        case 353:
+        {
+            // msg.m_params[0]: my nick
+            // msg.m_params[1]: "=" | "*" | "@"
+            // msg.m_params[2]: channel
+            // msg.m_params[3]: names, separated by spaces
+            //
+            // RPL_NAMREPLY was sent as a result of a JOIN command
+            if(!m_inChannel)
+            {
+                int numSections = msg.m_params[3].count(' ') + 1;
+                for(int i = 0; i < numSections; ++i)
+                    addUser(msg.m_params[3].section(' ', i, i, QString::SectionSkipEmpty));
+            }
+            break;
+        }
+        case 366:
+        {
+            // msg.m_params[0]: my nick
+            // msg.m_params[1]: channel
+            // msg.m_params[2]: "End of NAMES list"
+            //
+            // RPL_ENDOFNAMES was sent as a result of a JOIN command
+            if(!m_inChannel)
+                joinChannel();
             break;
         }
     }
@@ -261,19 +269,18 @@ void ChannelWindow::onJoinMessage(Event *evt)
         QString nickJoined = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
         if(m_pSharedSession->isMyNick(nickJoined))
         {
-            joinChannel();
-            textToPrint = QString("* You have rejoined %1").arg(msg.m_params[0]);
+            textToPrint = g_pCfgManager->getOptionValue("messages.ini", "rejoin")
+                            .arg(msg.m_params[0]);
         }
         else
         {
-            textToPrint = QString("* %1 (%2) has joined %3")
+            textToPrint = g_pCfgManager->getOptionValue("messages.ini", "join")
                           .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName))
                           .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixUserAndHost))
                           .arg(msg.m_params[0]);
             addUser(nickJoined);
         }
 
-        //printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "join")));
         printOutput(textToPrint, MESSAGE_IRC_JOIN);
     }
 }
@@ -287,23 +294,21 @@ void ChannelWindow::onKickMessage(Event *evt)
         if(m_pSharedSession->isMyNick(msg.m_params[1]))
         {
             leaveChannel();
-            textToPrint = "* You were kicked";
+            textToPrint = g_pCfgManager->getOptionValue("messages.ini", "kick-self")
+                            .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName));
         }
         else
         {
             removeUser(msg.m_params[1]);
-            textToPrint = QString("* %1 was kicked").arg(msg.m_params[1]);
+            textToPrint = g_pCfgManager->getOptionValue("messages.ini", "kick-self")
+                            .arg(msg.m_params[1])
+                            .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName));
         }
-
-        textToPrint += QString(" by %2").arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName));
 
         bool hasReason = (msg.m_paramsNum > 2 && !msg.m_params[2].isEmpty());
         if(hasReason)
-        {
             textToPrint += QString(" (%1%2)").arg(msg.m_params[2]).arg(QString::fromUtf8("\xF"));
-        }
 
-        //printOutput(textToPrint, g_pCfgManager->getOptionValue("colors.ini", "kick"));
         printOutput(textToPrint, MESSAGE_IRC_KICK);
     }
 }
@@ -313,14 +318,14 @@ void ChannelWindow::onModeMessage(Event *evt)
     Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
     if(isChannelName(msg.m_params[0]))
     {
-        QString textToPrint = QString("* %1 has set mode: ").arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName));
-
         // ignore first parameter
-        for(int i = 1; i < msg.m_paramsNum; ++i)
-        {
-                textToPrint += msg.m_params[i];
-                textToPrint += ' ';
-        }
+        QString modeParams = msg.m_params[1];
+        for(int i = 2; i < msg.m_paramsNum; ++i)
+            modeParams += ' ' + msg.m_params[i];
+
+        QString textToPrint = g_pCfgManager->getOptionValue("messages.ini", "mode")
+                                .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName))
+                                .arg(modeParams);
 
         bool sign = true;
         QString modes = msg.m_params[1];
@@ -367,7 +372,6 @@ void ChannelWindow::onModeMessage(Event *evt)
             }
         }
 
-        //printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "mode")));
         printOutput(textToPrint, MESSAGE_IRC_MODE);
     }
 }
@@ -380,11 +384,18 @@ void ChannelWindow::onNickMessage(Event *evt)
     if(hasUser(oldNick))
     {
         changeUserNick(oldNick, msg.m_params[0]);
-        QString textToPrint = QString("* %1 is now known as %2")
+        QString textToPrint = g_pCfgManager->getOptionValue("messages.ini", "nick")
                               .arg(oldNick)
                               .arg(msg.m_params[0]);
-        //printOutput(textToPrint, g_pCfgManager->getOptionValue("colors.ini", "nick"));
         printOutput(textToPrint, MESSAGE_IRC_NICK);
+    }
+}
+
+void ChannelWindow::onNoticeMessage(Event *evt)
+{
+    if(m_pManager->isWindowFocused(this))
+    {
+        InputOutputWindow::onNoticeMessage(evt);
     }
 }
 
@@ -399,13 +410,14 @@ void ChannelWindow::onPartMessage(Event *evt)
         if(m_pSharedSession->isMyNick(parseMsgPrefix(msg.m_prefix, MsgPrefixName)))
         {
             leaveChannel();
-            textToPrint = QString("* You have left %1").arg(msg.m_params[0]);
+            textToPrint = g_pCfgManager->getOptionValue("messages.ini", "part-self")
+                            .arg(msg.m_params[0]);
 
         }
         else
         {
             removeUser(parseMsgPrefix(msg.m_prefix, MsgPrefixName));
-            textToPrint = QString("* %1 (%2) has left %3")
+            textToPrint = g_pCfgManager->getOptionValue("messages.ini", "part")
                           .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName))
                           .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixUserAndHost))
                           .arg(msg.m_params[0]);
@@ -414,9 +426,10 @@ void ChannelWindow::onPartMessage(Event *evt)
         // if there's a part message
         bool hasReason = (msg.m_paramsNum > 1 && !msg.m_params[1].isEmpty());
         if(hasReason)
-            textToPrint += QString(" (%1%2)").arg(msg.m_params[1]).arg(QString::fromUtf8("\xF"));
+            textToPrint += g_pCfgManager->getOptionValue("messages.ini", "reason")
+                            .arg(msg.m_params[1])
+                            .arg(QString::fromUtf8("\xF"));
 
-        //printOutput(textToPrint, g_pCfgManager->getOptionValue("colors.ini", "part"));
         printOutput(textToPrint, MESSAGE_IRC_PART);
     }
 }
@@ -444,18 +457,16 @@ void ChannelWindow::onPrivmsgMessage(Event *evt)
                 // first 8 characters and last 1 character need to be excluded
                 // so we'll take the mid, starting at index 8 and going until every
                 // character but the last is included
-                //color.setNamedColor(g_pCfgManager->getOptionValue("colors.ini", "action"));
                 msgType = MESSAGE_IRC_ACTION;
-                textToPrint = QString("* %1 %2")
+                textToPrint = g_pCfgManager->getOptionValue("messages.ini", "action")
                               .arg(fromNick)
                               .arg(action.mid(8, action.size()-9));
             }
         }
         else
         {
-            //color.setNamedColor(g_pCfgManager->getOptionValue("colors.ini", "say"));
             msgType = MESSAGE_IRC_SAY;
-            textToPrint = QString("<%1> %2")
+            textToPrint = g_pCfgManager->getOptionValue("messages.ini", "say")
                           .arg(fromNick)
                           .arg(msg.m_params[1]);
         }
@@ -477,11 +488,9 @@ void ChannelWindow::onTopicMessage(Event *evt)
     Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
     if(isChannelName(msg.m_params[0]))
     {
-        QString textToPrint = QString("* %1 changes topic to: %2")
-                    .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName))
-                    .arg(msg.m_params[1]);
-        //QColor topicColor(g_pCfgManager->getOptionValue("colors.ini", "topic"));
-        //printOutput(textToPrint, topicColor);
+        QString textToPrint = g_pCfgManager->getOptionValue("messages.ini", "topic")
+                                .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName))
+                                .arg(msg.m_params[1]);
         printOutput(textToPrint, MESSAGE_IRC_TOPIC);
 
         if(m_pManager)
@@ -497,21 +506,62 @@ void ChannelWindow::onTopicMessage(Event *evt)
 
 void ChannelWindow::processOutputEvent(OutputEvent *evt)
 {
-    int lastIdx = 0, idx;
-    while((idx = evt->getText().indexOf("seand", lastIdx)) >= 0)
+    for(int i = 0; i < m_users.size(); ++i)
     {
-        lastIdx = idx + 4;
-        evt->addLinkInfo(idx, lastIdx);
+        QRegExp regex(OutputWindow::s_invalidNickPrefix
+                    + QRegExp::escape(m_users[i]->getNickname())
+                    + OutputWindow::s_invalidNickSuffix);
+        regex.setCaseSensitivity(Qt::CaseInsensitive);
+        int lastIdx = 0, idx;
+        while((idx = regex.indexIn(evt->getText(), lastIdx)) >= 0)
+        {
+            idx += regex.capturedTexts()[1].length();
+            lastIdx = idx + m_users[i]->getNickname().length() - 1;
+            evt->addLinkInfo(idx, lastIdx);
+        }
+    }
+}
+
+// adds a message to the "in-limbo" queue, where messages are
+// stored before the channel has been officially "joined" (when
+// the userlist has been received)
+void ChannelWindow::enqueueMessage(const QString &msg, OutputMessageType msgType)
+{
+    QueuedOutputMessage qom;
+    qom.message = msg;
+    qom.messageType = msgType;
+    m_messageQueue.enqueue(qom);
+}
+
+// "joins" the channel by flushing all messages received since creating
+// the channel (but before the list of users was received)
+void ChannelWindow::joinChannel()
+{
+    m_inChannel = true;
+    while(!m_messageQueue.isEmpty())
+    {
+        QueuedOutputMessage &qom = m_messageQueue.dequeue();
+        printOutput(qom.message, qom.messageType);
+    }
+}
+
+// removes all the users from memory
+void ChannelWindow::leaveChannel()
+{
+    m_inChannel = false;
+    while(m_users.size() > 0)
+    {
+        delete m_users.takeAt(0);
+        m_pUserList->takeItem(0);
     }
 }
 
 // handles the printing/sending of the PRIVMSG message
 void ChannelWindow::handleSay(const QString &text)
 {
-    QString textToPrint = QString("<%1> %2")
+    QString textToPrint = g_pCfgManager->getOptionValue("messages.ini", "say")
                           .arg(m_pSharedSession->getNick())
                           .arg(text);
-    //printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "say")));
     printOutput(textToPrint, MESSAGE_IRC_SAY_SELF);
     m_pSharedSession->sendPrivmsg(getWindowName(), text);
 }
@@ -519,11 +569,10 @@ void ChannelWindow::handleSay(const QString &text)
 // handles the printing/sending of the PRIVMSG ACTION message
 void ChannelWindow::handleAction(const QString &text)
 {
-    QString textToPrint = QString("* %1 %2")
+    QString textToPrint = g_pCfgManager->getOptionValue("messages.ini", "action")
                           .arg(m_pSharedSession->getNick())
                           .arg(text);
-    //printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "action")));
-    printOutput(textToPrint, MESSAGE_IRC_ACTION);
+    printOutput(textToPrint, MESSAGE_IRC_ACTION_SELF);
     m_pSharedSession->sendAction(getWindowName(), text);
 }
 
@@ -535,7 +584,7 @@ void ChannelWindow::handleTab()
     // find the beginning of the word that the user is
     // trying to tab-complete
     while(idx >= 0 && text[idx] != ' ') --idx;
-    idx++;
+    ++idx;
 
     // now capture the word
     QString word = text.mid(idx);
@@ -568,17 +617,6 @@ void ChannelWindow::handleTab()
         m_pInput->clear();
         m_pInput->insertPlainText(s + possibleNickNames[0]);
     }
-    /*
-    else
-    {
-        m_pOutput->append("Possibilities:\n");
-        for(int i = 0; i < possibleNickNames.size(); ++i)
-        {
-            m_pOutput->insertPlainText(possibleNickNames[i] + " ");
-        }
-        m_pOutput->insertPlainText("\n");
-    }
-    */
 }
 
 
@@ -589,9 +627,7 @@ void ChannelWindow::closeEvent(QCloseEvent *event)
     if(m_inChannel)
     {
         leaveChannel();
-        QString textToSend = "PART ";
-        textToSend += getWindowName();
-        m_pSharedSession->sendData(textToSend);
+        m_pSharedSession->sendData(QString("PART %1").arg(getWindowName()));
     }
 
     return Window::closeEvent(event);
@@ -600,10 +636,7 @@ void ChannelWindow::closeEvent(QCloseEvent *event)
 // adds a user by pointer to IrcChanUser
 bool ChannelWindow::addUser(ChannelUser *pNewUser)
 {
-    QListWidgetItem *pListItem = new (std::nothrow) QListWidgetItem(pNewUser->getProperNickname());
-    if(!pListItem)
-        return false;
-
+    QListWidgetItem *pListItem = new QListWidgetItem(pNewUser->getProperNickname());
     for(int i = 0; i < m_users.size(); ++i)
     {
         int compareVal = m_pSharedSession->compareNickPrefixes(m_users[i]->getPrefix(), pNewUser->getPrefix());
@@ -658,12 +691,8 @@ ChannelUser *ChannelWindow::findUser(const QString &user)
 {
     ChannelUser ircChanUser(m_pSharedSession, user);
     for(int i = 0; i < m_users.size(); ++i)
-    {
         if(QString::compare(m_users[i]->getNickname(), ircChanUser.getNickname(), Qt::CaseInsensitive) == 0)
-        {
             return m_users[i];
-        }
-    }
 
     return NULL;
 }

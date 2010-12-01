@@ -7,6 +7,7 @@
 ************************************************************************/
 
 #include <QCoreApplication>
+#include <QDebug>
 #include "cv/Session.h"
 #include "cv/Parser.h"
 
@@ -16,12 +17,16 @@ Session::Session(const QString& nick)
   : m_nick(nick),
     m_prevData("")
 {
-    m_pConn = new Connection;
+    m_pConn = new ThreadedConnection;
+    QObject::connect(m_pConn, SIGNAL(connecting()), this, SLOT(onConnecting()));
     QObject::connect(m_pConn, SIGNAL(connected()), this, SLOT(onConnect()));
+    QObject::connect(m_pConn, SIGNAL(connectionFailed()), this, SLOT(onFailedConnect()));
     QObject::connect(m_pConn, SIGNAL(disconnected()), this, SLOT(onDisconnect()));
     QObject::connect(m_pConn, SIGNAL(dataReceived(QString)), this, SLOT(onReceiveData(QString)));
 
     m_pEvtMgr = new EventManager;
+    m_pEvtMgr->createEvent("connecting");
+    m_pEvtMgr->createEvent("connectFailed");
     m_pEvtMgr->createEvent("onConnect");
     m_pEvtMgr->createEvent("onDisconnect");
     m_pEvtMgr->createEvent("onReceiveData");
@@ -67,12 +72,13 @@ void Session::connectToServer(const QString &host, int port, const QString &name
     // for more info see the definition in Session.h
     m_prefixRules = "o@v+";
 
-    m_pConn->connectToHost(host.toAscii(), port);
+    m_pConn->connectToHost(host, port);
 }
 
 void Session::disconnectFromServer()
 {
-    m_pConn->disconnectFromHost();
+    if(isConnected())
+        m_pConn->disconnectFromHost();
 }
 
 void Session::sendData(const QString &data)
@@ -340,6 +346,13 @@ void Session::processMessage(const Message &msg)
     delete evt;
 }
 
+void Session::onConnecting()
+{
+    ConnectionEvent *pEvt = new ConnectionEvent(m_host, m_port);
+    m_pEvtMgr->fireEvent("connecting", pEvt);
+    delete pEvt;
+}
+
 void Session::onConnect()
 {
     // todo: use options
@@ -350,10 +363,19 @@ void Session::onConnect()
     m_pEvtMgr->fireEvent("onConnect", NULL);
 }
 
+void Session::onFailedConnect()
+{
+    ConnectionEvent *pEvt = new ConnectionEvent(m_host, m_port, m_pConn->error());
+    m_pEvtMgr->fireEvent("connectFailed", pEvt);
+    delete pEvt;
+}
+
 void Session::onDisconnect()
 {
     // todo: find out what to do with Event *
-    m_pEvtMgr->fireEvent("onDisconnect", NULL);
+    ConnectionEvent *pEvt = new ConnectionEvent(m_host, m_port);
+    m_pEvtMgr->fireEvent("onDisconnect", pEvt);
+    delete pEvt;
 }
 
 void Session::onReceiveData(const QString &data)
@@ -375,7 +397,6 @@ void Session::onReceiveData(const QString &data)
 
         Message msg = parseData(msgData);
         processMessage(msg);
-        QCoreApplication::processEvents(QEventLoop::ExcludeSocketNotifiers, 5);
     }
 }
 

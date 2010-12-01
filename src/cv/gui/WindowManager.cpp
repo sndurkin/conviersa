@@ -311,6 +311,13 @@ Window *WindowManager::getWindowFromItem(QTreeWidgetItem *pItem)
     return NULL;
 }
 
+// returns true if the current window is focused in the tree
+// false otherwise
+bool WindowManager::isWindowFocused(Window *pWin)
+{
+    return (getWindowFromItem(currentItem()) == pWin);
+}
+
 // activates the window in the treeview
 void WindowManager::onSubWindowActivated(QMdiSubWindow *pSubWin)
 {

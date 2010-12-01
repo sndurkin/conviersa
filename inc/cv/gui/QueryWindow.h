@@ -38,6 +38,7 @@ public:
     // events
     void onNumericMessage(Event *evt);
     void onNickMessage(Event *evt);
+    void onNoticeMessage(Event *evt);
     void onPrivmsgMessage(Event *evt);
 
     void processOutputEvent(OutputEvent *evt);

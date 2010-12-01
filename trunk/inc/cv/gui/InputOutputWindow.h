@@ -60,6 +60,8 @@ public:
 
     static void handleInput(Event *evt);
 
+    void onNoticeMessage(Event *evt);
+
 protected:
     // handles the printing/sending of the PRIVMSG message
     virtual void handleSay(const QString &msg) = 0;

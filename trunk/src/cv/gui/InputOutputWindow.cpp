@@ -8,6 +8,7 @@
 
 #include <QApplication>
 #include <QPushButton>
+#include <QFont>
 #include "cv/ConfigManager.h"
 #include "cv/gui/InputOutputWindow.h"
 
@@ -64,11 +65,18 @@ void InputOutputWindow::handleInput(Event *evt)
             port = 6667;
         }
 
-        if(pSession->isConnected())
-            pSession->disconnectFromServer();
+        pSession->disconnectFromServer();
         pSession->connectToServer(host, port);
 
         return;
+    }
+    else if(text.startsWith("/font ", Qt::CaseInsensitive))
+    {
+        bool ok;
+        int pt = text.section(' ', 1, 1, QString::SectionSkipEmpty).toInt(&ok);
+        if(!ok) pt = 12;
+
+        pWindow->m_pOutput->changeFont(QFont("Consolas", pt));
     }
     else if(text.startsWith("/search ", Qt::CaseInsensitive))
     {
@@ -102,6 +110,24 @@ void InputOutputWindow::handleInput(Event *evt)
             pSession->sendData(text);
         }
     }
+}
+
+//-----------------------------------//
+
+void InputOutputWindow::onNoticeMessage(Event *evt)
+{
+    Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
+    QString source;
+    if(!msg.m_prefix.isEmpty())
+        source = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
+    // if m_prefix is empty, it is from the host
+    else
+        source = m_pSharedSession->getHost();
+
+    QString textToPrint = g_pCfgManager->getOptionValue("messages.ini", "notice")
+                          .arg(source)
+                          .arg(msg.m_params[1]);
+    printOutput(textToPrint, MESSAGE_IRC_NOTICE);
 }
 
 //-----------------------------------//

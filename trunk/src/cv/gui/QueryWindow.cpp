@@ -35,17 +35,24 @@ QueryWindow::QueryWindow(QExplicitlySharedDataPointer<Session> pSharedSession,
     m_pOpenButton = m_pSharedServerConnPanel->addOpenButton(m_pOutput, "Connect", 80, 30);
     m_pOutput->installEventFilter(this);
 
-    m_pSharedSession->getEventManager()->hookEvent("onNumericMessage", MakeDelegate(this, &QueryWindow::onNumericMessage));
-    m_pSharedSession->getEventManager()->hookEvent("onNickMessage", MakeDelegate(this, &QueryWindow::onNickMessage));
-    m_pSharedSession->getEventManager()->hookEvent("onPrivmsgMessage", MakeDelegate(this, &QueryWindow::onPrivmsgMessage));
+    EventManager *pEvtMgr = m_pSharedSession->getEventManager();
+    pEvtMgr->hookEvent("onNumericMessage",  MakeDelegate(this, &QueryWindow::onNumericMessage));
+    pEvtMgr->hookEvent("onNickMessage",     MakeDelegate(this, &QueryWindow::onNickMessage));
+    pEvtMgr->hookEvent("onNoticeMessage",   MakeDelegate(this, &QueryWindow::onNoticeMessage));
+    pEvtMgr->hookEvent("onPrivmsgMessage",  MakeDelegate(this, &QueryWindow::onPrivmsgMessage));
 }
 
 QueryWindow::~QueryWindow()
 {
     // todo: rewrite
-    m_pSharedSession->getEventManager()->unhookEvent("onNumericMessage", MakeDelegate(this, &QueryWindow::onNumericMessage));
-    m_pSharedSession->getEventManager()->unhookEvent("onNickMessage", MakeDelegate(this, &QueryWindow::onNickMessage));
-    m_pSharedSession->getEventManager()->unhookEvent("onPrivmsgMessage", MakeDelegate(this, &QueryWindow::onPrivmsgMessage));
+    EventManager *pEvtMgr = m_pSharedSession->getEventManager();
+    pEvtMgr->unhookEvent("onNumericMessage",    MakeDelegate(this, &QueryWindow::onNumericMessage));
+    pEvtMgr->unhookEvent("onNickMessage",       MakeDelegate(this, &QueryWindow::onNickMessage));
+    pEvtMgr->unhookEvent("onNoticeMessage",     MakeDelegate(this, &QueryWindow::onNoticeMessage));
+    pEvtMgr->unhookEvent("onPrivmsgMessage",    MakeDelegate(this, &QueryWindow::onPrivmsgMessage));
+
+    m_pSharedSession.reset();
+    m_pSharedServerConnPanel.reset();
 }
 
 // changes the nickname of the person we're chatting with
@@ -75,9 +82,7 @@ void QueryWindow::onNumericMessage(Event *evt)
             // msg.m_params[1]: nick/channel
             // msg.m_params[2]: "No such nick/channel"
             if(msg.m_params[1].compare(getWindowName(), Qt::CaseInsensitive) == 0)
-            {
                 printOutput(getNumericText(msg), MESSAGE_IRC_NUMERIC);
-            }
         }
     }
 }
@@ -90,13 +95,11 @@ void QueryWindow::onNickMessage(Event *evt)
     // if we get a NICK message, which will only be if we're in
     // a channel with the person (or if the nick being changed is ours)
     QString oldNick = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
-    QString textToPrint = QString("* %1 is now known as %2")
+    QString textToPrint = g_pCfgManager->getOptionValue("messages.ini", "nick")
                           .arg(oldNick)
                           .arg(msg.m_params[0]);
-    QString nickColor = g_pCfgManager->getOptionValue("colors.ini", "nick");
     if(m_pSharedSession->isMyNick(oldNick))
     {
-        //printOutput(textToPrint, nickColor);
         printOutput(textToPrint, MESSAGE_IRC_NICK);
     }
     else
@@ -107,9 +110,16 @@ void QueryWindow::onNickMessage(Event *evt)
         if(isTargetNick(oldNick) && !queryWindowExists)
         {
             setTargetNick(msg.m_params[0]);
-            //printOutput(textToPrint, nickColor);
             printOutput(textToPrint, MESSAGE_IRC_NICK);
         }
+    }
+}
+
+void QueryWindow::onNoticeMessage(Event *evt)
+{
+    if(m_pManager->isWindowFocused(this))
+    {
+        InputOutputWindow::onNoticeMessage(evt);
     }
 }
 
@@ -122,7 +132,6 @@ void QueryWindow::onPrivmsgMessage(Event *evt)
         if(isTargetNick(fromNick))
         {
             QString textToPrint;
-            //QColor color;
             OutputMessageType msgType;
 
             CtcpRequestType requestType = getCtcpRequestType(msg);
@@ -137,18 +146,16 @@ void QueryWindow::onPrivmsgMessage(Event *evt)
                     // first 8 characters and last 1 character need to be excluded
                     // so we'll take the mid, starting at index 8 and going until every
                     // character but the last is included
-                    //color.setNamedColor(g_pCfgManager->getOptionValue("colors.ini", "action"));
                     msgType = MESSAGE_IRC_ACTION;
-                    textToPrint = QString("* %1 %2")
+                    textToPrint = g_pCfgManager->getOptionValue("messages.ini", "action")
                                   .arg(fromNick)
                                   .arg(action.mid(8, action.size()-9));
                 }
             }
             else
             {
-                //color.setNamedColor(g_pCfgManager->getOptionValue("colors.ini", "say"));
                 msgType = MESSAGE_IRC_SAY;
-                textToPrint = QString("<%1> %2")
+                textToPrint = g_pCfgManager->getOptionValue("messages.ini", "say")
                               .arg(fromNick)
                               .arg(msg.m_params[1]);
             }
@@ -171,10 +178,9 @@ void QueryWindow::processOutputEvent(OutputEvent *evt)
 // handles the printing/sending of the PRIVMSG message
 void QueryWindow::handleSay(const QString &text)
 {
-    QString textToPrint = QString("<%1> %2")
+    QString textToPrint = g_pCfgManager->getOptionValue("messages.ini", "say")
                           .arg(m_pSharedSession->getNick())
                           .arg(text);
-    //printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "say")));
     printOutput(textToPrint, MESSAGE_IRC_SAY_SELF);
     m_pSharedSession->sendPrivmsg(getWindowName(), text);
 }
@@ -182,11 +188,10 @@ void QueryWindow::handleSay(const QString &text)
 // handles the printing/sending of the PRIVMSG ACTION message
 void QueryWindow::handleAction(const QString &text)
 {
-    QString textToPrint = QString("* %1 %2")
+    QString textToPrint = g_pCfgManager->getOptionValue("messages.ini", "action")
                           .arg(m_pSharedSession->getNick())
                           .arg(text);
-    //printOutput(textToPrint, QColor(g_pCfgManager->getOptionValue("colors.ini", "action")));
-    printOutput(textToPrint, MESSAGE_IRC_ACTION);
+    printOutput(textToPrint, MESSAGE_IRC_ACTION_SELF);
     m_pSharedSession->sendAction(getWindowName(), text);
 }
 

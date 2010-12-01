@@ -50,6 +50,8 @@ private:
     void setupMenu();
     void setupColorConfig();
     void setupServerConfig();
+    void setupGeneralConfig();
+    void setupMessagesConfig();
 
 public slots:
     // creates a blank IRC server window

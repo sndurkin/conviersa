@@ -30,6 +30,7 @@ enum OutputMessageType {
     MESSAGE_IRC_SAY,
     MESSAGE_IRC_SAY_SELF,
     MESSAGE_IRC_ACTION,
+    MESSAGE_IRC_ACTION_SELF,
     MESSAGE_IRC_CTCP,
 
     MESSAGE_IRC_ERROR,
@@ -99,6 +100,9 @@ protected:
     // lines on which items are found will be draw inside
     // the slider area (proportional to the size of the slider area)
     OutputWindowScrollBar * m_pScrollBar;
+
+    static QString          s_invalidNickPrefix;
+    static QString          s_invalidNickSuffix;
 
 public:
     OutputWindow(const QString &title = tr("Untitled"),

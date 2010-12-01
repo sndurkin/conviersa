@@ -8,31 +8,45 @@
 
 #pragma once
 
-#include <QString>
 #include <QApplication>
+#include <QString>
+#include <QQueue>
 #include "cv/ChannelUser.h"
 #include "cv/gui/InputOutputWindow.h"
 
 class QListWidget;
 class QSplitter;
-class QMutex;
 
 namespace cv { namespace gui {
 
 // subject to change
 const unsigned int MAX_NICK_PRIORITY = 1;
 
+// represents a message that is to be displayed
+// after the channel is officially joined (i.e. when
+// the list of users is received from the server)
+struct QueuedOutputMessage
+{
+    QString             message;
+    OutputMessageType   messageType;
+};
+
 class ChannelWindow : public InputOutputWindow
 {
     Q_OBJECT
 
 protected:
-    QListWidget *           m_pUserList;
-    QSplitter *             m_pSplitter;
+    QListWidget *               m_pUserList;
+    QSplitter *                 m_pSplitter;
 
-    QList<ChannelUser *>    m_users;
+    QList<ChannelUser *>        m_users;
 
-    bool                    m_inChannel;
+    // this variable dictates whether we are fully
+    // in the channel or not; we are not fully in
+    // a channel until the 366 numeric has been received
+    // (end of /NAMES list)
+    bool                        m_inChannel;
+    QQueue<QueuedOutputMessage> m_messageQueue;
 
 public:
     ChannelWindow(QExplicitlySharedDataPointer<Session> pSharedSession,
@@ -41,17 +55,7 @@ public:
                   const QSize &size = QSize(500, 300));
     ~ChannelWindow();
 
-    bool isInChannel() { return m_inChannel; }
-
     bool isChannelName(const QString &name) { return (name.compare(getWindowName(), Qt::CaseInsensitive) == 0); }
-
-    // lets the user know that he is back inside the channel,
-    // whose window was already open when it was rejoined
-    void joinChannel();
-
-    // lets the user know that he is no longer in the channel,
-    // but still has the window open
-    void leaveChannel();
 
     // returns true if the user is in the channel,
     // returns false otherwise
@@ -93,6 +97,7 @@ public:
     void onKickMessage(Event *evt);
     void onModeMessage(Event *evt);
     void onNickMessage(Event *evt);
+    void onNoticeMessage(Event *evt);
     void onPartMessage(Event *evt);
     void onPrivmsgMessage(Event *evt);
     void onTopicMessage(Event *evt);
@@ -100,6 +105,18 @@ public:
     void processOutputEvent(OutputEvent *evt);
 
 protected:
+    // adds a message to the "in-limbo" queue, where messages are
+    // stored before the channel has been officially "joined" (when
+    // the userlist has been received)
+    void enqueueMessage(const QString &msg, OutputMessageType msgType);
+
+    // "joins" the channel by flushing all messages received since creating
+    // the channel (but before the list of users was received)
+    void joinChannel();
+
+    // removes all the users from memory
+    void leaveChannel();
+
     // handles the printing/sending of the PRIVMSG message
     void handleSay(const QString &text);
 

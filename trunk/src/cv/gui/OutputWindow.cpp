@@ -23,6 +23,13 @@
 
 namespace cv { namespace gui {
 
+/*
+QString OutputWindow::s_invalidNickPrefix = "(^|[^A-z\\{\\|\\}])(";
+QString OutputWindow::s_invalidNickSuffix = ")($|[^0-9A-z\\{\\|\\}\\-])";
+*/
+QString OutputWindow::s_invalidNickPrefix = "(^|[^A-Za-z0-9])(";
+QString OutputWindow::s_invalidNickSuffix = ")($|[^A-Za-z0-9])";
+
 //-----------------------------------//
 
 OutputWindow::OutputWindow(const QString &title/* = tr("Untitled")*/,
@@ -57,7 +64,11 @@ void OutputWindow::printOutput(const QString &text, OutputMessageType msgType)
     {
         case MESSAGE_IRC_SAY:
         {
-            if(text.contains(m_pSharedSession->getNick(), Qt::CaseInsensitive))
+            QRegExp regex(OutputWindow::s_invalidNickPrefix
+                        + QRegExp::escape(m_pSharedSession->getNick())
+                        + OutputWindow::s_invalidNickSuffix);
+            regex.setCaseSensitivity(Qt::CaseInsensitive);
+            if(text.contains(regex))
             {
                 defaultMsgColor = COLOR_HIGHLIGHT;
                 outputAlertLevel = 3;
@@ -74,7 +85,11 @@ void OutputWindow::printOutput(const QString &text, OutputMessageType msgType)
             break;
         case MESSAGE_IRC_ACTION:
         {
-            if(text.contains(m_pSharedSession->getNick(), Qt::CaseInsensitive))
+            QRegExp regex(OutputWindow::s_invalidNickPrefix
+                        + QRegExp::escape(m_pSharedSession->getNick())
+                        + OutputWindow::s_invalidNickSuffix);
+            regex.setCaseSensitivity(Qt::CaseInsensitive);
+            if(text.contains(regex))
             {
                 defaultMsgColor = COLOR_HIGHLIGHT;
                 outputAlertLevel = 3;
@@ -86,6 +101,9 @@ void OutputWindow::printOutput(const QString &text, OutputMessageType msgType)
             }
             break;
         }
+        case MESSAGE_IRC_ACTION_SELF:
+            defaultMsgColor = COLOR_ACTION;
+            break;
         case MESSAGE_IRC_CTCP:
             defaultMsgColor = COLOR_CTCP;
             outputAlertLevel = 2;

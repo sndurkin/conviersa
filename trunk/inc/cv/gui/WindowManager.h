@@ -97,6 +97,10 @@ public:
     // retrieves the pointer to the IWindow given the pointer to the treeview item
     Window *getWindowFromItem(QTreeWidgetItem *pItem);
 
+    // returns true if the current window is focused in the tree
+    // false otherwise
+    bool isWindowFocused(Window *pWin);
+
     QSize sizeHint() const;
 
 public slots:

@@ -12,7 +12,7 @@
   * a way to provide default functionality in response to an event
   * a way for plugins to override or modify that default functionality
 </font>
-<font size=3>Fulfilling those general goals isn't that difficult, but problems arise when we get into specifics. For example, every `Session` object (represnts a connection to an IRC server) fires events for messages it receives. The relevant `Window` instances have hooked the events they need to provide default functionality, such as displaying chat and other messages. The problem is that if, for example, there is an "onPrivmsgMessage" event and possibly several `Session` instances, there needs to be a way to map specific instances to callbacks.</font>
+<font size=3>Fulfilling those general goals isn't that difficult, but problems arise when we get into specifics. For example, every `Session` object (represents a connection to an IRC server) fires events for messages it receives. The relevant `Window` instances have hooked the events they need to provide default functionality, such as displaying chat and other messages. The problem is that if, for example, there is an "onPrivmsgMessage" event and possibly several `Session` instances, there needs to be a way to map specific instances to callbacks.</font>
 <br>
 <br>
 ===The Solution===

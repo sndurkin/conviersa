@@ -288,7 +288,7 @@ void OutputControl::appendMessage(const QString &msg, OutputColor defaultMsgColo
     // fire onOutput event for callbacks to use for adding links
     // to the text
     OutputEvent *evt = new(m_pEvt) OutputEvent(line.text(), m_pParentWindow);
-    g_pEvtManager->fireEvent("onOutput", evt);
+    g_pEvtManager->fireEvent("output", this, evt);
 
     // iterate through the OutputEvent to add the links given the
     // LinkInfo
@@ -1417,7 +1417,7 @@ void OutputControl::mouseDoubleClickEvent(QMouseEvent *event)
     {
         QString text = m_lines[lineIdx].text().mid(link->getStartIdx(), link->getEndIdx() - link->getStartIdx() + 1);
         DoubleClickLinkEvent *evt = new DoubleClickLinkEvent(text, m_pParentWindow);
-        g_pEvtManager->fireEvent("onDoubleClickLink", evt);
+        g_pEvtManager->fireEvent("doubleClickedLink", this, evt);
         delete evt;
     }
 }

@@ -16,6 +16,7 @@
 #include "cv/ConfigManager.h"
 #include "cv/gui/WindowManager.h"
 #include "cv/gui/ChannelWindow.h"
+#include "cv/gui/QueryWindow.h"
 #include "cv/gui/StatusWindow.h"
 #include "cv/gui/OutputControl.h"
 
@@ -24,14 +25,15 @@
 
 namespace cv { namespace gui {
 
-ChannelWindow::ChannelWindow(QExplicitlySharedDataPointer<Session> pSharedSession,
+ChannelWindow::ChannelWindow(Session *pSession,
                              QExplicitlySharedDataPointer<ServerConnectionPanel> pSharedServerConnPanel,
                              const QString &title/* = tr("Untitled")*/,
                              const QSize &size/* = QSize(500, 300)*/)
     : InputOutputWindow(title, size),
-      m_inChannel(false)
+      m_inChannel(false),
+      m_matchesIdx(-1)
 {
-    m_pSharedSession = pSharedSession;
+    m_pSession = pSession;
     m_pSharedServerConnPanel = pSharedServerConnPanel;
 
     m_pSplitter = new QSplitter(this);
@@ -60,33 +62,28 @@ ChannelWindow::ChannelWindow(QExplicitlySharedDataPointer<Session> pSharedSessio
     m_pOpenButton = m_pSharedServerConnPanel->addOpenButton(m_pOutput, "Connect", 80, 30);
     m_pOutput->installEventFilter(this);
 
-    EventManager *pEvtMgr = m_pSharedSession->getEventManager();
-    pEvtMgr->hookEvent("onNumericMessage",  MakeDelegate(this, &ChannelWindow::onNumericMessage));
-    pEvtMgr->hookEvent("onJoinMessage",     MakeDelegate(this, &ChannelWindow::onJoinMessage));
-    pEvtMgr->hookEvent("onKickMessage",     MakeDelegate(this, &ChannelWindow::onKickMessage));
-    pEvtMgr->hookEvent("onModeMessage",     MakeDelegate(this, &ChannelWindow::onModeMessage));
-    pEvtMgr->hookEvent("onNoticeMessage",   MakeDelegate(this, &ChannelWindow::onNoticeMessage));
-    pEvtMgr->hookEvent("onNickMessage",     MakeDelegate(this, &ChannelWindow::onNickMessage));
-    pEvtMgr->hookEvent("onPartMessage",     MakeDelegate(this, &ChannelWindow::onPartMessage));
-    pEvtMgr->hookEvent("onPrivmsgMessage",  MakeDelegate(this, &ChannelWindow::onPrivmsgMessage));
-    pEvtMgr->hookEvent("onTopicMessage",    MakeDelegate(this, &ChannelWindow::onTopicMessage));
+    g_pEvtManager->hookEvent("numericMessage",  m_pSession, MakeDelegate(this, &ChannelWindow::onNumericMessage));
+    g_pEvtManager->hookEvent("joinMessage",     m_pSession, MakeDelegate(this, &ChannelWindow::onJoinMessage));
+    g_pEvtManager->hookEvent("kickMessage",     m_pSession, MakeDelegate(this, &ChannelWindow::onKickMessage));
+    g_pEvtManager->hookEvent("modeMessage",     m_pSession, MakeDelegate(this, &ChannelWindow::onModeMessage));
+    g_pEvtManager->hookEvent("noticeMessage",   m_pSession, MakeDelegate(this, &ChannelWindow::onNoticeMessage));
+    g_pEvtManager->hookEvent("nickMessage",     m_pSession, MakeDelegate(this, &ChannelWindow::onNickMessage));
+    g_pEvtManager->hookEvent("partMessage",     m_pSession, MakeDelegate(this, &ChannelWindow::onPartMessage));
+    g_pEvtManager->hookEvent("privmsgMessage",  m_pSession, MakeDelegate(this, &ChannelWindow::onPrivmsgMessage));
+    g_pEvtManager->hookEvent("topicMessage",    m_pSession, MakeDelegate(this, &ChannelWindow::onTopicMessage));
 }
 
 ChannelWindow::~ChannelWindow()
 {
-    // todo: rewrite
-    EventManager *pEvtMgr = m_pSharedSession->getEventManager();
-    pEvtMgr->unhookEvent("onNumericMessage",    MakeDelegate(this, &ChannelWindow::onNumericMessage));
-    pEvtMgr->unhookEvent("onJoinMessage",       MakeDelegate(this, &ChannelWindow::onJoinMessage));
-    pEvtMgr->unhookEvent("onKickMessage",       MakeDelegate(this, &ChannelWindow::onKickMessage));
-    pEvtMgr->unhookEvent("onModeMessage",       MakeDelegate(this, &ChannelWindow::onModeMessage));
-    pEvtMgr->unhookEvent("onNickMessage",       MakeDelegate(this, &ChannelWindow::onNickMessage));
-    pEvtMgr->unhookEvent("onNoticeMessage",     MakeDelegate(this, &ChannelWindow::onNoticeMessage));
-    pEvtMgr->unhookEvent("onPartMessage",       MakeDelegate(this, &ChannelWindow::onPartMessage));
-    pEvtMgr->unhookEvent("onPrivmsgMessage",    MakeDelegate(this, &ChannelWindow::onPrivmsgMessage));
-    pEvtMgr->unhookEvent("onTopicMessage",      MakeDelegate(this, &ChannelWindow::onTopicMessage));
-
-    m_pSharedSession.reset();
+    g_pEvtManager->unhookEvent("numericMessage", m_pSession, MakeDelegate(this, &ChannelWindow::onNumericMessage));
+    g_pEvtManager->unhookEvent("joinMessage",    m_pSession, MakeDelegate(this, &ChannelWindow::onJoinMessage));
+    g_pEvtManager->unhookEvent("kickMessage",    m_pSession, MakeDelegate(this, &ChannelWindow::onKickMessage));
+    g_pEvtManager->unhookEvent("modeMessage",    m_pSession, MakeDelegate(this, &ChannelWindow::onModeMessage));
+    g_pEvtManager->unhookEvent("nickMessage",    m_pSession, MakeDelegate(this, &ChannelWindow::onNickMessage));
+    g_pEvtManager->unhookEvent("noticeMessage",  m_pSession, MakeDelegate(this, &ChannelWindow::onNoticeMessage));
+    g_pEvtManager->unhookEvent("partMessage",    m_pSession, MakeDelegate(this, &ChannelWindow::onPartMessage));
+    g_pEvtManager->unhookEvent("privmsgMessage", m_pSession, MakeDelegate(this, &ChannelWindow::onPrivmsgMessage));
+    g_pEvtManager->unhookEvent("topicMessage",   m_pSession, MakeDelegate(this, &ChannelWindow::onTopicMessage));
     m_pSharedServerConnPanel.reset();
 }
 
@@ -106,7 +103,7 @@ bool ChannelWindow::hasUser(const QString &user)
 // returns false otherwise
 bool ChannelWindow::addUser(const QString &user)
 {
-    ChannelUser *pNewUser = new ChannelUser(m_pSharedSession, user);
+    ChannelUser *pNewUser = new ChannelUser(m_pSession, user);
     if(!addUser(pNewUser))
     {
         delete pNewUser;
@@ -140,7 +137,7 @@ void ChannelWindow::changeUserNick(const QString &oldNick, const QString &newNic
     if(!pNewUser)
         return;
 
-    ChannelUser *pUser = new ChannelUser(m_pSharedSession, newNick);
+    ChannelUser *pUser = new ChannelUser(m_pSession, newNick);
     for(int i = 0; i < m_users.size(); ++i)
     {
         if(m_users[i] == pNewUser)
@@ -267,7 +264,7 @@ void ChannelWindow::onJoinMessage(Event *evt)
     {
         QString textToPrint;
         QString nickJoined = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
-        if(m_pSharedSession->isMyNick(nickJoined))
+        if(m_pSession->isMyNick(nickJoined))
         {
             textToPrint = g_pCfgManager->getOptionValue("messages.ini", "rejoin")
                             .arg(msg.m_params[0]);
@@ -291,7 +288,7 @@ void ChannelWindow::onKickMessage(Event *evt)
     if(isChannelName(msg.m_params[0]))
     {
         QString textToPrint;
-        if(m_pSharedSession->isMyNick(msg.m_params[1]))
+        if(m_pSession->isMyNick(msg.m_params[1]))
         {
             leaveChannel();
             textToPrint = g_pCfgManager->getOptionValue("messages.ini", "kick-self")
@@ -341,7 +338,7 @@ void ChannelWindow::onModeMessage(Event *evt)
             }
             else
             {
-                ChanModeType type = getChanModeType(m_pSharedSession->getChanModes(), modes[modesIndex]);
+                ChanModeType type = getChanModeType(m_pSession->getChanModes(), modes[modesIndex]);
                 switch(type)
                 {
                     case ModeTypeA:
@@ -352,7 +349,7 @@ void ChannelWindow::onModeMessage(Event *evt)
                         if(paramsIndex >= msg.m_paramsNum)
                             break;
 
-                        QChar prefix = m_pSharedSession->getPrefixRule(modes[modesIndex]);
+                        QChar prefix = m_pSession->getPrefixRule(modes[modesIndex]);
                         if(prefix != '\0')
                         {
                             if(sign)
@@ -407,7 +404,7 @@ void ChannelWindow::onPartMessage(Event *evt)
         QString textToPrint;
 
         // if the PART message is of you leaving the channel
-        if(m_pSharedSession->isMyNick(parseMsgPrefix(msg.m_prefix, MsgPrefixName)))
+        if(m_pSession->isMyNick(parseMsgPrefix(msg.m_prefix, MsgPrefixName)))
         {
             leaveChannel();
             textToPrint = g_pCfgManager->getOptionValue("messages.ini", "part-self")
@@ -442,7 +439,7 @@ void ChannelWindow::onPrivmsgMessage(Event *evt)
     {
         QString fromNick = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
         QString textToPrint;
-        //QColor color;
+        bool shouldHighlight;
         OutputMessageType msgType;
 
         CtcpRequestType requestType = getCtcpRequestType(msg);
@@ -458,28 +455,31 @@ void ChannelWindow::onPrivmsgMessage(Event *evt)
                 // so we'll take the mid, starting at index 8 and going until every
                 // character but the last is included
                 msgType = MESSAGE_IRC_ACTION;
+                QString msgText = action.mid(8, action.size()-9);
+                shouldHighlight = containsNick(msgText);
                 textToPrint = g_pCfgManager->getOptionValue("messages.ini", "action")
-                              .arg(fromNick)
-                              .arg(action.mid(8, action.size()-9));
+                                .arg(fromNick)
+                                .arg(msgText);
             }
         }
         else
         {
             msgType = MESSAGE_IRC_SAY;
+            shouldHighlight = containsNick(msg.m_params[1]);
             textToPrint = g_pCfgManager->getOptionValue("messages.ini", "say")
-                          .arg(fromNick)
-                          .arg(msg.m_params[1]);
+                            .arg(fromNick)
+                            .arg(msg.m_params[1]);
         }
 /*
         if(!hasFocus())
         {
-            if(msg.m_params[1].toLower().contains(m_pSharedSession->getNick().toLower()))
+            if(msg.m_params[1].toLower().contains(m_pSession->getNick().toLower()))
             {
                 QApplication::alert(this);
             }
         }
 */
-        printOutput(textToPrint, msgType);
+        printOutput(textToPrint, msgType, shouldHighlight ? COLOR_HIGHLIGHT : COLOR_NONE);
     }
 }
 
@@ -504,8 +504,9 @@ void ChannelWindow::onTopicMessage(Event *evt)
     }
 }
 
-void ChannelWindow::processOutputEvent(OutputEvent *evt)
+void ChannelWindow::processOutputEvent(Event *evt)
 {
+    OutputEvent *pOutputEvt = dynamic_cast<OutputEvent *>(evt);
     for(int i = 0; i < m_users.size(); ++i)
     {
         QRegExp regex(OutputWindow::s_invalidNickPrefix
@@ -513,12 +514,31 @@ void ChannelWindow::processOutputEvent(OutputEvent *evt)
                     + OutputWindow::s_invalidNickSuffix);
         regex.setCaseSensitivity(Qt::CaseInsensitive);
         int lastIdx = 0, idx;
-        while((idx = regex.indexIn(evt->getText(), lastIdx)) >= 0)
+        while((idx = regex.indexIn(pOutputEvt->getText(), lastIdx)) >= 0)
         {
             idx += regex.capturedTexts()[1].length();
             lastIdx = idx + m_users[i]->getNickname().length() - 1;
-            evt->addLinkInfo(idx, lastIdx);
+            pOutputEvt->addLinkInfo(idx, lastIdx);
         }
+    }
+}
+
+void ChannelWindow::processDoubleClickLinkEvent(Event *evt)
+{
+    DoubleClickLinkEvent *pDblClickLinkEvt = dynamic_cast<DoubleClickLinkEvent *>(evt);
+    // check to see if there is a QueryWindow already open for this nick
+    Window *pParentWin = m_pManager->getWindowFromItem(m_pManager->getItemFromWindow(this)->parent());
+    StatusWindow *pStatusWin = dynamic_cast<StatusWindow *>(pParentWin);
+
+    OutputWindow *pQueryWin = pStatusWin->getChildIrcWindow(pDblClickLinkEvt->getText());
+    if(pQueryWin != NULL)
+    {
+        m_pManager->setCurrentItem(m_pManager->getItemFromWindow(pQueryWin));
+        pQueryWin->giveFocus();
+    }
+    else
+    {
+        pStatusWin->addQueryWindow(new QueryWindow(m_pSession, m_pSharedServerConnPanel, pDblClickLinkEvt->getText()), true);
     }
 }
 
@@ -560,62 +580,86 @@ void ChannelWindow::leaveChannel()
 void ChannelWindow::handleSay(const QString &text)
 {
     QString textToPrint = g_pCfgManager->getOptionValue("messages.ini", "say")
-                          .arg(m_pSharedSession->getNick())
+                          .arg(m_pSession->getNick())
                           .arg(text);
     printOutput(textToPrint, MESSAGE_IRC_SAY_SELF);
-    m_pSharedSession->sendPrivmsg(getWindowName(), text);
+    m_pSession->sendPrivmsg(getWindowName(), text);
 }
 
 // handles the printing/sending of the PRIVMSG ACTION message
 void ChannelWindow::handleAction(const QString &text)
 {
     QString textToPrint = g_pCfgManager->getOptionValue("messages.ini", "action")
-                          .arg(m_pSharedSession->getNick())
+                          .arg(m_pSession->getNick())
                           .arg(text);
     printOutput(textToPrint, MESSAGE_IRC_ACTION_SELF);
-    m_pSharedSession->sendAction(getWindowName(), text);
+    m_pSession->sendAction(getWindowName(), text);
+}
+
+bool ChannelWindow::eventFilter(QObject *obj, QEvent *event)
+{
+    if(obj == m_pInput)
+    {
+        if(event->type() == QEvent::KeyPress)
+        {
+            QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+            if(keyEvent->key() != Qt::Key_Tab)
+            {
+                m_matchesIdx = -1;
+                m_autocompleteMatches.clear();
+            }
+        }
+    }
+
+    return InputOutputWindow::eventFilter(obj, event);
 }
 
 void ChannelWindow::handleTab()
 {
     QString text = getInputText();
-    int idx = m_pInput->textCursor().position();
-
-    // find the beginning of the word that the user is
-    // trying to tab-complete
-    while(idx >= 0 && text[idx] != ' ') --idx;
-    ++idx;
-
-    // now capture the word
-    QString word = text.mid(idx);
-
-    if(word.isEmpty())
+    if(m_matchesIdx < 0)
     {
-        // todo: beep?
-        return;
+        int idx, lastIdx;
+        idx = lastIdx = m_pInput->textCursor().position();
+
+        // find the beginning of the word that the user is
+        // trying to tab-complete
+        while(--idx >= 0 && text[idx] != ' ');
+        ++idx;
+
+        // now capture the parts
+        m_preAutocompleteStr = text.mid(0, idx);
+        QString word = text.mid(idx, lastIdx - idx);
+        m_postAutocompleteStr = text.mid(lastIdx);
+
+        if(word.isEmpty())
+            return;
+
+        // find all autocomplete matches
+        for(int i = 0; i < m_users.size(); ++i)
+            if(m_users[i]->getNickname().startsWith(word, Qt::CaseInsensitive))
+                m_autocompleteMatches.push_back(m_users[i]);
+
+        if(m_autocompleteMatches.size() > 0)
+            m_matchesIdx = 0;
+    }
+    else
+    {
+        ++m_matchesIdx;
+        m_matchesIdx %= m_autocompleteMatches.size();
     }
 
-    QList<QString> possibleNickNames;
-
-    for(int j = 0; j < m_users.size(); ++j)
+    // set the text and cursor
+    if(m_matchesIdx >= 0)
     {
-        if(m_users[j]->getNickname().toLower().startsWith(word.toLower()))
-        {
-            possibleNickNames.append(m_users[j]->getNickname());
-        }
-    }
-
-    if(possibleNickNames.size() == 0)
-    {
-        // TODO: Beep?
-        return;
-    }
-    else if(possibleNickNames.size() == 1)
-    {
-        QString s = text.mid(0, idx);
-
-        m_pInput->clear();
-        m_pInput->insertPlainText(s + possibleNickNames[0]);
+        m_pInput->setPlainText(m_preAutocompleteStr
+                             + m_autocompleteMatches[m_matchesIdx]->getNickname()
+                             + m_postAutocompleteStr);
+        int cursorPos = m_preAutocompleteStr.length()
+                      + m_autocompleteMatches[m_matchesIdx]->getNickname().length();
+        QTextCursor textCursor = m_pInput->textCursor();
+        textCursor.setPosition(cursorPos);
+        m_pInput->setTextCursor(textCursor);
     }
 }
 
@@ -627,7 +671,7 @@ void ChannelWindow::closeEvent(QCloseEvent *event)
     if(m_inChannel)
     {
         leaveChannel();
-        m_pSharedSession->sendData(QString("PART %1").arg(getWindowName()));
+        m_pSession->sendData(QString("PART %1").arg(getWindowName()));
     }
 
     return Window::closeEvent(event);
@@ -639,7 +683,7 @@ bool ChannelWindow::addUser(ChannelUser *pNewUser)
     QListWidgetItem *pListItem = new QListWidgetItem(pNewUser->getProperNickname());
     for(int i = 0; i < m_users.size(); ++i)
     {
-        int compareVal = m_pSharedSession->compareNickPrefixes(m_users[i]->getPrefix(), pNewUser->getPrefix());
+        int compareVal = m_pSession->compareNickPrefixes(m_users[i]->getPrefix(), pNewUser->getPrefix());
         if(compareVal > 0)
         {
             m_pUserList->insertItem(i, pListItem);
@@ -689,7 +733,7 @@ void ChannelWindow::removeUser(ChannelUser *pUser)
 // returns NULL otherwise
 ChannelUser *ChannelWindow::findUser(const QString &user)
 {
-    ChannelUser ircChanUser(m_pSharedSession, user);
+    ChannelUser ircChanUser(m_pSession, user);
     for(int i = 0; i < m_users.size(); ++i)
         if(QString::compare(m_users[i]->getNickname(), ircChanUser.getNickname(), Qt::CaseInsensitive) == 0)
             return m_users[i];

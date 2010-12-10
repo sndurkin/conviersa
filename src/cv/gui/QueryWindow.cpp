@@ -17,12 +17,12 @@
 
 namespace cv { namespace gui {
 
-QueryWindow::QueryWindow(QExplicitlySharedDataPointer<Session> pSharedSession,
+QueryWindow::QueryWindow(Session *pSession,
                          QExplicitlySharedDataPointer<ServerConnectionPanel> pSharedServerConnPanel,
                          const QString &targetNick)
     : InputOutputWindow(targetNick)
 {
-    m_pSharedSession = pSharedSession;
+    m_pSession = pSession;
     m_pSharedServerConnPanel = pSharedServerConnPanel;
     m_targetNick = targetNick;
 
@@ -35,23 +35,19 @@ QueryWindow::QueryWindow(QExplicitlySharedDataPointer<Session> pSharedSession,
     m_pOpenButton = m_pSharedServerConnPanel->addOpenButton(m_pOutput, "Connect", 80, 30);
     m_pOutput->installEventFilter(this);
 
-    EventManager *pEvtMgr = m_pSharedSession->getEventManager();
-    pEvtMgr->hookEvent("onNumericMessage",  MakeDelegate(this, &QueryWindow::onNumericMessage));
-    pEvtMgr->hookEvent("onNickMessage",     MakeDelegate(this, &QueryWindow::onNickMessage));
-    pEvtMgr->hookEvent("onNoticeMessage",   MakeDelegate(this, &QueryWindow::onNoticeMessage));
-    pEvtMgr->hookEvent("onPrivmsgMessage",  MakeDelegate(this, &QueryWindow::onPrivmsgMessage));
+    g_pEvtManager->hookEvent("numericMessage", m_pSession, MakeDelegate(this, &QueryWindow::onNumericMessage));
+    g_pEvtManager->hookEvent("nickMessage",    m_pSession, MakeDelegate(this, &QueryWindow::onNickMessage));
+    g_pEvtManager->hookEvent("noticeMessage",  m_pSession, MakeDelegate(this, &QueryWindow::onNoticeMessage));
+    g_pEvtManager->hookEvent("privmsgMessage", m_pSession, MakeDelegate(this, &QueryWindow::onPrivmsgMessage));
 }
 
 QueryWindow::~QueryWindow()
 {
-    // todo: rewrite
-    EventManager *pEvtMgr = m_pSharedSession->getEventManager();
-    pEvtMgr->unhookEvent("onNumericMessage",    MakeDelegate(this, &QueryWindow::onNumericMessage));
-    pEvtMgr->unhookEvent("onNickMessage",       MakeDelegate(this, &QueryWindow::onNickMessage));
-    pEvtMgr->unhookEvent("onNoticeMessage",     MakeDelegate(this, &QueryWindow::onNoticeMessage));
-    pEvtMgr->unhookEvent("onPrivmsgMessage",    MakeDelegate(this, &QueryWindow::onPrivmsgMessage));
+    g_pEvtManager->unhookEvent("numericMessage", m_pSession, MakeDelegate(this, &QueryWindow::onNumericMessage));
+    g_pEvtManager->unhookEvent("nickMessage",    m_pSession, MakeDelegate(this, &QueryWindow::onNickMessage));
+    g_pEvtManager->unhookEvent("noticeMessage",  m_pSession, MakeDelegate(this, &QueryWindow::onNoticeMessage));
+    g_pEvtManager->unhookEvent("privmsgMessage", m_pSession, MakeDelegate(this, &QueryWindow::onPrivmsgMessage));
 
-    m_pSharedSession.reset();
     m_pSharedServerConnPanel.reset();
 }
 
@@ -98,7 +94,7 @@ void QueryWindow::onNickMessage(Event *evt)
     QString textToPrint = g_pCfgManager->getOptionValue("messages.ini", "nick")
                           .arg(oldNick)
                           .arg(msg.m_params[0]);
-    if(m_pSharedSession->isMyNick(oldNick))
+    if(m_pSession->isMyNick(oldNick))
     {
         printOutput(textToPrint, MESSAGE_IRC_NICK);
     }
@@ -126,12 +122,13 @@ void QueryWindow::onNoticeMessage(Event *evt)
 void QueryWindow::onPrivmsgMessage(Event *evt)
 {
     Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
-    if(m_pSharedSession->isMyNick(msg.m_params[0]))
+    if(m_pSession->isMyNick(msg.m_params[0]))
     {
         QString fromNick = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
         if(isTargetNick(fromNick))
         {
             QString textToPrint;
+            bool shouldHighlight;
             OutputMessageType msgType;
 
             CtcpRequestType requestType = getCtcpRequestType(msg);
@@ -147,14 +144,17 @@ void QueryWindow::onPrivmsgMessage(Event *evt)
                     // so we'll take the mid, starting at index 8 and going until every
                     // character but the last is included
                     msgType = MESSAGE_IRC_ACTION;
+                    QString msgText = action.mid(8, action.size()-9);
+                    shouldHighlight = containsNick(msgText);
                     textToPrint = g_pCfgManager->getOptionValue("messages.ini", "action")
                                   .arg(fromNick)
-                                  .arg(action.mid(8, action.size()-9));
+                                  .arg(msgText);
                 }
             }
             else
             {
                 msgType = MESSAGE_IRC_SAY;
+                shouldHighlight = containsNick(msg.m_params[1]);
                 textToPrint = g_pCfgManager->getOptionValue("messages.ini", "say")
                               .arg(fromNick)
                               .arg(msg.m_params[1]);
@@ -165,34 +165,51 @@ void QueryWindow::onPrivmsgMessage(Event *evt)
                 QApplication::alert(this);
             }
 
-            printOutput(textToPrint, msgType);
+            printOutput(textToPrint, msgType, shouldHighlight ? COLOR_HIGHLIGHT : COLOR_NONE);
         }
     }
 }
 
-void QueryWindow::processOutputEvent(OutputEvent *evt)
+void QueryWindow::processOutputEvent(Event *evt)
 {
+    OutputEvent *pOutputEvt = dynamic_cast<OutputEvent *>(evt);
+    QRegExp regex(OutputWindow::s_invalidNickPrefix
+                + QRegExp::escape(m_targetNick)
+                + OutputWindow::s_invalidNickSuffix);
+    regex.setCaseSensitivity(Qt::CaseInsensitive);
+    int lastIdx = 0, idx;
+    while((idx = regex.indexIn(pOutputEvt->getText(), lastIdx)) >= 0)
+    {
+        idx += regex.capturedTexts()[1].length();
+        lastIdx = idx + m_targetNick.length() - 1;
+        pOutputEvt->addLinkInfo(idx, lastIdx);
+    }
+}
 
+void QueryWindow::processDoubleClickLinkEvent(Event *evt)
+{
+    DoubleClickLinkEvent *pDblClickLinkEvt = dynamic_cast<DoubleClickLinkEvent *>(evt);
+    m_pSession->sendData(QString().arg(pDblClickLinkEvt->getText()));
 }
 
 // handles the printing/sending of the PRIVMSG message
 void QueryWindow::handleSay(const QString &text)
 {
     QString textToPrint = g_pCfgManager->getOptionValue("messages.ini", "say")
-                          .arg(m_pSharedSession->getNick())
+                          .arg(m_pSession->getNick())
                           .arg(text);
     printOutput(textToPrint, MESSAGE_IRC_SAY_SELF);
-    m_pSharedSession->sendPrivmsg(getWindowName(), text);
+    m_pSession->sendPrivmsg(getWindowName(), text);
 }
 
 // handles the printing/sending of the PRIVMSG ACTION message
 void QueryWindow::handleAction(const QString &text)
 {
     QString textToPrint = g_pCfgManager->getOptionValue("messages.ini", "action")
-                          .arg(m_pSharedSession->getNick())
+                          .arg(m_pSession->getNick())
                           .arg(text);
     printOutput(textToPrint, MESSAGE_IRC_ACTION_SELF);
-    m_pSharedSession->sendAction(getWindowName(), text);
+    m_pSession->sendAction(getWindowName(), text);
 }
 
 void QueryWindow::handleTab()

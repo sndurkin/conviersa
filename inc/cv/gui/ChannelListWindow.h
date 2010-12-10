@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "cv/Session.h"
 #include "cv/gui/Window.h"
 
 class QVBoxLayout;
@@ -23,7 +22,11 @@ class QGroupBox;
 class QRadioButton;
 class QSpinBox;
 
-namespace cv { namespace gui {
+namespace cv {
+
+class Session;
+
+namespace gui {
 
 class SearchBar;
 class CLineEdit;
@@ -37,8 +40,7 @@ class ChannelListWindow : public Window
 {
     Q_OBJECT
 
-    QExplicitlySharedDataPointer<Session>
-                            m_pSharedSession;
+    Session *               m_pSession;
 
     // main layout
     QVBoxLayout *           m_pVLayout;
@@ -84,8 +86,7 @@ class ChannelListWindow : public Window
     bool            m_savedTopicDisplay;
 
 public:
-    ChannelListWindow(QExplicitlySharedDataPointer<Session> pSharedSession,
-                    const QSize &size = QSize(715, 300));
+    ChannelListWindow(Session *pSession, const QSize &size = QSize(715, 300));
 
     void giveFocus();
 

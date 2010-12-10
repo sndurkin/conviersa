@@ -43,30 +43,29 @@ StatusWindow::StatusWindow(const QString &title/* = tr("Server Window")*/,
     m_pOpenButton = m_pSharedServerConnPanel->addOpenButton(m_pOutput, "Connect", 80, 30);
     m_pOutput->installEventFilter(this);
 
-    m_pSharedSession = new Session("conviersa");
-    EventManager *pEvtMgr = m_pSharedSession->getEventManager();
-    pEvtMgr->hookEvent("connecting",        MakeDelegate(this, &StatusWindow::onServerConnecting));
-    pEvtMgr->hookEvent("connectFailed",     MakeDelegate(this, &StatusWindow::onServerConnectFailed));
-    pEvtMgr->hookEvent("onConnect",         MakeDelegate(this, &StatusWindow::onServerConnect));
-    pEvtMgr->hookEvent("onDisconnect",      MakeDelegate(this, &StatusWindow::onServerDisconnect));
-    pEvtMgr->hookEvent("onReceiveData",     MakeDelegate(this, &StatusWindow::onReceiveData));
-    pEvtMgr->hookEvent("onErrorMessage",    MakeDelegate(this, &StatusWindow::onErrorMessage));
-    pEvtMgr->hookEvent("onInviteMessage",   MakeDelegate(this, &StatusWindow::onInviteMessage));
-    pEvtMgr->hookEvent("onJoinMessage",     MakeDelegate(this, &StatusWindow::onJoinMessage));
-    pEvtMgr->hookEvent("onModeMessage",     MakeDelegate(this, &StatusWindow::onModeMessage));
-    pEvtMgr->hookEvent("onNickMessage",     MakeDelegate(this, &StatusWindow::onNickMessage));
-    pEvtMgr->hookEvent("onNoticeMessage",   MakeDelegate(this, &InputOutputWindow::onNoticeMessage));
-    pEvtMgr->hookEvent("onPongMessage",     MakeDelegate(this, &StatusWindow::onPongMessage));
-    pEvtMgr->hookEvent("onPrivmsgMessage",  MakeDelegate(this, &StatusWindow::onPrivmsgMessage));
-    pEvtMgr->hookEvent("onQuitMessage",     MakeDelegate(this, &StatusWindow::onQuitMessage));
-    pEvtMgr->hookEvent("onWallopsMessage",  MakeDelegate(this, &StatusWindow::onWallopsMessage));
-    pEvtMgr->hookEvent("onNumericMessage",  MakeDelegate(this, &StatusWindow::onNumericMessage));
-    pEvtMgr->hookEvent("onUnknownMessage",  MakeDelegate(this, &StatusWindow::onUnknownMessage));
+    m_pSession = new Session("conviersa");
+    g_pEvtManager->hookEvent("connecting",     m_pSession, MakeDelegate(this, &StatusWindow::onServerConnecting));
+    g_pEvtManager->hookEvent("connectFailed",  m_pSession, MakeDelegate(this, &StatusWindow::onServerConnectFailed));
+    g_pEvtManager->hookEvent("connected",      m_pSession, MakeDelegate(this, &StatusWindow::onServerConnect));
+    g_pEvtManager->hookEvent("disconnected",   m_pSession, MakeDelegate(this, &StatusWindow::onServerDisconnect));
+    g_pEvtManager->hookEvent("receivedData",   m_pSession, MakeDelegate(this, &StatusWindow::onReceiveData));
+    g_pEvtManager->hookEvent("errorMessage",   m_pSession, MakeDelegate(this, &StatusWindow::onErrorMessage));
+    g_pEvtManager->hookEvent("inviteMessage",  m_pSession, MakeDelegate(this, &StatusWindow::onInviteMessage));
+    g_pEvtManager->hookEvent("joinMessage",    m_pSession, MakeDelegate(this, &StatusWindow::onJoinMessage));
+    g_pEvtManager->hookEvent("modeMessage",    m_pSession, MakeDelegate(this, &StatusWindow::onModeMessage));
+    g_pEvtManager->hookEvent("nickMessage",    m_pSession, MakeDelegate(this, &StatusWindow::onNickMessage));
+    g_pEvtManager->hookEvent("noticeMessage",  m_pSession, MakeDelegate(this, &InputOutputWindow::onNoticeMessage));
+    g_pEvtManager->hookEvent("pongMessage",    m_pSession, MakeDelegate(this, &StatusWindow::onPongMessage));
+    g_pEvtManager->hookEvent("privmsgMessage", m_pSession, MakeDelegate(this, &StatusWindow::onPrivmsgMessage));
+    g_pEvtManager->hookEvent("quitMessage",    m_pSession, MakeDelegate(this, &StatusWindow::onQuitMessage));
+    g_pEvtManager->hookEvent("wallopsMessage", m_pSession, MakeDelegate(this, &StatusWindow::onWallopsMessage));
+    g_pEvtManager->hookEvent("numericMessage", m_pSession, MakeDelegate(this, &StatusWindow::onNumericMessage));
+    g_pEvtManager->hookEvent("unknownMessage", m_pSession, MakeDelegate(this, &StatusWindow::onUnknownMessage));
 }
 
 StatusWindow::~StatusWindow()
 {
-    m_pSharedSession.reset();
+    delete m_pSession;
     m_pSharedServerConnPanel.reset();
 }
 
@@ -124,10 +123,10 @@ void StatusWindow::removeChannelWindow(ChannelWindow *pChanWin)
 }
 
 // adds a PM window to the list
-void StatusWindow::addQueryWindow(QueryWindow *pQueryWin)
+void StatusWindow::addQueryWindow(QueryWindow *pQueryWin, bool giveFocus)
 {
     if(m_pManager)
-        m_pManager->addWindow(pQueryWin, m_pManager->getItemFromWindow(this));
+        m_pManager->addWindow(pQueryWin, m_pManager->getItemFromWindow(this), giveFocus);
     m_privList.append(pQueryWin);
     QObject::connect(pQueryWin, SIGNAL(privWindowClosing(QueryWindow *)),
                 this, SLOT(removeQueryWindow(QueryWindow *)));
@@ -141,7 +140,7 @@ void StatusWindow::removeQueryWindow(QueryWindow *pPrivWin)
 
 void StatusWindow::connectToServer(QString server, int port, QString name, QString nick, QString altNick)
 {
-    m_pSharedSession->connectToServer(server, port, name, nick);
+    m_pSession->connectToServer(server, port, name, nick);
 }
 
 // handles the printing/sending of the PRIVMSG message
@@ -176,7 +175,7 @@ void StatusWindow::handle321Numeric(const Message &msg)
 {
     if(!m_pChanListWin)
     {
-        m_pChanListWin = new ChannelListWindow(m_pSharedSession);
+        m_pChanListWin = new ChannelListWindow(m_pSession);
 
         m_pManager->addWindow(m_pChanListWin, m_pManager->getItemFromWindow(this));
         QString title = QString("Channel List - %1").arg(getWindowName());
@@ -210,7 +209,7 @@ void StatusWindow::handle322Numeric(const Message &msg)
         if(!m_sentListStopMsg)
         {
             m_sentListStopMsg = true;
-            m_pSharedSession->sendData("LIST STOP");
+            m_pSession->sendData("LIST STOP");
         }
     }
 }
@@ -252,8 +251,8 @@ void StatusWindow::handle366Numeric(const Message &msg)
 void StatusWindow::onServerConnecting(Event *)
 {
     QString textToPrint = g_pCfgManager->getOptionValue("messages.ini", "connecting")
-                            .arg(m_pSharedSession->getHost())
-                            .arg(QString::number(m_pSharedSession->getPort()));
+                            .arg(m_pSession->getHost())
+                            .arg(QString::number(m_pSession->getPort()));
     printOutput(textToPrint, MESSAGE_INFO);
 }
 
@@ -479,10 +478,10 @@ void StatusWindow::onJoinMessage(Event *evt)
     Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
 
     QString nickJoined = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
-    if(m_pSharedSession->isMyNick(nickJoined) && !childIrcWindowExists(msg.m_params[0]))
+    if(m_pSession->isMyNick(nickJoined) && !childIrcWindowExists(msg.m_params[0]))
     {
         // create the channel and post the message to it
-        ChannelWindow *pChanWin = new ChannelWindow(m_pSharedSession, m_pSharedServerConnPanel, msg.m_params[0]);
+        ChannelWindow *pChanWin = new ChannelWindow(m_pSession, m_pSharedServerConnPanel, msg.m_params[0]);
         addChannelWindow(pChanWin);
         QString textToPrint = g_pCfgManager->getOptionValue("messages.ini", "join-self").arg(msg.m_params[0]);
         pChanWin->printOutput(textToPrint, MESSAGE_IRC_JOIN);
@@ -512,7 +511,7 @@ void StatusWindow::onNickMessage(Event *evt)
     Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
 
     QString oldNick = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
-    if(m_pSharedSession->isMyNick(oldNick))
+    if(m_pSession->isMyNick(oldNick))
     {
         QString textToPrint = g_pCfgManager->getOptionValue("messages.ini", "nick")
                               .arg(oldNick)
@@ -582,7 +581,7 @@ void StatusWindow::onPrivmsgMessage(Event *evt)
                                  .arg(fromNick)
                                  .arg(requestTypeStr)
                                  .arg(replyStr);
-            m_pSharedSession->sendData(textToSend);
+            m_pSession->sendData(textToSend);
         }
 
         QString textToPrint = g_pCfgManager->getOptionValue("messages.ini", "ctcp")
@@ -593,10 +592,10 @@ void StatusWindow::onPrivmsgMessage(Event *evt)
     }
 
     // if the target is me, then it's a PM from someone
-    if(m_pSharedSession->isMyNick(msg.m_params[0]) && !childIrcWindowExists(fromNick))
+    if(m_pSession->isMyNick(msg.m_params[0]) && !childIrcWindowExists(fromNick))
     {
-        QueryWindow *pQueryWin = new QueryWindow(m_pSharedSession, m_pSharedServerConnPanel, fromNick);
-        addQueryWindow(pQueryWin);
+        QueryWindow *pQueryWin = new QueryWindow(m_pSession, m_pSharedServerConnPanel, fromNick);
+        addQueryWindow(pQueryWin, false);
 
         // delegate to newly created query window
         pQueryWin->onPrivmsgMessage(evt);
@@ -656,7 +655,12 @@ void StatusWindow::onUnknownMessage(Event *evt)
     // todo: decide what to do here
 }
 
-void StatusWindow::processOutputEvent(OutputEvent *evt)
+void StatusWindow::processOutputEvent(Event *evt)
+{
+
+}
+
+void StatusWindow::processDoubleClickLinkEvent(Event *evt)
 {
 
 }

@@ -86,7 +86,7 @@ public:
     }
 };
 
-// event that is used for the "onDoubleClickLink" event
+// event that is used for the "doubleClickedLink" event
 class DoubleClickLinkEvent : public Event
 {
     QString         m_text;
@@ -105,7 +105,9 @@ public:
 };
 
 enum OutputColor {
-    COLOR_CHAT_FOREGROUND = 0,
+    COLOR_NONE = -1,
+
+    COLOR_CHAT_FOREGROUND,
     COLOR_CHAT_BACKGROUND,
 
     COLOR_CUSTOM_1,

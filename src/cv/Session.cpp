@@ -24,38 +24,37 @@ Session::Session(const QString& nick)
     QObject::connect(m_pConn, SIGNAL(disconnected()), this, SLOT(onDisconnect()));
     QObject::connect(m_pConn, SIGNAL(dataReceived(QString)), this, SLOT(onReceiveData(QString)));
 
-    m_pEvtMgr = new EventManager;
-    m_pEvtMgr->createEvent("connecting");
-    m_pEvtMgr->createEvent("connectFailed");
-    m_pEvtMgr->createEvent("onConnect");
-    m_pEvtMgr->createEvent("onDisconnect");
-    m_pEvtMgr->createEvent("onReceiveData");
-    m_pEvtMgr->createEvent("onErrorMessage");
-    m_pEvtMgr->createEvent("onInviteMessage");
-    m_pEvtMgr->createEvent("onJoinMessage");
-    m_pEvtMgr->createEvent("onKickMessage");
-    m_pEvtMgr->createEvent("onModeMessage");
-    m_pEvtMgr->createEvent("onNickMessage");
-    m_pEvtMgr->createEvent("onNoticeMessage");
-    m_pEvtMgr->createEvent("onPartMessage");
-    m_pEvtMgr->createEvent("onPongMessage");
-    m_pEvtMgr->createEvent("onPrivmsgMessage");
-    m_pEvtMgr->createEvent("onQuitMessage");
-    m_pEvtMgr->createEvent("onTopicMessage");
-    m_pEvtMgr->createEvent("onWallopsMessage");
-    m_pEvtMgr->createEvent("onNumericMessage");
-    m_pEvtMgr->createEvent("onUnknownMessage");
+    g_pEvtManager->createEvent("connecting");
+    g_pEvtManager->createEvent("connectFailed");
+    g_pEvtManager->createEvent("connected");
+    g_pEvtManager->createEvent("disconnected");
+    g_pEvtManager->createEvent("receivedData");
+    g_pEvtManager->createEvent("errorMessage");
+    g_pEvtManager->createEvent("inviteMessage");
+    g_pEvtManager->createEvent("joinMessage");
+    g_pEvtManager->createEvent("kickMessage");
+    g_pEvtManager->createEvent("modeMessage");
+    g_pEvtManager->createEvent("nickMessage");
+    g_pEvtManager->createEvent("noticeMessage");
+    g_pEvtManager->createEvent("partMessage");
+    g_pEvtManager->createEvent("pongMessage");
+    g_pEvtManager->createEvent("privmsgMessage");
+    g_pEvtManager->createEvent("quitMessage");
+    g_pEvtManager->createEvent("topicMessage");
+    g_pEvtManager->createEvent("wallopsMessage");
+    g_pEvtManager->createEvent("numericMessage");
+    g_pEvtManager->createEvent("unknownMessage");
 }
 
 Session::~Session()
 {
     delete m_pConn;
-    delete m_pEvtMgr;
+    g_pEvtManager->unhookAllEvents(this);
 }
 
-void Session::connectToServer(const QString& host, int port)
+void Session::connectToServer(const QString &host, int port)
 {
-    connectToServer(host, port, "Ronnie Reagan", "conviersa");
+    connectToServer(host, port, "conviersa", "conviersa");
 }
 
 void Session::connectToServer(const QString &host, int port, const QString &name, const QString &nick)
@@ -253,7 +252,7 @@ void Session::processMessage(const Message &msg)
             }
         }
 
-        m_pEvtMgr->fireEvent("onNumericMessage", evt);
+        g_pEvtManager->fireEvent("numericMessage", this, evt);
     }
     else
     {
@@ -261,32 +260,32 @@ void Session::processMessage(const Message &msg)
         {
             case IRC_COMMAND_ERROR:
             {
-                m_pEvtMgr->fireEvent("onErrorMessage", evt);
+                g_pEvtManager->fireEvent("errorMessage", this, evt);
                 break;
             }
             case IRC_COMMAND_INVITE:
             {
-                m_pEvtMgr->fireEvent("onInviteMessage", evt);
+                g_pEvtManager->fireEvent("inviteMessage", this, evt);
                 break;
             }
             case IRC_COMMAND_JOIN:
             {
-                m_pEvtMgr->fireEvent("onJoinMessage", evt);
+                g_pEvtManager->fireEvent("joinMessage", this, evt);
                 break;
             }
             case IRC_COMMAND_KICK:
             {
-                m_pEvtMgr->fireEvent("onKickMessage", evt);
+                g_pEvtManager->fireEvent("kickMessage", this, evt);
                 break;
             }
             case IRC_COMMAND_MODE:
             {
-                m_pEvtMgr->fireEvent("onModeMessage", evt);
+                g_pEvtManager->fireEvent("modeMessage", this, evt);
                 break;
             }
             case IRC_COMMAND_NICK:
             {
-                m_pEvtMgr->fireEvent("onNickMessage", evt);
+                g_pEvtManager->fireEvent("nickMessage", this, evt);
 
                 // update the user's nickname if he's the one changing it
                 QString oldNick = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
@@ -298,12 +297,12 @@ void Session::processMessage(const Message &msg)
             }
             case IRC_COMMAND_NOTICE:
             {
-                m_pEvtMgr->fireEvent("onNoticeMessage", evt);
+                g_pEvtManager->fireEvent("noticeMessage", this, evt);
                 break;
             }
             case IRC_COMMAND_PART:
             {
-                m_pEvtMgr->fireEvent("onPartMessage", evt);
+                g_pEvtManager->fireEvent("partMessage", this, evt);
                 break;
             }
             case IRC_COMMAND_PING:
@@ -313,32 +312,32 @@ void Session::processMessage(const Message &msg)
             }
             case IRC_COMMAND_PONG:
             {
-                m_pEvtMgr->fireEvent("onPongMessage", evt);
+                g_pEvtManager->fireEvent("pongMessage", this, evt);
                 break;
             }
             case IRC_COMMAND_PRIVMSG:
             {
-                m_pEvtMgr->fireEvent("onPrivmsgMessage", evt);
+                g_pEvtManager->fireEvent("privmsgMessage", this, evt);
                 break;
             }
             case IRC_COMMAND_QUIT:
             {
-                m_pEvtMgr->fireEvent("onQuitMessage", evt);
+                g_pEvtManager->fireEvent("quitMessage", this, evt);
                 break;
             }
             case IRC_COMMAND_TOPIC:
             {
-                m_pEvtMgr->fireEvent("onTopicMessage", evt);
+                g_pEvtManager->fireEvent("topicMessage", this, evt);
                 break;
             }
             case IRC_COMMAND_WALLOPS:
             {
-                m_pEvtMgr->fireEvent("onWallopsMessage", evt);
+                g_pEvtManager->fireEvent("wallopsMessage", this, evt);
                 break;
             }
             default:
             {
-                m_pEvtMgr->fireEvent("onUnknownMessage", evt);
+                g_pEvtManager->fireEvent("unknownMessage", this, evt);
             }
         }
     }
@@ -349,7 +348,7 @@ void Session::processMessage(const Message &msg)
 void Session::onConnecting()
 {
     ConnectionEvent *pEvt = new ConnectionEvent(m_host, m_port);
-    m_pEvtMgr->fireEvent("connecting", pEvt);
+    g_pEvtManager->fireEvent("connecting", this, pEvt);
     delete pEvt;
 }
 
@@ -360,13 +359,13 @@ void Session::onConnect()
     sendData(info);
 
     // todo: find out what to do with Event *
-    m_pEvtMgr->fireEvent("onConnect", NULL);
+    g_pEvtManager->fireEvent("connected", this, NULL);
 }
 
 void Session::onFailedConnect()
 {
     ConnectionEvent *pEvt = new ConnectionEvent(m_host, m_port, m_pConn->error());
-    m_pEvtMgr->fireEvent("connectFailed", pEvt);
+    g_pEvtManager->fireEvent("connectFailed", this, pEvt);
     delete pEvt;
 }
 
@@ -374,7 +373,7 @@ void Session::onDisconnect()
 {
     // todo: find out what to do with Event *
     ConnectionEvent *pEvt = new ConnectionEvent(m_host, m_port);
-    m_pEvtMgr->fireEvent("onDisconnect", pEvt);
+    g_pEvtManager->fireEvent("disconnected", this, pEvt);
     delete pEvt;
 }
 
@@ -392,7 +391,7 @@ void Session::onReceiveData(const QString &data)
         m_prevData.remove(0, numChars);
 
         Event *evt = new DataEvent(msgData);
-        m_pEvtMgr->fireEvent("onReceiveData", evt);
+        g_pEvtManager->fireEvent("receivedData", this, evt);
         delete evt;
 
         Message msg = parseData(msgData);

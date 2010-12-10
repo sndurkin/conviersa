@@ -11,7 +11,11 @@
 #include <QApplication>
 #include "cv/gui/InputOutputWindow.h"
 
-namespace cv { namespace gui {
+namespace cv {
+
+class Session;
+
+namespace gui {
 
 class QueryWindow : public InputOutputWindow
 {
@@ -21,7 +25,7 @@ private:
     QString     m_targetNick;
 
 public:
-    QueryWindow(QExplicitlySharedDataPointer<Session> pSharedSession,
+    QueryWindow(Session *pSession,
                 QExplicitlySharedDataPointer<ServerConnectionPanel> pSharedServerConnPanel,
                 const QString &targetNick);
     ~QueryWindow();
@@ -41,7 +45,8 @@ public:
     void onNoticeMessage(Event *evt);
     void onPrivmsgMessage(Event *evt);
 
-    void processOutputEvent(OutputEvent *evt);
+    void processOutputEvent(Event *evt);
+    void processDoubleClickLinkEvent(Event *evt);
 
 protected:
     // handles the printing/sending of the PRIVMSG message

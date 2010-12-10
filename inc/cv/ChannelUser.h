@@ -9,14 +9,14 @@
 #pragma once
 
 #include <QString>
-#include "cv/Session.h"
 
 namespace cv {
 
+class Session;
+
 class ChannelUser
 {
-    QExplicitlySharedDataPointer<Session>
-                m_pSharedSession;
+    Session *   m_pSession;
 
     // msg prefix: nick!user@host
     QString     m_nickname;
@@ -30,7 +30,7 @@ class ChannelUser
 public:
     // parses the input nick into nickname, and
     // prefixes and user/host (if applicable)
-    ChannelUser(QExplicitlySharedDataPointer<Session> pSharedSession, const QString &nick);
+    ChannelUser(Session *pSession, const QString &nick);
 
     // adds the given prefix to the user, unless it's
     // already there or it isn't a valid prefix

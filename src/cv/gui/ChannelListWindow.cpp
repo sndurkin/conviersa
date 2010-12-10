@@ -23,6 +23,7 @@
 #include <QTextCursor>
 #include <QMessageBox>
 #include "cv/Parser.h"
+#include "cv/Session.h"
 #include "cv/gui/WindowManager.h"
 #include "cv/gui/SearchBar.h"
 #include "cv/gui/ChannelListWindow.h"
@@ -30,15 +31,14 @@
 
 namespace cv { namespace gui {
 
-ChannelListWindow::ChannelListWindow(QExplicitlySharedDataPointer<Session> pSharedSession,
-                                     const QSize &size/* = QSize(715, 300)*/)
+ChannelListWindow::ChannelListWindow(Session *pSession, const QSize &size/* = QSize(715, 300)*/)
     : Window("Channel List", size),
       m_searchStr(),
       m_searchRegex(),
       m_savedMinUsers(0),
       m_savedMaxUsers(0)
 {
-    m_pSharedSession = pSharedSession;
+    m_pSession = pSession;
 
     m_pVLayout = new QVBoxLayout;
     m_pView = new QTreeView(this);
@@ -60,8 +60,8 @@ ChannelListWindow::ChannelListWindow(QExplicitlySharedDataPointer<Session> pShar
     m_pView->setRootIsDecorated(false);
     m_pView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
-    QObject::connect(m_pSharedSession.data(), SIGNAL(connected()), this, SLOT(handleConnect()));
-    QObject::connect(m_pSharedSession.data(), SIGNAL(disconnected()), this, SLOT(handleDisconnect()));
+    QObject::connect(m_pSession, SIGNAL(connected()), this, SLOT(handleConnect()));
+    QObject::connect(m_pSession, SIGNAL(disconnected()), this, SLOT(handleDisconnect()));
     QObject::connect(m_pView, SIGNAL(doubleClicked(const QModelIndex &)), this, SLOT(joinChannel(const QModelIndex &)));
 
     setupControls();
@@ -313,13 +313,13 @@ void ChannelListWindow::downloadList()
     {
         textToSend += QString(" %1").arg(m_pCustomParameters->text());
     }
-    m_pSharedSession->sendData(textToSend);
+    m_pSession->sendData(textToSend);
 }
 
 // requests to stop the download of the channels from the server
 void ChannelListWindow::stopDownload()
 {
-    m_pSharedSession->sendData("LIST STOP");
+    m_pSession->sendData("LIST STOP");
 }
 
 // joins the channel which is found with the given index
@@ -329,7 +329,7 @@ void ChannelListWindow::joinChannel(const QModelIndex &index)
     // this isn't enough
     if(index.isValid())
     {
-        m_pSharedSession->sendData(QString("JOIN :%1").arg(index.sibling(index.row(), 0).data().toString()));
+        m_pSession->sendData(QString("JOIN :%1").arg(index.sibling(index.row(), 0).data().toString()));
     }
 }
 
@@ -379,7 +379,7 @@ void ChannelListWindow::startFilter()
     m_pMinUsers->setEnabled(false);
     m_pMaxUsersLabel->setEnabled(false);
     m_pMaxUsers->setEnabled(false);
-    if(m_pSharedSession->isConnected())
+    if(m_pSession->isConnected())
         m_pDownloadingGroup->setEnabled(false);
     m_pSaveButton->setEnabled(false);
 
@@ -508,7 +508,7 @@ void ChannelListWindow::stopFilter()
     m_pMinUsers->setEnabled(true);
     m_pMaxUsersLabel->setEnabled(true);
     m_pMaxUsers->setEnabled(true);
-    if(m_pSharedSession->isConnected())
+    if(m_pSession->isConnected())
         m_pDownloadingGroup->setEnabled(true);
     m_pSaveButton->setEnabled(true);
 }

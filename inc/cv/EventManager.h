@@ -41,7 +41,6 @@ class EventManager;
 
 struct EventInfo
 {
-    EventManager *          pChainedEvtMgr;
     QList<EventCallback>    callbacks;
     bool                    firingEvent;
     QList<EventCallback>    callbacksToAdd;
@@ -51,16 +50,22 @@ struct EventInfo
 // TODO: make thread-safe, with maybe some sort of reference counting
 class EventManager
 {
-    QHash<QString, EventInfo> m_hash;
+    QHash<QString, QHash<uintptr_t, EventInfo> > m_eventsHash;
 
 public:
-    bool createEvent(const QString &name, EventManager *pEvtMgr = NULL);
-    bool hookEvent(const QString &name, EventCallback callback);
-    bool unhookEvent(const QString &name, EventCallback callback);
-    void fireEvent(const QString &name, Event *evt);
+    ~EventManager();
+
+    void createEvent(const QString &evtName);
+    void hookEvent(const QString &evtName, void *pEvtInstance, EventCallback callback);
+    void unhookEvent(const QString &evtName, void *pEvtInstance, EventCallback callback);
+    void unhookAllEvents(void *pEvtInstance);
+    void fireEvent(const QString &evtName, void *pEvtInstance, Event *pEvent);
 
 protected:
-    CallbackReturnType execPluginCallbacks(Event *evt, HookType type);
+    CallbackReturnType execPluginCallbacks(Event *pEvent, HookType type);
+    EventInfo *getEventInfo(const QString &evtName, void *pEvtInstance);
+    EventInfo *getEventInfo(QHash<uintptr_t, EventInfo> *pInstancesHash, void *pEvtInstance);
+    QHash<uintptr_t, EventInfo> *getInstancesHash(const QString &evtName);
 };
 
 extern EventManager *g_pEvtManager;

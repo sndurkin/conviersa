@@ -35,7 +35,7 @@ public:
             const QSize &size = QSize(500, 300));
     ~StatusWindow();
 
-    // returns a pointer to the IIrcWindow if it exists,
+    // returns a pointer to the OutpuWindow if it exists,
     // 	and is a child of this status window (meaning
     //	it can only be a channel or PM window)
     // returns NULL otherwise
@@ -57,7 +57,7 @@ public:
     void addChannelWindow(ChannelWindow *pChan);
 
     // adds a PM window to the list
-    void addQueryWindow(QueryWindow *pPriv);
+    void addQueryWindow(QueryWindow *pPriv, bool giveFocus);
 
     // events
     void onServerConnecting(Event *evt);
@@ -77,7 +77,8 @@ public:
     void onNumericMessage(Event *evt);
     void onUnknownMessage(Event *evt);
 
-    void processOutputEvent(OutputEvent *evt);
+    void processOutputEvent(Event *evt);
+    void processDoubleClickLinkEvent(Event *evt);
 
 protected:
     // handles the printing/sending of the PRIVMSG message

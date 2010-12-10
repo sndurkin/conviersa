@@ -75,9 +75,6 @@ private:
     // the actual connection to the server
     ThreadedConnection *   m_pConn;
 
-    // event manager for the session object
-    EventManager *      m_pEvtMgr;
-
     // stores the user's nickname
     QString             m_nick;
 
@@ -131,8 +128,6 @@ public:
     void setNick(const QString &nick) { m_nick = nick; }
     QString getNick() { return m_nick; }
     bool isMyNick(const QString &nick) { return (m_nick.compare(nick, Qt::CaseSensitive) == 0); }
-
-    EventManager *getEventManager() { return m_pEvtMgr; }
 
     // sets the prefix rules supported by the server
     void setPrefixRules(const QString &prefixRules);

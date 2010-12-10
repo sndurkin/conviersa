@@ -9,7 +9,9 @@
 #include <QApplication>
 #include <QPushButton>
 #include <QFont>
+#include "cv/Session.h"
 #include "cv/ConfigManager.h"
+#include "cv/EventManager.h"
 #include "cv/gui/InputOutputWindow.h"
 
 namespace cv { namespace gui {
@@ -25,6 +27,15 @@ InputOutputWindow::InputOutputWindow(const QString &title/* = tr("Untitled")*/,
     m_pInput->installEventFilter(this);
     setFocusProxy(m_pInput);
     m_pOutput->setFocusProxy(m_pInput);
+
+    g_pEvtManager->hookEvent("input", m_pInput, MakeDelegate(this, &InputOutputWindow::handleInput));
+}
+
+//-----------------------------------//
+
+InputOutputWindow::~InputOutputWindow()
+{
+    g_pEvtManager->unhookEvent("input", m_pInput, MakeDelegate(this, &InputOutputWindow::handleInput));
 }
 
 //-----------------------------------//
@@ -44,8 +55,8 @@ void InputOutputWindow::handleInput(Event *evt)
 {
     // todo: change when colors are added
     InputEvent *inputEvt = dynamic_cast<InputEvent *>(evt);
-    InputOutputWindow *pWindow = inputEvt->getWindow();
-    Session *pSession = inputEvt->getSession();
+    InputOutputWindow *pWindow = this;//inputEvt->getWindow();
+    //Session *pSession = m_pSharedSession.data();//inputEvt->getSession();
     QString text = inputEvt->getInput();
 
     // TODO: make the '/' changeable??
@@ -65,8 +76,8 @@ void InputOutputWindow::handleInput(Event *evt)
             port = 6667;
         }
 
-        pSession->disconnectFromServer();
-        pSession->connectToServer(host, port);
+        m_pSession->disconnectFromServer();
+        m_pSession->connectToServer(host, port);
 
         return;
     }
@@ -86,7 +97,7 @@ void InputOutputWindow::handleInput(Event *evt)
     }
     else    // commands that interact with the server
     {
-        if(!pSession->isConnected())
+        if(!m_pSession->isConnected())
         {
             pWindow->printError("Not connected to a server.");
             return;
@@ -107,7 +118,7 @@ void InputOutputWindow::handleInput(Event *evt)
         else
         {
             text.remove(0, 1);
-            pSession->sendData(text);
+            m_pSession->sendData(text);
         }
     }
 }
@@ -122,7 +133,7 @@ void InputOutputWindow::onNoticeMessage(Event *evt)
         source = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
     // if m_prefix is empty, it is from the host
     else
-        source = m_pSharedSession->getHost();
+        source = m_pSession->getHost();
 
     QString textToPrint = g_pCfgManager->getOptionValue("messages.ini", "notice")
                           .arg(source)
@@ -163,9 +174,9 @@ bool InputOutputWindow::eventFilter(QObject *obj, QEvent *event)
                 m_pastCommands.append(text);
                 m_pInput->clear();
 
-                InputEvent *inputEvt = new InputEvent(this, m_pSharedSession, text);
-                g_pEvtManager->fireEvent("onInput", inputEvt);
-                //delete inputEvt;
+                InputEvent *inputEvt = new InputEvent(this, m_pSession, text);
+                g_pEvtManager->fireEvent("input", m_pInput, inputEvt);
+                delete inputEvt;
 
                 return true;
             }

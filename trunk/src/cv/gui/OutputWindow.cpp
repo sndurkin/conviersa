@@ -17,6 +17,7 @@
 #include "cv/Parser.h"
 #include "cv/Session.h"
 #include "cv/ConfigManager.h"
+#include "cv/EventManager.h"
 #include "cv/gui/OutputWindow.h"
 #include "cv/gui/OutputWindowScrollBar.h"
 #include "cv/gui/WindowManager.h"
@@ -51,56 +52,40 @@ OutputWindow::OutputWindow(const QString &title/* = tr("Untitled")*/,
     m_pOutput->setVerticalScrollBar(m_pScrollBar);
     */
     m_pOutput = new OutputControl;
-    m_pOutput->setParentWindow(this);
+    g_pEvtManager->hookEvent("output", m_pOutput, MakeDelegate(this, &OutputWindow::processOutputEvent));
+    g_pEvtManager->hookEvent("doubleClickedLink", m_pOutput, MakeDelegate(this, &OutputWindow::processDoubleClickLinkEvent));
+    //m_pOutput->setParentWindow(this);
 }
 
 //-----------------------------------//
 
-void OutputWindow::printOutput(const QString &text, OutputMessageType msgType)
+OutputWindow::~OutputWindow()
+{
+    g_pEvtManager->unhookEvent("output", m_pOutput, MakeDelegate(this, &OutputWindow::processOutputEvent));
+    g_pEvtManager->unhookEvent("doubleClickedLink", m_pOutput, MakeDelegate(this, &OutputWindow::processDoubleClickLinkEvent));
+}
+
+//-----------------------------------//
+
+void OutputWindow::printOutput(const QString &text,
+                               OutputMessageType msgType,
+                               OutputColor overrideMsgColor/* = COLOR_NONE*/)
 {
     OutputColor defaultMsgColor;
     int outputAlertLevel = 0;
     switch(msgType)
     {
         case MESSAGE_IRC_SAY:
-        {
-            QRegExp regex(OutputWindow::s_invalidNickPrefix
-                        + QRegExp::escape(m_pSharedSession->getNick())
-                        + OutputWindow::s_invalidNickSuffix);
-            regex.setCaseSensitivity(Qt::CaseInsensitive);
-            if(text.contains(regex))
-            {
-                defaultMsgColor = COLOR_HIGHLIGHT;
-                outputAlertLevel = 3;
-            }
-            else
-            {
-                defaultMsgColor = COLOR_CHAT_FOREGROUND;
-                outputAlertLevel = 2;
-            }
+            defaultMsgColor = COLOR_CHAT_FOREGROUND;
+            outputAlertLevel = 2;
             break;
-        }
         case MESSAGE_IRC_SAY_SELF:
             defaultMsgColor = COLOR_CHAT_SELF;
             break;
         case MESSAGE_IRC_ACTION:
-        {
-            QRegExp regex(OutputWindow::s_invalidNickPrefix
-                        + QRegExp::escape(m_pSharedSession->getNick())
-                        + OutputWindow::s_invalidNickSuffix);
-            regex.setCaseSensitivity(Qt::CaseInsensitive);
-            if(text.contains(regex))
-            {
-                defaultMsgColor = COLOR_HIGHLIGHT;
-                outputAlertLevel = 3;
-            }
-            else
-            {
-                defaultMsgColor = COLOR_ACTION;
-                outputAlertLevel = 2;
-            }
+            defaultMsgColor = COLOR_ACTION;
+            outputAlertLevel = 2;
             break;
-        }
         case MESSAGE_IRC_ACTION_SELF:
             defaultMsgColor = COLOR_ACTION;
             break;
@@ -162,7 +147,10 @@ void OutputWindow::printOutput(const QString &text, OutputMessageType msgType)
             defaultMsgColor = COLOR_CHAT_FOREGROUND;
     }
 
-    m_pOutput->appendMessage(text, defaultMsgColor);
+    m_pOutput->appendMessage(text, (overrideMsgColor != COLOR_NONE) ? overrideMsgColor : defaultMsgColor);
+
+    if(overrideMsgColor == COLOR_HIGHLIGHT)
+        outputAlertLevel = 3;
 
     QTreeWidgetItem *pItem = m_pManager->getItemFromWindow(this);
     if(pItem != NULL && !pItem->isSelected())
@@ -187,19 +175,6 @@ void OutputWindow::printOutput(const QString &text, OutputMessageType msgType)
             pItem->setForeground(0, QBrush(QColor(color), Qt::SolidPattern));
         }
     }
-
-    /*
-    QRegExp URL("lol(([\\w:]+)[/]{2})?(\\w|.)+");
-
-    if(URL.exactMatch("http://www.google.com"))
-        cursor.insertText("match/n");
-    else
-        cursor.insertText("nawt\n");
-    if(URL.exactMatch("www.google.com"))
-        cursor.insertText("match\n");
-    if(URL.exactMatch("lolm"))
-        cursor.insertText("match\n");
-    */
 }
 
 //-----------------------------------//
@@ -220,6 +195,21 @@ void OutputWindow::printDebug(const QString &text)
     printOutput(debug, MESSAGE_DEBUG);
 }
 
+//-----------------------------------//
+
+// returns true if the user's nick is within
+// the provided text, false otherwise
+bool OutputWindow::containsNick(const QString &text)
+{
+    QRegExp regex(OutputWindow::s_invalidNickPrefix
+                + QRegExp::escape(m_pSession->getNick())
+                + OutputWindow::s_invalidNickSuffix);
+    regex.setCaseSensitivity(Qt::CaseInsensitive);
+    return text.contains(regex);
+}
+
+//-----------------------------------//
+
 // this static function delegates the task of processing each
 // OutputEvent to the specific instance of OutputWindow that
 // contains the OutputControl instance that fired the event
@@ -237,8 +227,7 @@ void OutputWindow::handleOutput(Event *evt)
 void OutputWindow::handleDoubleClickLink(Event *evt)
 {
     DoubleClickLinkEvent *dblClickLinkEvt = dynamic_cast<DoubleClickLinkEvent *>(evt);
-    //dblClickLinkEvt->getParentWindow()->processDoubleClickLinkEvent(dblClickLinkEvt);
-    QMessageBox::information(NULL, "Hi", "You double-clicked a link!");
+    dblClickLinkEvt->getParentWindow()->processDoubleClickLinkEvent(dblClickLinkEvt);
 }
 
 //-----------------------------------//

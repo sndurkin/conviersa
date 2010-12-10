@@ -51,17 +51,14 @@ public:
     // of managed containers
     void removeContainer(WindowContainer *pCont);
 
-    // manages an IWindow under the WindowManager; it
+    // manages a Window under the WindowManager; it
     // will handle its deallocation upon closing
-    //
-    // pWin: pointer to the IWindow, which should point
-    //       to a valid IWindow
-    // pParent: pointer to the parent tree item to be added
-    //          under, should also be valid
     //
     // returns: true if successful,
     //          false otherwise
-    bool addWindow(Window *pWin, QTreeWidgetItem *pParent = NULL);
+    bool addWindow(Window *pWin,
+                   QTreeWidgetItem *pParent = NULL,
+                   bool giveFocus = true);
 
     // removes the respective item in the treeview, but has
     // to let the window close itself due to Qt's design

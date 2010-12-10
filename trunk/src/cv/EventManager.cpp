@@ -6,135 +6,190 @@
 *
 ************************************************************************/
 
-#include <QTime>
 #include "cv/EventManager.h"
 
 namespace cv {
 
-bool EventManager::createEvent(const QString &name, EventManager *pEvtMgr/* = NULL*/)
+EventManager::~EventManager()
 {
-    if(m_hash.find(name) == m_hash.end())
+    QHash<QString, QHash<uintptr_t, EventInfo> >::iterator iter = m_eventsHash.begin();
+    QString eventStr;
+    while(iter != m_eventsHash.end())
     {
-        EventInfo evtInfo;
-        evtInfo.pChainedEvtMgr = pEvtMgr;
-        evtInfo.firingEvent = false;
-        m_hash.insert(name, evtInfo);
-        return true;
+        if(!iter.value().isEmpty())
+            eventStr += iter.key() + ", ";
+        ++iter;
     }
 
-    return false;
+    if(!eventStr.isEmpty())
+    {
+        eventStr.remove(eventStr.length() - 2, 2);
+        qDebug("Events still hooked: %s", eventStr.toLatin1().constData());
+    }
 }
 
-bool EventManager::hookEvent(const QString &name, EventCallback callback)
+void EventManager::createEvent(const QString &evtName)
 {
-    QHash<QString, EventInfo>::iterator iter = m_hash.find(name);
-    if(iter == m_hash.end())
-        return false;
-    EventInfo &evtInfo = *iter;
+    if(m_eventsHash.find(evtName) == m_eventsHash.end())
+    {
+        QHash<uintptr_t, EventInfo> instancesHash;
+        m_eventsHash.insert(evtName, instancesHash);
+    }
+}
+
+void EventManager::hookEvent(const QString &evtName, void *pEvtInstance, EventCallback callback)
+{
+    QHash<uintptr_t, EventInfo> *pInstancesHash = getInstancesHash(evtName);
+    if(pInstancesHash == NULL)
+        return;
+    EventInfo *pEvtInfo = getEventInfo(pInstancesHash, pEvtInstance);
+    if(pEvtInfo == NULL)
+    {
+        EventInfo evtInfo;
+        evtInfo.firingEvent = false;
+        pInstancesHash->insert((uintptr_t) pEvtInstance, evtInfo);
+        pEvtInfo = getEventInfo(pInstancesHash, pEvtInstance);
+    }
 
     // if we're currently firing the event, then add the callback
-    // to a temp list which will get prepended after the entire list
+    // to a temp list which will get added after the entire list
     // of callbacks has been iterated
-    if(evtInfo.firingEvent)
-        evtInfo.callbacksToAdd.append(callback);
+    if(pEvtInfo->firingEvent)
+        pEvtInfo->callbacksToAdd.append(callback);
     else
         // new callbacks get prepended, because it acts kinda like a stack;
         // we call the most recently attached callbacks first
-        evtInfo.callbacks.prepend(callback);
-    return true;
+        pEvtInfo->callbacks.prepend(callback);
 }
 
-bool EventManager::unhookEvent(const QString &name, EventCallback callback)
+void EventManager::unhookEvent(const QString &evtName, void *pEvtInstance, EventCallback callback)
 {
-    QHash<QString, EventInfo>::iterator iter = m_hash.find(name);
-    if(iter == m_hash.end())
-        return false;
-
-    EventInfo &evtInfo = *iter;
+    EventInfo *pEvtInfo = getEventInfo(evtName, pEvtInstance);
+    if(pEvtInfo == NULL)
+        return;
 
     // if we're currently firing the event, then add the callback
     // to a temp list which will get removed after the event is
     // done being fired
-    if(evtInfo.firingEvent)
+    if(pEvtInfo->firingEvent)
     {
-        evtInfo.callbacksToRemove.append(callback);
+        pEvtInfo->callbacksToRemove.append(callback);
     }
     else
     {
-        int callbackIdx = evtInfo.callbacks.indexOf(callback);
-        if(callbackIdx < 0)
-            return false;
-        evtInfo.callbacks.removeAt(callbackIdx);
-    }
+        int callbackIdx = pEvtInfo->callbacks.indexOf(callback);
+        if(callbackIdx >= 0)
+            pEvtInfo->callbacks.removeAt(callbackIdx);
 
-    return true;
+        // if it's empty, then we can go ahead and remove the instance's entry
+        if(pEvtInfo->callbacks.isEmpty())
+        {
+            QHash<uintptr_t, EventInfo> *pInstancesHash = getInstancesHash(evtName);
+            pInstancesHash->remove((uintptr_t) pEvtInstance);
+        }
+    }
 }
 
-void EventManager::fireEvent(const QString &name, Event *evt)
+void EventManager::unhookAllEvents(void *pEvtInstance)
 {
-    CallbackReturnType returnType = EVENT_CONTINUE;
-    QHash<QString, EventInfo>::iterator iter = m_hash.find(name);
-    if(iter == m_hash.end())
-        return;
-    EventInfo &evtInfo = *iter;
-    evtInfo.firingEvent = true;
-
-    // call the chained event manager's pre-hook callbacks, if it exists
-    if(evtInfo.pChainedEvtMgr != NULL)
+    QHash<QString, QHash<uintptr_t, EventInfo> >::iterator iter = m_eventsHash.begin();
+    while(iter != m_eventsHash.end())
     {
-        returnType = evtInfo.pChainedEvtMgr->execPluginCallbacks(evt, PRE_HOOK);
+        (*iter).remove((uintptr_t) pEvtInstance);
+        ++iter;
+    }
+}
+
+void EventManager::fireEvent(const QString &evtName, void *pEvtInstance, Event *pEvent)
+{
+    EventInfo *pEvtInfo = getEventInfo(evtName, pEvtInstance);
+    if(pEvtInfo == NULL)
+    {
+        qDebug("Attempted to fire unrecognized event: %s\n", evtName);
+        return;
     }
 
-    if(returnType == EVENT_CONTINUE)
-        returnType = execPluginCallbacks(evt, PRE_HOOK);
-    else
-        execPluginCallbacks(evt, PRE_HOOK);
+    pEvtInfo->firingEvent = true;
+
+    CallbackReturnType returnType = execPluginCallbacks(pEvent, PRE_HOOK);
 
     if(returnType == EVENT_CONTINUE)
     {
         // default functionality callbacks
-        QList<EventCallback>::iterator callbackIter = evtInfo.callbacks.begin();
-        while(callbackIter != evtInfo.callbacks.end())
+        QList<EventCallback>::iterator callbackIter = pEvtInfo->callbacks.begin();
+        while(callbackIter != pEvtInfo->callbacks.end())
         {
-            (*callbackIter)(evt);
+            (*callbackIter)(pEvent);
             ++callbackIter;
         }
     }
 
-    execPluginCallbacks(evt, POST_HOOK);
-
-    // call the chained event manager's post-hook callbacks, if it exists
-    if(evtInfo.pChainedEvtMgr != NULL)
-    {
-        evtInfo.pChainedEvtMgr->execPluginCallbacks(evt, POST_HOOK);
-    }
+    execPluginCallbacks(pEvent, POST_HOOK);
 
     // prepend all the callbacks that were added with hookEvent() calls
     // while it was firing
-    evtInfo.firingEvent = false;
-    while(!evtInfo.callbacksToAdd.isEmpty())
+    pEvtInfo->firingEvent = false;
+    while(!pEvtInfo->callbacksToAdd.isEmpty())
     {
-        evtInfo.callbacks.prepend(evtInfo.callbacksToAdd.takeFirst());
+        pEvtInfo->callbacks.prepend(pEvtInfo->callbacksToAdd.takeFirst());
     }
 
     // remove all the callbacks that were added with unhookEvent() calls
     // while it was firing
-    while(!evtInfo.callbacksToRemove.isEmpty())
+    while(!pEvtInfo->callbacksToRemove.isEmpty())
     {
-        EventCallback callback = evtInfo.callbacksToRemove.takeFirst();
-        int callbackIdx = evtInfo.callbacks.indexOf(callback);
-        if(callbackIdx < 0)
-            continue;
-        evtInfo.callbacks.removeAt(callbackIdx);
+        EventCallback callback = pEvtInfo->callbacksToRemove.takeFirst();
+        int callbackIdx = pEvtInfo->callbacks.indexOf(callback);
+        if(callbackIdx >= 0)
+            pEvtInfo->callbacks.removeAt(callbackIdx);
     }
 
-    return;
+    // if it's empty, then we can go ahead and remove the instance's entry
+    if(pEvtInfo->callbacks.isEmpty())
+    {
+        QHash<uintptr_t, EventInfo> *pInstancesHash = getInstancesHash(evtName);
+        pInstancesHash->remove((uintptr_t) pEvtInstance);
+    }
 }
 
-CallbackReturnType EventManager::execPluginCallbacks(Event *evt, HookType type)
+CallbackReturnType EventManager::execPluginCallbacks(Event *pEvent, HookType type)
 {
     // TODO: fill in
     return EVENT_CONTINUE;
+}
+
+EventInfo *EventManager::getEventInfo(const QString &evtName, void *pEvtInstance)
+{
+    QHash<uintptr_t, EventInfo> *pInstancesHash = getInstancesHash(evtName);
+    QHash<uintptr_t, EventInfo>::iterator instancesIter = pInstancesHash->find((uintptr_t) pEvtInstance);
+    if(instancesIter == pInstancesHash->end())
+    {
+        qDebug("Instance for event %s not found", evtName);
+        return NULL;
+    }
+
+    return &(*instancesIter);
+}
+
+EventInfo *EventManager::getEventInfo(QHash<uintptr_t, EventInfo> *pInstancesHash, void *pEvtInstance)
+{
+    QHash<uintptr_t, EventInfo>::iterator instancesIter = pInstancesHash->find((uintptr_t) pEvtInstance);
+    if(instancesIter == pInstancesHash->end())
+        return NULL;
+
+    return &(*instancesIter);
+}
+
+QHash<uintptr_t, EventInfo> *EventManager::getInstancesHash(const QString &evtName)
+{
+    QHash<QString, QHash<uintptr_t, EventInfo> >::iterator eventsIter = m_eventsHash.find(evtName);
+    if(eventsIter == m_eventsHash.end())
+    {
+        qDebug("Event %s has not been created", evtName);
+        return NULL;
+    }
+
+    return &(*eventsIter);
 }
 
 } // end namespace

@@ -90,18 +90,14 @@ void WindowManager::removeContainer(WindowContainer *pCont)
     m_altContainers.removeOne(pCont);
 }
 
-// manages an IWindow under the WindowManager; it
+// manages a Window under the WindowManager; it
 // will handle its deallocation upon closing
 //
-// pWin: 	pointer to the IWindow, which should point
-//		to a valid IWindow
-// pParent: pointer to the parent tree item to be added
-//		under, or NULL if it is to become an orphaned
-//		window
-//
 // returns: true if successful,
-//		false otherwise
-bool WindowManager::addWindow(Window *pWin, QTreeWidgetItem *pParent/* = NULL*/)
+//          false otherwise
+bool WindowManager::addWindow(Window *pWin,
+                              QTreeWidgetItem *pParent/* = NULL*/,
+                              bool giveFocus/* = true*/)
 {
     // rudimentary checking to make sure window is valid
     if(!pWin)
@@ -125,8 +121,12 @@ bool WindowManager::addWindow(Window *pWin, QTreeWidgetItem *pParent/* = NULL*/)
         pParent->addChild(pNewItem);
         pParent->setExpanded(true);
     }
-    setCurrentItem(pNewItem);
-    pWin->giveFocus();
+
+    if(giveFocus)
+    {
+        setCurrentItem(pNewItem);
+        pWin->giveFocus();
+    }
 
     tempInfo.m_pTreeItem = pNewItem;
 

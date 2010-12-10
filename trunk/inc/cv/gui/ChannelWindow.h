@@ -17,7 +17,11 @@
 class QListWidget;
 class QSplitter;
 
-namespace cv { namespace gui {
+namespace cv {
+
+class Session;
+
+namespace gui {
 
 // subject to change
 const unsigned int MAX_NICK_PRIORITY = 1;
@@ -41,6 +45,14 @@ protected:
 
     QList<ChannelUser *>        m_users;
 
+    // these variables are used to keep track of
+    // the set of nicks that are currently matches
+    // for the autocomplete string
+    QList<ChannelUser *>        m_autocompleteMatches;
+    int                         m_matchesIdx;
+    QString                     m_preAutocompleteStr;
+    QString                     m_postAutocompleteStr;
+
     // this variable dictates whether we are fully
     // in the channel or not; we are not fully in
     // a channel until the 366 numeric has been received
@@ -49,7 +61,7 @@ protected:
     QQueue<QueuedOutputMessage> m_messageQueue;
 
 public:
-    ChannelWindow(QExplicitlySharedDataPointer<Session> pSharedSession,
+    ChannelWindow(Session *pSession,
                   QExplicitlySharedDataPointer<ServerConnectionPanel> pSharedServerConnPanel,
                   const QString &title = tr("Untitled"),
                   const QSize &size = QSize(500, 300));
@@ -102,7 +114,8 @@ public:
     void onPrivmsgMessage(Event *evt);
     void onTopicMessage(Event *evt);
 
-    void processOutputEvent(OutputEvent *evt);
+    void processOutputEvent(Event *evt);
+    void processDoubleClickLinkEvent(Event *evt);
 
 protected:
     // adds a message to the "in-limbo" queue, where messages are
@@ -122,6 +135,9 @@ protected:
 
     // handles the printing/sending of the PRIVMSG ACTION message
     void handleAction(const QString &text);
+
+    // handles child widget events
+    bool eventFilter(QObject *obj, QEvent *event);
 
     void handleTab();
     void closeEvent(QCloseEvent *event);

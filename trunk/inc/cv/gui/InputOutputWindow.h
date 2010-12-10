@@ -14,29 +14,33 @@
 
 class QPushButton;
 
-namespace cv { namespace gui {
+namespace cv {
+
+class Session;
+
+namespace gui {
 
 class InputOutputWindow;
 
 class InputEvent : public Event
 {
     InputOutputWindow * m_pWindow;
-    QExplicitlySharedDataPointer<Session>
-                        m_pSharedSession;
+    Session *           m_pSession;
     QString             m_input;
 
 public:
     InputEvent(InputOutputWindow *pWindow,
-               QExplicitlySharedDataPointer<Session> pSharedSession,
+               Session *pSession,
                const QString &input)
-        : m_pWindow(pWindow),
+        : m_pSession(pSession),
+          m_pWindow(pWindow),
           m_input(input)
     {
-        m_pSharedSession = pSharedSession;
+        m_pSession = pSession;
     }
 
     InputOutputWindow *getWindow() { return m_pWindow; }
-    Session *getSession() { return m_pSharedSession.data(); }
+    Session *getSession() { return m_pSession; }
     QString getInput() { return m_input; }
 };
 
@@ -55,10 +59,11 @@ protected:
 public:
     InputOutputWindow(const QString &title = tr("Untitled"),
                       const QSize &size = QSize(500, 300));
+    ~InputOutputWindow();
 
     void giveFocus();
 
-    static void handleInput(Event *evt);
+    void handleInput(Event *evt);
 
     void onNoticeMessage(Event *evt);
 

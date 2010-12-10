@@ -50,17 +50,25 @@ Client::Client(const QString &title)
     setupServerConfig();
     setupMessagesConfig();
 
-    // create new irc server window on client start
-    onNewIrcServerWindow();
-
     // TODO: fill in with events
     g_pEvtManager = new EventManager;
-    g_pEvtManager->createEvent("onInput");
-    g_pEvtManager->hookEvent("onInput", &InputOutputWindow::handleInput);
-    g_pEvtManager->createEvent("onOutput");
-    g_pEvtManager->hookEvent("onOutput", &OutputWindow::handleOutput);
-    g_pEvtManager->createEvent("onDoubleClickLink");
-    g_pEvtManager->hookEvent("onDoubleClickLink", &OutputWindow::handleDoubleClickLink);
+    g_pEvtManager->createEvent("input");
+    //g_pEvtManager->hookEvent("onInput", &InputOutputWindow::handleInput);
+    g_pEvtManager->createEvent("output");
+    //g_pEvtManager->hookEvent("onOutput", &OutputWindow::handleOutput);
+    g_pEvtManager->createEvent("doubleClickedLink");
+    //g_pEvtManager->hookEvent("onDoubleClickLink", &OutputWindow::handleDoubleClickLink);
+
+    // create new irc server window on client start
+    onNewIrcServerWindow();
+}
+
+//-----------------------------------//
+
+Client::~Client()
+{
+    delete g_pCfgManager;
+    delete g_pEvtManager;
 }
 
 //-----------------------------------//

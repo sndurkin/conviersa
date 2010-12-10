@@ -8,19 +8,20 @@
 
 #include "cv/ChannelUser.h"
 #include "cv/Parser.h"
+#include "cv/Session.h"
 
 namespace cv {
 
 // parses the input nick into nickname, and
 // prefixes and user/host (if applicable)
-ChannelUser::ChannelUser(QExplicitlySharedDataPointer<Session> pSharedSession, const QString &nick)
-    : m_pSharedSession(pSharedSession)
+ChannelUser::ChannelUser(Session *pSession, const QString &nick)
+    : m_pSession(pSession)
 {
     m_nickname = nick.section('!', 0, 0);
 
     // get the prefixes from the nickname (if any)
     int numPrefixes = 0;
-    for(int i = 0; i < m_nickname.size() && m_pSharedSession->isNickPrefix(m_nickname[i]); ++i)
+    for(int i = 0; i < m_nickname.size() && m_pSession->isNickPrefix(m_nickname[i]); ++i)
     {
         m_prefixes += m_nickname[i];
         ++numPrefixes;
@@ -45,13 +46,13 @@ ChannelUser::ChannelUser(QExplicitlySharedDataPointer<Session> pSharedSession, c
 // already there or it isn't a valid prefix
 void ChannelUser::addPrefix(const QChar &prefixToAdd)
 {
-    if(!m_pSharedSession->isNickPrefix(prefixToAdd))
+    if(!m_pSession->isNickPrefix(prefixToAdd))
         return;
 
     // insert the prefix in the right spot
     for(int i = 0; i < m_prefixes.size(); ++i)
     {
-        int compareVal = m_pSharedSession->compareNickPrefixes(m_prefixes[i], prefixToAdd);
+        int compareVal = m_pSession->compareNickPrefixes(m_prefixes[i], prefixToAdd);
         if(compareVal > 0)
         {
             m_prefixes.insert(i, prefixToAdd);

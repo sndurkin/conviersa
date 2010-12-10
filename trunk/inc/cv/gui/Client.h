@@ -42,6 +42,7 @@ private:
 
 public:
     Client(const QString &title);
+    ~Client();
 
 protected:
     void closeEvent(QCloseEvent *event);

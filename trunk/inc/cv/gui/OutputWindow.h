@@ -10,13 +10,16 @@
 
 #include <QVBoxLayout>
 #include <QPlainTextEdit>
-#include "cv/Session.h"
 #include "cv/gui/Window.h"
 #include "cv/gui/OutputControl.h"
 
 class QTextEdit;
 
-namespace cv { namespace gui {
+namespace cv {
+
+class Session;
+
+namespace gui {
 
 class OutputWindowScrollBar;
 class OutputControl;
@@ -84,8 +87,7 @@ protected:
     OutputControl *         m_pOutput;
     QFont                   m_defaultFont;
 
-    QExplicitlySharedDataPointer<Session>
-                            m_pSharedSession;
+    Session *               m_pSession;
 
     // this variable holds the most important level
     // of output alert for a window not in focus; this is
@@ -107,17 +109,32 @@ protected:
 public:
     OutputWindow(const QString &title = tr("Untitled"),
                  const QSize &size = QSize(500, 300));
+    ~OutputWindow();
 
     // printing functions
-    void printOutput(const QString &text, OutputMessageType msgType);
+    void printOutput(const QString &text,
+                     OutputMessageType msgType,
+                     OutputColor overrideMsgColor = COLOR_NONE);
     void printError(const QString &text);
     void printDebug(const QString &text);
 
-    static void handleOutput(Event *evt);
-    static void handleDoubleClickLink(Event *evt);
+    // returns true if the user's nick is within
+    // the provided text, false otherwise
+    bool containsNick(const QString &text);
 
     void focusedInTree();
-    virtual void processOutputEvent(OutputEvent *evt) = 0;
+
+    // this static function delegates the task of processing each
+    // OutputEvent to the specific instance of OutputWindow that
+    // contains the OutputControl instance that fired the event
+    //
+    // it also ensures that the correct color is used for the text
+    // in the WindowManager, if it's not the currently selected Window
+    static void handleOutput(Event *evt);
+    virtual void processOutputEvent(Event *evt) = 0;
+
+    static void handleDoubleClickLink(Event *evt);
+    virtual void processDoubleClickLinkEvent(Event *evt) = 0;
 
 protected:
     // imitates Google Chrome's search, with lines drawn in the scrollbar

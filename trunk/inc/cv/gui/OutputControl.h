@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <QApplication>
 #include <QAbstractScrollArea>
 #include <QList>
 #include <QLinkedList>
@@ -27,9 +28,6 @@ class QMouseEvent;
 
 namespace cv { namespace gui {
 
-class OutputWindow;
-
-
 struct LinkInfo {
     int startIdx;
     int endIdx;
@@ -42,18 +40,15 @@ class OutputEvent : public Event
 {
     QString         m_text;
     QList<LinkInfo> m_linkInfoList;
-    OutputWindow *  m_pParentWindow;
 
 public:
-    OutputEvent(const QString &text, OutputWindow *pParentWin)
-      : m_text(text),
-        m_pParentWindow(pParentWin)
+    OutputEvent(const QString &text)
+      : m_text(text)
     { }
     ~OutputEvent() { }
 
     // accessors
     QString getText() { return m_text; }
-    OutputWindow *getParentWindow() { return m_pParentWindow; }
     const QList<LinkInfo> &getLinkInfoList() { return m_linkInfoList; }
 
     // modifiers
@@ -90,18 +85,14 @@ public:
 class DoubleClickLinkEvent : public Event
 {
     QString         m_text;
-    OutputWindow *  m_pParentWindow;
 
 public:
-    DoubleClickLinkEvent(const QString &text, OutputWindow *pParentWin)
-      : m_text(text),
-        m_pParentWindow(pParentWin)
+    DoubleClickLinkEvent(const QString &text)
+      : m_text(text)
     { }
-    ~DoubleClickLinkEvent() { }
 
     // accessors
     QString getText() { return m_text; }
-    OutputWindow *getParentWindow() { return m_pParentWindow; }
 };
 
 enum OutputColor {
@@ -325,6 +316,14 @@ class OutputLine
     TextRun *   m_firstTextRun;
     Link *      m_firstLink;
 
+    // these variables hold information about where the
+    // alternate text selection starts (if there are
+    // timestamps and the user selects text while holding down
+    // ctrl, then text selection will start after the
+    // timestamp)
+    int         m_alternateSelectionIdx;
+    int         m_alternateSelectionStart;
+
     // this is to manage line wraps inside a word chunk
     int *       m_splits;
     int         m_numSplits;
@@ -352,6 +351,9 @@ public:
     int getTextSelectionStart() const { return m_selStartIdx; }
     int getTextSelectionEnd() const { return m_selEndIdx; }
     int getTextSelectionLength() const { return m_selEndIdx - m_selStartIdx + 1; }
+    int getAlternateSelectionIdx() const { return m_alternateSelectionIdx; }
+    int getSelectionStartIdx() const;
+    int getSelectionStart() const;
     int getNumSplits() const { return m_numSplits; }
     int *getSplitsArray() const { return m_splits; }
 
@@ -363,6 +365,8 @@ public:
     void setFirstLink(Link *firstLink) { m_firstLink = firstLink; }
     void setSelectionRange(int startIdx, int endIdx) { m_selStartIdx = startIdx; m_selEndIdx = endIdx; }
     void unsetSelectionRange() { m_selStartIdx = -1; }
+    void setAlternateSelectionIdx(int a) { m_alternateSelectionIdx = a; }
+    void setAlternateSelectionStart(int a) { m_alternateSelectionStart = a; }
     void setSplitsAndClearList(QLinkedList<int> &splitsList)
     {
         if(splitsList.count() > 0)
@@ -386,9 +390,6 @@ public:
 class OutputControl : public QAbstractScrollArea
 {
     Q_OBJECT
-
-    // used for firing the OutputEvent
-    OutputWindow *      m_pParentWindow;
 
     QList<OutputLine>   m_lines;
     int                 m_lastVisibleLineIdx;
@@ -424,7 +425,6 @@ public:
     static QColor       COLORS[36];
 
     OutputControl(QWidget *parent = NULL);
-    void setParentWindow(OutputWindow *pParentWin) { m_pParentWindow = pParentWin; }
     void appendMessage(const QString &msg, OutputColor defaultMsgColor);
     void changeFont(const QFont &font);
     void refreshLinks();

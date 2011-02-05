@@ -16,7 +16,11 @@
 
 class QTreeWidgetItem;
 
-namespace cv { namespace gui {
+namespace cv {
+
+class ConfigOption;
+
+namespace gui {
 
 class WindowManager;
 class WindowContainer;
@@ -49,10 +53,14 @@ protected:
 
 private:
     void setupMenu();
-    void setupColorConfig();
-    void setupServerConfig();
-    void setupGeneralConfig();
-    void setupMessagesConfig();
+    void setupConfig();
+
+    void setupColorConfig(QList<ConfigOption> &defOptions);
+    void setupServerConfig(QList<ConfigOption> &defOptions);
+    void setupGeneralConfig(QList<ConfigOption> &defOptions);
+    void setupMessagesConfig(QList<ConfigOption> &defOptions);
+
+    void setClientSize();
 
 public slots:
     // creates a blank IRC server window

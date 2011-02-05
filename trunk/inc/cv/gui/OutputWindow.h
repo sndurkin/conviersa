@@ -64,7 +64,7 @@ enum OutputMessageType {
 
 
 /*
- *  IRC window interface
+ *  IRC window hierarchy
  *  + indicates an abstract class
  *
  *  + Window
@@ -114,7 +114,8 @@ public:
     // printing functions
     void printOutput(const QString &text,
                      OutputMessageType msgType,
-                     OutputColor overrideMsgColor = COLOR_NONE);
+                     OutputColor overrideMsgColor = COLOR_NONE,
+                     int overrideAlertLevel = -1);
     void printError(const QString &text);
     void printDebug(const QString &text);
 
@@ -124,17 +125,8 @@ public:
 
     void focusedInTree();
 
-    // this static function delegates the task of processing each
-    // OutputEvent to the specific instance of OutputWindow that
-    // contains the OutputControl instance that fired the event
-    //
-    // it also ensures that the correct color is used for the text
-    // in the WindowManager, if it's not the currently selected Window
-    static void handleOutput(Event *evt);
-    virtual void processOutputEvent(Event *evt) = 0;
-
-    static void handleDoubleClickLink(Event *evt);
-    virtual void processDoubleClickLinkEvent(Event *evt) = 0;
+    virtual void onOutput(Event *evt) = 0;
+    virtual void onDoubleClickLink(Event *evt) = 0;
 
 protected:
     // imitates Google Chrome's search, with lines drawn in the scrollbar

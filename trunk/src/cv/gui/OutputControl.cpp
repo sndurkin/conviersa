@@ -13,8 +13,9 @@
 #include <QPalette>
 #include <QLinkedList>
 #include <QMouseEvent>
-#include <QTimer>
+#include <QDateTime>
 #include <QDebug>
+#include "cv/ConfigManager.h"
 #include "cv/gui/OutputControl.h"
 
 namespace cv { namespace gui {
@@ -61,14 +62,27 @@ QColor OutputControl::COLORS[36] = {
     QColor("red")           // COLOR_ERROR
 };
 
+int OutputLine::getSelectionStartIdx() const
+{
+    if(QApplication::keyboardModifiers() & Qt::ControlModifier)
+        return m_alternateSelectionIdx;
+    return 0;
+}
+
+int OutputLine::getSelectionStart() const
+{
+    if(QApplication::keyboardModifiers() & Qt::ControlModifier)
+        return m_alternateSelectionStart;
+    return OutputControl::TEXT_START_POS;
+}
+
 OutputControl::OutputControl(QWidget *parent/*= NULL*/)
     : QAbstractScrollArea(parent),
       m_isMouseDown(false),
       m_lastVisibleLineIdx(-1),
       m_totalWrappedLines(0),
       m_hoveredLineIdx(-1),
-      m_hoveredLink(NULL),
-      m_pParentWindow(NULL)
+      m_hoveredLink(NULL)
 {
     setFont(QFont("Consolas", 10));
     viewport()->setMouseTracking(true);
@@ -95,10 +109,14 @@ void OutputControl::appendMessage(const QString &msg, OutputColor defaultMsgColo
     currTextRun->setFgColor(defaultMsgColor);
     line.setFirstTextRun(currTextRun);
 
+    QString msgToDisplay = QString("%1 ").arg(QDateTime::currentDateTime().toString(g_pCfgManager->getOptionValue("timestamp.format")));
+    line.setAlternateSelectionIdx(msgToDisplay.length());
+    msgToDisplay += msg;
+
     // iterate through msg, determining the various TextRuns
-    for(int i = 0, msgLen = msg.length(); i < msgLen; ++i)
+    for(int i = 0, msgLen = msgToDisplay.length(); i < msgLen; ++i)
     {
-        switch(msg[i].toLatin1())
+        switch(msgToDisplay[i].toLatin1())
         {
             case 2:     // bold
             {
@@ -159,24 +177,24 @@ void OutputControl::appendMessage(const QString &msg, OutputColor defaultMsgColo
                 {
                     if(i >= msgLen)
                         goto end_color_spec;
-                    if(!msg[i].isDigit())
+                    if(!msgToDisplay[i].isDigit())
                     {
-                        if(j > 0 && msg[i] == ',')
+                        if(j > 0 && msgToDisplay[i] == ',')
                             break;
                         goto end_color_spec;
                     }
-                    firstNum += msg[i];
+                    firstNum += msgToDisplay[i];
                 }
 
-                if(i >= msgLen || msg[i] != ',')
+                if(i >= msgLen || msgToDisplay[i] != ',')
                     goto end_color_spec;
 
                 ++i;
                 for(int j = 0; j < 2; ++j, ++i)
                 {
-                    if(i >= msgLen || !QChar(msg[i]).isDigit())
+                    if(i >= msgLen || !QChar(msgToDisplay[i]).isDigit())
                         goto end_color_spec;
-                    secondNum += msg[i];
+                    secondNum += msgToDisplay[i];
                 }
 
             end_color_spec:
@@ -201,7 +219,7 @@ void OutputControl::appendMessage(const QString &msg, OutputColor defaultMsgColo
             default:
             {
                 currTextRun->incrementLength();
-                line.append(msg[i]);
+                line.append(msgToDisplay[i]);
             }
         } // switch
     } // for
@@ -287,7 +305,7 @@ void OutputControl::appendMessage(const QString &msg, OutputColor defaultMsgColo
 
     // fire onOutput event for callbacks to use for adding links
     // to the text
-    OutputEvent *evt = new(m_pEvt) OutputEvent(line.text(), m_pParentWindow);
+    OutputEvent *evt = new(m_pEvt) OutputEvent(line.text());
     g_pEvtManager->fireEvent("output", this, evt);
 
     // iterate through the OutputEvent to add the links given the
@@ -586,6 +604,59 @@ void OutputControl::calculateLineWraps(OutputLine &currLine, QLinkedList<int> &s
 
     // set the splits on the line
     currLine.setSplitsAndClearList(splits);
+
+    // if this line has a timestamp, then we want to set
+    // the alternate text selection start
+    if(currLine.getAlternateSelectionIdx() > 0)
+    {
+        int x = TEXT_START_POS;
+        currTextIdx = currTextRunIdx = 0;
+        currTextRun = currLine.firstTextRun();
+        font.setBold(currTextRun->isBold());
+
+        while(currTextIdx < currLine.getAlternateSelectionIdx())
+        {
+            // find the text run for our current text idx
+            while(currTextRunIdx + currTextRun->getLength() <= currTextIdx)
+            {
+                currTextRunIdx += currTextRun->getLength();
+                currTextRun = currTextRun->nextTextRun();
+            }
+
+            // update font metrics object if necessary
+            if(currTextRun != NULL && font.bold() != currTextRun->isBold())
+            {
+                font.setBold(currTextRun->isBold());
+                fm->~QFontMetrics();
+                fm = new(m_pFM) QFontMetrics(font);
+            }
+
+            // if the text run fits before the alternate selection idx
+            if(currTextRunIdx + currTextRun->getLength() <= currLine.getAlternateSelectionIdx())
+            {
+                // then we want to find the width of all the text
+                // and add it into the x-coord
+                int len = currTextRun->getLength() - (currTextIdx - currTextRunIdx);
+                x += fm->width(currLine.text().mid(currTextIdx, len));
+
+                // move to the next text run
+                currTextRunIdx += currTextRun->getLength();
+                currTextIdx = currTextRunIdx;
+                currTextRun = currTextRun->nextTextRun();
+            }
+            // if the text run doesn't fit
+            else
+            {
+                // then we find the width up to just before alternate selection idx
+                int len = currLine.getAlternateSelectionIdx() - currTextIdx;
+                x += fm->width(currLine.text().mid(currTextIdx, len));
+                break;
+            }
+
+        }
+
+        currLine.setAlternateSelectionStart(x);
+    }
 
     // now that we have the indices where the OutputLine is split,
     // we can use them to calculate the link fragments for each link
@@ -895,8 +966,8 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
                         int currX, currTextIdx, charWidth, halfCharWidth;
                         if(j == 0)
                         {
-                            currX = TEXT_START_POS;
-                            currTextIdx = 0;
+                            currX = currLine.getSelectionStart();
+                            currTextIdx = currLine.getSelectionStartIdx();
                         }
                         else
                         {
@@ -961,7 +1032,7 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
                                 else
                                     foundEndPos = true;
 
-                                if(firstPosIndex >= 0)
+                                if(firstPosIndex >= currLine.getSelectionStartIdx())
                                 {
                                     currLine.setSelectionRange(firstPosIndex, currTextIdx - 1);
                                     foundBothPos = true;
@@ -976,7 +1047,7 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
 
                         if(!foundBothPos)
                         {
-                            if(firstPosIndex >= 0)
+                            if(firstPosIndex >= currLine.getSelectionStartIdx())
                             {
                                 currLine.setSelectionRange(firstPosIndex, currTextIdx - 1);
                                 foundBothPos = true;
@@ -1010,8 +1081,8 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
                         int currX, currTextIdx, charWidth, halfCharWidth;
                         if(j == 0)
                         {
-                            currX = TEXT_START_POS;
-                            currTextIdx = 0;
+                            currX = currLine.getSelectionStart();
+                            currTextIdx = currLine.getSelectionStartIdx();
                         }
                         else
                         {
@@ -1068,7 +1139,7 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
                                 //      which means this drag position is after the first one
                                 //   2) this is the first drag position, which means
                                 //      it's before the second drag position
-                                if(firstPosIndex >= 0)
+                                if(firstPosIndex >= currLine.getSelectionStartIdx())
                                 {
                                     currLine.setSelectionRange(firstPosIndex, currTextIdx - 1);
                                     foundBothPos = true;
@@ -1090,7 +1161,7 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
                         // 2) it's after the last character of the wrapped line
                         if(!foundPosInLoop)
                         {
-                            if(firstPosIndex >= 0)
+                            if(firstPosIndex >= currLine.getSelectionStartIdx())
                             {
                                 currLine.setSelectionRange(firstPosIndex, currTextIdx - 1);
                                 foundBothPos = true;
@@ -1137,8 +1208,8 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
                         int currX, currTextIdx, charWidth, halfCharWidth;
                         if(j == 0)
                         {
-                            currX = TEXT_START_POS;
-                            currTextIdx = 0;
+                            currX = currLine.getSelectionStart();
+                            currTextIdx = currLine.getSelectionStartIdx();
                         }
                         else
                         {
@@ -1203,7 +1274,7 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
                                 else
                                 {
                                     if(currTextIdx > 0)
-                                        currLine.setSelectionRange(0, currTextIdx - 1);
+                                        currLine.setSelectionRange(currLine.getSelectionStartIdx(), currTextIdx - 1);
                                     else
                                         currLine.unsetSelectionRange();
                                     foundFirstPos = true;
@@ -1231,7 +1302,7 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
                             }
                             else
                             {
-                                currLine.setSelectionRange(0, lastTextIdx);
+                                currLine.setSelectionRange(currLine.getSelectionStartIdx(), lastTextIdx);
                                 foundFirstPos = true;
                             }
                         }
@@ -1250,7 +1321,7 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
                 //        but if we have already found the first drag position
                 //        then we need to select the entire line
                 if(foundFirstPos && !foundBothPos)
-                    currLine.setSelectionRange(0, currLine.text().length() - 1);
+                    currLine.setSelectionRange(currLine.getSelectionStartIdx(), currLine.text().length() - 1);
                 else
                     currLine.unsetSelectionRange();
             }
@@ -1416,7 +1487,7 @@ void OutputControl::mouseDoubleClickEvent(QMouseEvent *event)
     if(linkHitTest(event->pos().x(), event->pos().y(), lineIdx, link))
     {
         QString text = m_lines[lineIdx].text().mid(link->getStartIdx(), link->getEndIdx() - link->getStartIdx() + 1);
-        DoubleClickLinkEvent *evt = new DoubleClickLinkEvent(text, m_pParentWindow);
+        DoubleClickLinkEvent *evt = new DoubleClickLinkEvent(text);
         g_pEvtManager->fireEvent("doubleClickedLink", this, evt);
         delete evt;
     }
@@ -1451,7 +1522,7 @@ void OutputControl::paintEvent(QPaintEvent *event)
         ascent = painter.fontMetrics().ascent();
 
     // draw viewport background
-    painter.fillRect(0, 0, vpWidth, vpHeight, COLORS[COLOR_CHAT_BACKGROUND]);
+    //painter.fillRect(0, 0, vpWidth, vpHeight, COLORS[COLOR_CHAT_BACKGROUND]);
 
     // 3) TEXT DRAWING
     //     - start from the last visible OutputLine (determined in part 1)
@@ -1751,12 +1822,14 @@ void OutputControl::paintEvent(QPaintEvent *event)
     }
 
     // draw border
+    /*
     painter.setPen(palette().dark().color());
     painter.drawLine(          0,            0,     vpWidth,            0);
     painter.drawLine(          0,            0,           0,     vpHeight);
     painter.setPen(palette().light().color());
     painter.drawLine(          1, vpHeight - 1, vpWidth - 1, vpHeight - 1);
     painter.drawLine(vpWidth - 1,            1, vpWidth - 1, vpHeight - 1);
+    */
 }
 
 // updates the last visible line by using the new scrollbar value

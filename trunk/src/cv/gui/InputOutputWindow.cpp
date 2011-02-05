@@ -13,6 +13,8 @@
 #include "cv/ConfigManager.h"
 #include "cv/EventManager.h"
 #include "cv/gui/InputOutputWindow.h"
+#include "cv/gui/WindowManager.h"
+#include "cv/gui/DebugWindow.h"
 
 namespace cv { namespace gui {
 
@@ -28,14 +30,14 @@ InputOutputWindow::InputOutputWindow(const QString &title/* = tr("Untitled")*/,
     setFocusProxy(m_pInput);
     m_pOutput->setFocusProxy(m_pInput);
 
-    g_pEvtManager->hookEvent("input", m_pInput, MakeDelegate(this, &InputOutputWindow::handleInput));
+    g_pEvtManager->hookEvent("input", m_pInput, MakeDelegate(this, &InputOutputWindow::onInput));
 }
 
 //-----------------------------------//
 
 InputOutputWindow::~InputOutputWindow()
 {
-    g_pEvtManager->unhookEvent("input", m_pInput, MakeDelegate(this, &InputOutputWindow::handleInput));
+    g_pEvtManager->unhookEvent("input", m_pInput, MakeDelegate(this, &InputOutputWindow::onInput));
 }
 
 //-----------------------------------//
@@ -51,12 +53,10 @@ void InputOutputWindow::giveFocus()
 //-----------------------------------//
 
 // handles the input for the window
-void InputOutputWindow::handleInput(Event *evt)
+void InputOutputWindow::onInput(Event *evt)
 {
     // todo: change when colors are added
-    InputEvent *inputEvt = dynamic_cast<InputEvent *>(evt);
-    InputOutputWindow *pWindow = this;//inputEvt->getWindow();
-    //Session *pSession = m_pSharedSession.data();//inputEvt->getSession();
+    InputEvent *inputEvt = DCAST(InputEvent, evt);
     QString text = inputEvt->getInput();
 
     // TODO: make the '/' changeable??
@@ -71,10 +71,7 @@ void InputOutputWindow::handleInput(Event *evt)
         bool ok;
         int port = text.section(' ', 2, 2, QString::SectionSkipEmpty).toInt(&ok);
         if(!ok)
-        {
-            // TODO: change to use config
             port = 6667;
-        }
 
         m_pSession->disconnectFromServer();
         m_pSession->connectToServer(host, port);
@@ -87,19 +84,33 @@ void InputOutputWindow::handleInput(Event *evt)
         int pt = text.section(' ', 1, 1, QString::SectionSkipEmpty).toInt(&ok);
         if(!ok) pt = 12;
 
-        pWindow->m_pOutput->changeFont(QFont("Consolas", pt));
+        m_pOutput->changeFont(QFont("Consolas", pt));
+    }
+    else if(text.startsWith("/timestamp ", Qt::CaseInsensitive))
+    {
+        g_pCfgManager->setOptionValue("timestamp.format", text.mid(11));
     }
     else if(text.startsWith("/search ", Qt::CaseInsensitive))
     {
         text.remove(0, 8);
-        //pWindow->search(text);
+        //search(text);
         return;
+    }
+    else if(text.compare("/debug", Qt::CaseInsensitive) == 0)
+    {
+        // check for a DebugWindow, otherwise open a new one
+        Window *pParentWin = m_pManager->getParentWindow(this);
+        if(pParentWin == NULL)
+            pParentWin = this;
+
+        DebugWindow *pDebugWin = new DebugWindow(m_pSession);
+        m_pManager->addWindow(pDebugWin, m_pManager->getItemFromWindow(pParentWin), true);
     }
     else    // commands that interact with the server
     {
         if(!m_pSession->isConnected())
         {
-            pWindow->printError("Not connected to a server.");
+            printError("Not connected to a server.");
             return;
         }
 
@@ -108,12 +119,44 @@ void InputOutputWindow::handleInput(Event *evt)
         {
             if(text.startsWith('/'))
                 text.remove(0, 5);
-            pWindow->handleSay(text);
+            handleSay(text);
         }
         else if(text.startsWith("/me ", Qt::CaseInsensitive))
         {
             text.remove(0, 4);
-            pWindow->handleAction(text);
+            handleAction(text);
+        }
+        else if(text.startsWith("/join ", Qt::CaseInsensitive)
+             || text.startsWith("/j ", Qt::CaseInsensitive))
+        {
+            if(text.startsWith("/j ", Qt::CaseInsensitive))
+                text.remove(0, 3);
+            else
+                text.remove(0, 6);
+
+            QStringList params = text.split("\\s+");
+            if(params.size() > 0)
+            {
+                QStringList channelsToJoin = params[0].split(',', QString::SkipEmptyParts);
+                if(channelsToJoin.size() == 1)
+                {
+                    if(text[0] != '#' && text[0] != '0')
+                        text.prepend('#');
+                    m_pSession->sendData("JOIN " + text);
+                }
+                else if(channelsToJoin.size() > 1)
+                {
+                    for(int i = 0; i < channelsToJoin.size(); ++i)
+                        if(channelsToJoin[i][0] != '#')
+                            channelsToJoin[i].prepend('#');
+
+                    // send the message
+                    QString textToSend = "JOIN " + channelsToJoin.join(",");
+                    if(params.size() > 1)
+                        textToSend += " " + params[1];
+                    m_pSession->sendData(textToSend);
+                }
+            }
         }
         else
         {
@@ -127,7 +170,7 @@ void InputOutputWindow::handleInput(Event *evt)
 
 void InputOutputWindow::onNoticeMessage(Event *evt)
 {
-    Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
+    Message msg = DCAST(MessageEvent, evt)->getMessage();
     QString source;
     if(!msg.m_prefix.isEmpty())
         source = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
@@ -135,7 +178,7 @@ void InputOutputWindow::onNoticeMessage(Event *evt)
     else
         source = m_pSession->getHost();
 
-    QString textToPrint = g_pCfgManager->getOptionValue("messages.ini", "notice")
+    QString textToPrint = g_pCfgManager->getOptionValue("message.notice")
                           .arg(source)
                           .arg(msg.m_params[1]);
     printOutput(textToPrint, MESSAGE_IRC_NOTICE);

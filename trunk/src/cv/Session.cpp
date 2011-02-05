@@ -28,6 +28,7 @@ Session::Session(const QString& nick)
     g_pEvtManager->createEvent("connectFailed");
     g_pEvtManager->createEvent("connected");
     g_pEvtManager->createEvent("disconnected");
+    g_pEvtManager->createEvent("sendData");
     g_pEvtManager->createEvent("receivedData");
     g_pEvtManager->createEvent("errorMessage");
     g_pEvtManager->createEvent("inviteMessage");
@@ -44,6 +45,8 @@ Session::Session(const QString& nick)
     g_pEvtManager->createEvent("wallopsMessage");
     g_pEvtManager->createEvent("numericMessage");
     g_pEvtManager->createEvent("unknownMessage");
+
+    g_pEvtManager->hookEvent("sendData", this, MakeDelegate(this, &Session::onSendData));
 }
 
 Session::~Session()
@@ -82,17 +85,25 @@ void Session::disconnectFromServer()
 
 void Session::sendData(const QString &data)
 {
-    m_pConn->send(data + "\r\n");
+    DataEvent *pEvt = new DataEvent(data);
+    g_pEvtManager->fireEvent("sendData", this, pEvt);
+    delete pEvt;
+}
+
+// default functionality for the sendData event; it just sends the data
+void Session::onSendData(Event *pEvt)
+{
+    m_pConn->send(DCAST(DataEvent, pEvt)->getData() + "\r\n");
 }
 
 void Session::sendPrivmsg(const QString &target, const QString &msg)
 {
-    m_pConn->send("PRIVMSG " + target + " :" + msg + "\r\n");
+    sendData(QString("PRIVMSG %1 :%2").arg(target).arg(msg));
 }
 
 void Session::sendAction(const QString &target, const QString &msg)
 {
-    m_pConn->send("PRIVMSG " + target + " :\1ACTION " + msg + "\1\r\n");
+    sendData(QString("PRIVMSG %1 :\1ACTION %2\1").arg(target).arg(msg));
 }
 
 // sets the prefix rules supported by the server
@@ -355,8 +366,8 @@ void Session::onConnecting()
 void Session::onConnect()
 {
     // todo: use options
-    QString info = "PASS hello\r\nNICK " + m_nick + "\r\nUSER " + m_nick + " tolmoon tolsun :" + m_name;
-    sendData(info);
+    sendData(QString("NICK %1").arg(m_nick));
+    sendData(QString("USER %1 tolmoon \"%2\" :%3").arg(m_nick).arg(m_host).arg(m_name));
 
     // todo: find out what to do with Event *
     g_pEvtManager->fireEvent("connected", this, NULL);

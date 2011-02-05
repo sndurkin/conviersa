@@ -27,9 +27,10 @@ namespace gui {
 
 Client::Client(const QString &title)
 {
-    g_pCfgManager = new ConfigManager;
-    setupGeneralConfig();
+    g_pCfgManager = new ConfigManager("conviersa.ini");
+    setupConfig();
 
+    setClientSize();
     setWindowTitle(title);
 
     setupMenu();
@@ -46,18 +47,11 @@ Client::Client(const QString &title)
     m_pDock->setWidget(m_pManager);
     addDockWidget(Qt::LeftDockWidgetArea, m_pDock);
 
-    setupColorConfig();
-    setupServerConfig();
-    setupMessagesConfig();
-
     // TODO: fill in with events
     g_pEvtManager = new EventManager;
     g_pEvtManager->createEvent("input");
-    //g_pEvtManager->hookEvent("onInput", &InputOutputWindow::handleInput);
     g_pEvtManager->createEvent("output");
-    //g_pEvtManager->hookEvent("onOutput", &OutputWindow::handleOutput);
     g_pEvtManager->createEvent("doubleClickedLink");
-    //g_pEvtManager->hookEvent("onDoubleClickLink", &OutputWindow::handleDoubleClickLink);
 
     // create new irc server window on client start
     onNewIrcServerWindow();
@@ -76,9 +70,9 @@ Client::~Client()
 void Client::closeEvent(QCloseEvent *event)
 {
     // save the size of the client
-    g_pCfgManager->setOptionValue("general.ini", "width", QString::number(width()));
-    g_pCfgManager->setOptionValue("general.ini", "height", QString::number(height()));
-    g_pCfgManager->writeToFile("general.ini");
+    g_pCfgManager->setOptionValue("client.width", QString::number(width()));
+    g_pCfgManager->setOptionValue("client.height", QString::number(height()));
+    g_pCfgManager->writeToDefaultFile();
 
     delete m_pManager;
     delete m_pDock;
@@ -106,102 +100,112 @@ void Client::setupMenu()
 
 //-----------------------------------//
 
-void Client::setupColorConfig()
+void Client::setupConfig()
 {
     QList<ConfigOption> defOptions;
-    defOptions.append(ConfigOption("say", "#000000"));
-    defOptions.append(ConfigOption("action", "#0000CC"));
-    defOptions.append(ConfigOption("topic", "#006600"));
-    defOptions.append(ConfigOption("join", "#006600"));
-    defOptions.append(ConfigOption("part", "#006600"));
-    defOptions.append(ConfigOption("quit", "#006600"));
-    defOptions.append(ConfigOption("kick", "#000000"));
-    defOptions.append(ConfigOption("nick", "#808080"));
-    defOptions.append(ConfigOption("invite", "#808080"));
-    defOptions.append(ConfigOption("mode", "#808080"));
-    defOptions.append(ConfigOption("notice", "#B80000"));
-    defOptions.append(ConfigOption("ctcp", "#D80000"));
-    defOptions.append(ConfigOption("other", "#D80000"));
-    g_pCfgManager->setupConfigFile("colors.ini", defOptions);
+
+    setupColorConfig(defOptions);
+    setupServerConfig(defOptions);
+    setupGeneralConfig(defOptions);
+    setupMessagesConfig(defOptions);
+
+    g_pCfgManager->setupDefaultConfigFile(defOptions);
 }
 
 //-----------------------------------//
 
-void Client::setupServerConfig()
+void Client::setupColorConfig(QList<ConfigOption> &defOptions)
+{
+    defOptions.append(ConfigOption("color.say", "#000000"));
+    defOptions.append(ConfigOption("color.action", "#0000CC"));
+    defOptions.append(ConfigOption("color.topic", "#006600"));
+    defOptions.append(ConfigOption("color.join", "#006600"));
+    defOptions.append(ConfigOption("color.part", "#006600"));
+    defOptions.append(ConfigOption("color.quit", "#006600"));
+    defOptions.append(ConfigOption("color.kick", "#000000"));
+    defOptions.append(ConfigOption("color.nick", "#808080"));
+    defOptions.append(ConfigOption("color.invite", "#808080"));
+    defOptions.append(ConfigOption("color.mode", "#808080"));
+    defOptions.append(ConfigOption("color.notice", "#B80000"));
+    defOptions.append(ConfigOption("color.ctcp", "#D80000"));
+    defOptions.append(ConfigOption("color.other", "#D80000"));
+}
+
+//-----------------------------------//
+
+void Client::setupServerConfig(QList<ConfigOption> &defOptions)
 {
     // no default options
-    QList<ConfigOption> defOptions;
-    defOptions.append(ConfigOption("name", ""));
-    defOptions.append(ConfigOption("nick", ""));
-    defOptions.append(ConfigOption("altNick", ""));
-    g_pCfgManager->setupConfigFile("server.ini", defOptions);
+    defOptions.append(ConfigOption("server.name", ""));
+    defOptions.append(ConfigOption("server.nick", ""));
+    defOptions.append(ConfigOption("server.altNick", ""));
 }
 
 //-----------------------------------//
 
-void Client::setupGeneralConfig()
+void Client::setupGeneralConfig(QList<ConfigOption> &defOptions)
 {
-    QList<ConfigOption> defOptions;
-    defOptions.append(ConfigOption("width", "1000"));
-    defOptions.append(ConfigOption("height", "500"));
-    g_pCfgManager->setupConfigFile("general.ini", defOptions);
+    defOptions.append(ConfigOption("client.width", "1000"));
+    defOptions.append(ConfigOption("client.height", "500"));
 
-    // set size of client
+    defOptions.append(ConfigOption("timestamp.format", "[hh:mm:ss]"));
+}
+
+//-----------------------------------//
+
+void Client::setupMessagesConfig(QList<ConfigOption> &defOptions)
+{
+    // regular messages
+    defOptions.append(ConfigOption("message.action",        "* %1 %2"));
+    defOptions.append(ConfigOption("message.ctcp",          "[CTCP %1 (from %2)]"));
+    defOptions.append(ConfigOption("message.connecting",    "* Connecting to %1 (%2)"));
+    defOptions.append(ConfigOption("message.connectFailed", "* Failed to connect to server (%1)"));
+    defOptions.append(ConfigOption("message.disconnected",  "* Disconnected"));
+    defOptions.append(ConfigOption("message.invite",        "* %1 has invited you to %2"));
+    defOptions.append(ConfigOption("message.join",          "* %1 (%2) has joined %3"));
+    defOptions.append(ConfigOption("message.join.self",     "* You have joined %1"));
+    defOptions.append(ConfigOption("message.kick",          "* %1 was kicked by %2"));
+    defOptions.append(ConfigOption("message.kick.self",     "* You were kicked by %1"));
+    defOptions.append(ConfigOption("message.rejoin",        "* You have rejoined %1"));
+    defOptions.append(ConfigOption("message.mode",          "* %1 has set mode: %2"));
+    defOptions.append(ConfigOption("message.nick",          "* %1 is now known as %2"));
+    defOptions.append(ConfigOption("message.notice",        "-%1- %2"));
+    defOptions.append(ConfigOption("message.part",          "* %1 (%2) has left %3"));
+    defOptions.append(ConfigOption("message.part.self",     "* You have left %1"));
+    defOptions.append(ConfigOption("message.pong",          "* PONG from %1: %2"));
+    defOptions.append(ConfigOption("message.quit",          "* %1 (%2) has quit"));
+    defOptions.append(ConfigOption("message.reason",        " (%1%2)"));
+    defOptions.append(ConfigOption("message.say",           "<%1> %2"));
+    defOptions.append(ConfigOption("message.topic",         "* %1 changes topic to: %2"));
+    defOptions.append(ConfigOption("message.wallops",       "* WALLOPS from %1: %2"));
+
+    // numeric messages
+    defOptions.append(ConfigOption("message.301",           "%1 is away: %2"));
+    defOptions.append(ConfigOption("message.317",           "%1 has been idle %2"));
+    defOptions.append(ConfigOption("message.330",           "%1 %2: %3"));
+    defOptions.append(ConfigOption("message.332",           "* Topic is: %1"));
+    defOptions.append(ConfigOption("message.333.status",    "%1 topic set by %2 on %3 %4"));
+    defOptions.append(ConfigOption("message.333.channel",   "* Topic set by %1 on %2 %3"));
+}
+
+//-----------------------------------//
+
+void Client::setClientSize()
+{
     bool ok;
-    int width = g_pCfgManager->getOptionValue("general.ini", "width").toInt(&ok);
+    int width = g_pCfgManager->getOptionValue("client.width").toInt(&ok);
     if(!ok)
     {
         width = 1000;
-        g_pCfgManager->setOptionValue("general.ini", "width", QString::number(width));
+        g_pCfgManager->setOptionValue("client.width", QString::number(width));
     }
-    int height = g_pCfgManager->getOptionValue("general.ini", "height").toInt(&ok);
+    int height = g_pCfgManager->getOptionValue("client.height").toInt(&ok);
     if(!ok)
     {
         height = 500;
-        g_pCfgManager->setOptionValue("general.ini", "height", QString::number(height));
+        g_pCfgManager->setOptionValue("client.height", QString::number(height));
     }
     resize(width, height);
-}
-
-//-----------------------------------//
-
-void Client::setupMessagesConfig()
-{
-    QList<ConfigOption> defOptions;
-
-    // regular messages
-    defOptions.append(ConfigOption("action",        "* %1 %2"));
-    defOptions.append(ConfigOption("ctcp",          "[CTCP %1 (from %2)]"));
-    defOptions.append(ConfigOption("connecting",    "* Connecting to %1 (%2)"));
-    defOptions.append(ConfigOption("connect-failed","* Failed to connect to server (%1)"));
-    defOptions.append(ConfigOption("disconnected",  "* Disconnected"));
-    defOptions.append(ConfigOption("invite",        "* %1 has invited you to %2"));
-    defOptions.append(ConfigOption("join",          "* %1 (%2) has joined %3"));
-    defOptions.append(ConfigOption("join-self",     "* You have joined %1"));
-    defOptions.append(ConfigOption("kick",          "* %1 was kicked by %2"));
-    defOptions.append(ConfigOption("kick-self",     "* You were kicked by %1"));
-    defOptions.append(ConfigOption("rejoin",        "* You have rejoined %1"));
-    defOptions.append(ConfigOption("mode",          "* %1 has set mode: %2"));
-    defOptions.append(ConfigOption("nick",          "* %1 is now known as %2"));
-    defOptions.append(ConfigOption("notice",        "-%1- %2"));
-    defOptions.append(ConfigOption("part",          "* %1 (%2) has left %3"));
-    defOptions.append(ConfigOption("part-self",     "* You have left %1"));
-    defOptions.append(ConfigOption("pong",          "* PONG from %1: %2"));
-    defOptions.append(ConfigOption("quit",          "* %1 (%2) has quit"));
-    defOptions.append(ConfigOption("reason",        " (%1%2)"));
-    defOptions.append(ConfigOption("say",           "<%1> %2"));
-    defOptions.append(ConfigOption("topic",         "* %1 changes topic to: %2"));
-    defOptions.append(ConfigOption("wallops",       "* WALLOPS from %1: %2"));
-
-    // numeric messages
-    defOptions.append(ConfigOption("301",           "%1 is away: %2"));
-    defOptions.append(ConfigOption("317",           "%1 has been idle %2"));
-    defOptions.append(ConfigOption("330",           "%1 %2: %3"));
-    defOptions.append(ConfigOption("332",           "* Topic is: %1"));
-    defOptions.append(ConfigOption("333-status",    "%1 topic set by %2 on %3 %4"));
-    defOptions.append(ConfigOption("333-channel",   "* Topic set by %1 on %2 %3"));
-
-    g_pCfgManager->setupConfigFile("messages.ini", defOptions);
 }
 
 //-----------------------------------//
@@ -213,6 +217,8 @@ void Client::onNewIrcServerWindow()
     m_pManager->addWindow(pWin);
     pWin->showMaximized();
 }
+
+//-----------------------------------//
 
 void Client::loadQSS()
 {

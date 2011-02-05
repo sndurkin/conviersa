@@ -119,6 +119,7 @@ public:
 
     // public functions for sending messages
     void sendData(const QString &data);
+    void onSendData(Event *pEvt);
     void sendPrivmsg(const QString &target, const QString &msg);
     void sendAction(const QString &target, const QString &msg);
 

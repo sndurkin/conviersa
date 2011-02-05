@@ -60,7 +60,7 @@ void ChannelUser::addPrefix(const QChar &prefixToAdd)
         }
         else if(compareVal == 0)
         {
-            return;;
+            return;
         }
     }
 

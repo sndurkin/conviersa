@@ -52,8 +52,8 @@ OutputWindow::OutputWindow(const QString &title/* = tr("Untitled")*/,
     m_pOutput->setVerticalScrollBar(m_pScrollBar);
     */
     m_pOutput = new OutputControl;
-    g_pEvtManager->hookEvent("output", m_pOutput, MakeDelegate(this, &OutputWindow::processOutputEvent));
-    g_pEvtManager->hookEvent("doubleClickedLink", m_pOutput, MakeDelegate(this, &OutputWindow::processDoubleClickLinkEvent));
+    g_pEvtManager->hookEvent("output", m_pOutput, MakeDelegate(this, &OutputWindow::onOutput));
+    g_pEvtManager->hookEvent("doubleClickedLink", m_pOutput, MakeDelegate(this, &OutputWindow::onDoubleClickLink));
     //m_pOutput->setParentWindow(this);
 }
 
@@ -61,15 +61,16 @@ OutputWindow::OutputWindow(const QString &title/* = tr("Untitled")*/,
 
 OutputWindow::~OutputWindow()
 {
-    g_pEvtManager->unhookEvent("output", m_pOutput, MakeDelegate(this, &OutputWindow::processOutputEvent));
-    g_pEvtManager->unhookEvent("doubleClickedLink", m_pOutput, MakeDelegate(this, &OutputWindow::processDoubleClickLinkEvent));
+    g_pEvtManager->unhookEvent("output", m_pOutput, MakeDelegate(this, &OutputWindow::onOutput));
+    g_pEvtManager->unhookEvent("doubleClickedLink", m_pOutput, MakeDelegate(this, &OutputWindow::onDoubleClickLink));
 }
 
 //-----------------------------------//
 
 void OutputWindow::printOutput(const QString &text,
                                OutputMessageType msgType,
-                               OutputColor overrideMsgColor/* = COLOR_NONE*/)
+                               OutputColor overrideMsgColor/* = COLOR_NONE*/,
+                               int overrideAlertLevel/* = -1*/)
 {
     OutputColor defaultMsgColor;
     int outputAlertLevel = 0;
@@ -152,6 +153,9 @@ void OutputWindow::printOutput(const QString &text,
     if(overrideMsgColor == COLOR_HIGHLIGHT)
         outputAlertLevel = 3;
 
+    if(overrideAlertLevel >= 0)
+        outputAlertLevel = overrideAlertLevel;
+
     QTreeWidgetItem *pItem = m_pManager->getItemFromWindow(this);
     if(pItem != NULL && !pItem->isSelected())
     {
@@ -206,28 +210,6 @@ bool OutputWindow::containsNick(const QString &text)
                 + OutputWindow::s_invalidNickSuffix);
     regex.setCaseSensitivity(Qt::CaseInsensitive);
     return text.contains(regex);
-}
-
-//-----------------------------------//
-
-// this static function delegates the task of processing each
-// OutputEvent to the specific instance of OutputWindow that
-// contains the OutputControl instance that fired the event
-//
-// it also ensures that the correct color is used for the text
-// in the WindowManager, if it's not the currently selected Window
-void OutputWindow::handleOutput(Event *evt)
-{
-    OutputEvent *outputEvt = dynamic_cast<OutputEvent *>(evt);
-    outputEvt->getParentWindow()->processOutputEvent(outputEvt);
-}
-
-//-----------------------------------//
-
-void OutputWindow::handleDoubleClickLink(Event *evt)
-{
-    DoubleClickLinkEvent *dblClickLinkEvt = dynamic_cast<DoubleClickLinkEvent *>(evt);
-    dblClickLinkEvt->getParentWindow()->processDoubleClickLinkEvent(dblClickLinkEvt);
 }
 
 //-----------------------------------//

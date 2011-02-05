@@ -12,6 +12,8 @@
 #include <QList>
 #include "cv/FastDelegate.h"
 
+#define DCAST(eventType, var) dynamic_cast<eventType *>(var)
+
 using namespace fastdelegate;
 
 namespace cv {

@@ -34,7 +34,8 @@ HEADERS += inc/cv/qext.h \
     inc/cv/gui/InputOutputWindow.h \
     inc/cv/gui/OutputControl.h \
     inc/cv/gui/OverlayPanel.h \
-    inc/cv/gui/ServerConnectionPanel.h
+    inc/cv/gui/ServerConnectionPanel.h \
+    inc/cv/gui/DebugWindow.h
 SOURCES += src/cv/main.cpp \
     src/cv/qext.cpp \
     src/cv/Connection.cpp \
@@ -60,4 +61,5 @@ SOURCES += src/cv/main.cpp \
     src/cv/gui/InputOutputWindow.cpp \
     src/cv/gui/OutputControl.cpp \
     src/cv/gui/OverlayPanel.cpp \
-    src/cv/gui/ServerConnectionPanel.cpp
+    src/cv/gui/ServerConnectionPanel.cpp \
+    src/cv/gui/DebugWindow.cpp

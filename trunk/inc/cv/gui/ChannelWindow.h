@@ -15,6 +15,7 @@
 #include "cv/gui/InputOutputWindow.h"
 
 class QListWidget;
+class QListWidgetItem;
 class QSplitter;
 
 namespace cv {
@@ -114,8 +115,8 @@ public:
     void onPrivmsgMessage(Event *evt);
     void onTopicMessage(Event *evt);
 
-    void processOutputEvent(Event *evt);
-    void processDoubleClickLinkEvent(Event *evt);
+    void onOutput(Event *evt);
+    void onDoubleClickLink(Event *evt);
 
 protected:
     // adds a message to the "in-limbo" queue, where messages are
@@ -160,6 +161,9 @@ signals:
     // signifies that the window is closing - this is *only*
     // for IrcStatusWindow to use
     void chanWindowClosing(ChannelWindow *pWin);
+
+public slots:
+    void onUserDoubleClicked(QListWidgetItem *pItem);
 };
 
 } } // end namespaces

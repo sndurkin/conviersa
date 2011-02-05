@@ -32,7 +32,7 @@ protected:
 
 public:
     StatusWindow(const QString &title = tr("Server Window"),
-            const QSize &size = QSize(500, 300));
+                 const QSize &size = QSize(500, 300));
     ~StatusWindow();
 
     // returns a pointer to the OutpuWindow if it exists,
@@ -77,8 +77,8 @@ public:
     void onNumericMessage(Event *evt);
     void onUnknownMessage(Event *evt);
 
-    void processOutputEvent(Event *evt);
-    void processDoubleClickLinkEvent(Event *evt);
+    void onOutput(Event *evt);
+    void onDoubleClickLink(Event *evt);
 
 protected:
     // handles the printing/sending of the PRIVMSG message

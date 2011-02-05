@@ -6,31 +6,30 @@ We'll use this page to document all the features that will be put into the clien
 
 This will hold the core features that are typical of an IRC client. There won't be many features that distinguish this client from other IRC clients.
 
-  * basic UI to connect to a server (with SSL capability) by specifying server and port
-    * the UI will be embedded into the server status window when disconnected
-    * when connected, there will be a small button at the top (just inside the output control) that you can click which will pop up the UI to connect to another 
-    * connect button should be somewhat transparent (and maybe it should be top left, instead?)
+  * <s>basic UI to connect to a server by specifying server and port</s>
+    * <s>the UI will be embedded into the server status window when disconnected</s>
+    * <s>when connected, there will be a small button at the top (just inside the output control) that you can click which will pop up the UI to connect to another</s>
+    * <s>connect button should be somewhat transparent</s>
   * basic UI to manage configuration settings (a list of settings is needed)
     * a better UI for the options dialog (and support for plugin options) can be decided on at a later stage
   * UI to access channel settings, such as topic, modes, bans, excepts, invites
     * a simple dialog would do, but perhaps it's better to go with the theme of the transparent button in the top-left corner and the embedded UI
   * full implementation of the IRC protocol (including CTCP)
-  * debug messages window, which prints out all raw messages to/from server
+  * <s>debug messages window, which prints out all raw messages to/from server</s>
   * chat output control
-    * needs to be custom-made, and we'll try to use [http://qt.nokia.com/doc/4.6/qtwebkit.html QtWebKit] for the implementation
+    * <s>needs to be custom-made</s>
     * dynamic color changes
       * when the user changes color options, all existing text is changed
     * old chat text is clipped after a certain number of lines of chat
     * URL highlighting (or clickable URLs)
     * channel-specific chat output
-      * nick highlighting
-        * your nick appears in bold or the entire line is a certain color
-        * other nicks can be right-clicked, and a menu UI will be available with some options
+      * <s>nick highlighting: your nick appears in bold or the entire line is a certain color</s>
+      * other nicks can be right-clicked, and a menu UI will be available with some options
           * msg/notice
           * whois
           * ctcp options
-      * nick completion
-        * press tab and the client tries to auto-complete the nickname you are typing
+      * <s>nick completion</s>
+        * <s>press tab and the client tries to auto-complete the nickname you are typing</s>
   * chat logging
 
 

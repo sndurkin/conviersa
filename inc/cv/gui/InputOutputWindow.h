@@ -63,7 +63,7 @@ public:
 
     void giveFocus();
 
-    void handleInput(Event *evt);
+    void onInput(Event *evt);
 
     void onNoticeMessage(Event *evt);
 

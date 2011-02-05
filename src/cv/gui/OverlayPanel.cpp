@@ -11,6 +11,7 @@
 #include <QStyleOption>
 #include <QSignalMapper>
 #include <QStringBuilder>
+#include <QGraphicsDropShadowEffect>
 #include "cv/gui/OverlayPanel.h"
 
 namespace cv { namespace gui {
@@ -71,11 +72,11 @@ QPushButton *OverlayPanel::addOpenButton(QWidget *pParent, const QString &btnTex
 
         QString
             btnCss = QString("QPushButton { ") %
-                     QString("color: #999999; ") %
+                     QString("color: rgba(153, 153, 153, 50%); ") %
                      QString("background-color: transparent; ") %
                      QString("border-width: 1px; ") %
                      QString("border-style: solid; ") %
-                     QString("border-color: #999999; ");
+                     QString("border-color: rgba(153, 153, 153, 50%); ");
         if(m_alignment == Qt::AlignTop)
         {
             btnCss += QString("border-bottom-left-radius: 5px; ") %

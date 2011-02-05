@@ -24,7 +24,7 @@ EventManager::~EventManager()
     if(!eventStr.isEmpty())
     {
         eventStr.remove(eventStr.length() - 2, 2);
-        qDebug("Events still hooked: %s", eventStr.toLatin1().constData());
+        qDebug("[EM::~EM] Events still hooked: %s", eventStr.toLatin1().constData());
     }
 }
 
@@ -105,7 +105,7 @@ void EventManager::fireEvent(const QString &evtName, void *pEvtInstance, Event *
     EventInfo *pEvtInfo = getEventInfo(evtName, pEvtInstance);
     if(pEvtInfo == NULL)
     {
-        qDebug("Attempted to fire unrecognized event: %s\n", evtName);
+        qDebug("[EM::fireEvent] Attempted to fire unrecognized event: %s\n", evtName.toLatin1().constData());
         return;
     }
 
@@ -164,7 +164,7 @@ EventInfo *EventManager::getEventInfo(const QString &evtName, void *pEvtInstance
     QHash<uintptr_t, EventInfo>::iterator instancesIter = pInstancesHash->find((uintptr_t) pEvtInstance);
     if(instancesIter == pInstancesHash->end())
     {
-        qDebug("Instance for event %s not found", evtName);
+        qDebug("[EM::getEventInfo] Instance for event %s not found", evtName.toLatin1().constData());
         return NULL;
     }
 
@@ -185,7 +185,7 @@ QHash<uintptr_t, EventInfo> *EventManager::getInstancesHash(const QString &evtNa
     QHash<QString, QHash<uintptr_t, EventInfo> >::iterator eventsIter = m_eventsHash.find(evtName);
     if(eventsIter == m_eventsHash.end())
     {
-        qDebug("Event %s has not been created", evtName);
+        qDebug("[EM::getInstancesHash] Event %s has not been created", evtName.toLatin1().constData());
         return NULL;
     }
 

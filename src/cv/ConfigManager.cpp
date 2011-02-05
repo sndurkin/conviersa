@@ -27,7 +27,10 @@ bool ConfigManager::setupConfigFile(const QString &filename, const QList<ConfigO
 {
     QFile file(filename);
     if(file.exists() && !file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        qDebug("[CM::setupConfigFile] File %s could not be opened for read", filename.toLatin1().constData());
         return false;
+    }
 
     // put all the default options into a QMap
     QMap<QString, QString>  options;
@@ -38,6 +41,8 @@ bool ConfigManager::setupConfigFile(const QString &filename, const QList<ConfigO
 
     if(file.exists())
     {
+        QRegExp newlineRegex("[\r\n]*");
+
         // for each line in the file, find the corresponding option;
         // if the option exists in memory, overwrite it with
         // the value in the file
@@ -58,7 +63,7 @@ bool ConfigManager::setupConfigFile(const QString &filename, const QList<ConfigO
 
             QString optName = line.section('=', 0, 0);
             QString optValue = line.section('=', 1);
-            optValue = optValue.trimmed();
+            optValue.remove(newlineRegex);
 
             // find the option with key optName
             QMap<QString, QString>::iterator i = options.find(optName);
@@ -76,7 +81,10 @@ bool ConfigManager::setupConfigFile(const QString &filename, const QList<ConfigO
     else
     {
         if(!file.open(QIODevice::WriteOnly | QIODevice::Text))
+        {
+            qDebug("[CM::setupConfigFile] File %s could not be opened for write", filename.toLatin1().constData());
             return false;
+        }
 
         for(int i = 0; i < defOptions.size(); ++i)
         {
@@ -113,7 +121,10 @@ bool ConfigManager::writeToFile(const QString &filename)
     {
         QFile file(filename);
         if(file.exists() && !file.open(QIODevice::ReadOnly | QIODevice::Text))
+        {
+            qDebug("[CM::writeToFile] File %s could not be opened for read", filename.toLatin1().constData());
             return false;
+        }
 
         // little hack i use to get a temporary filename
         // for creating with QFile so i can open it with
@@ -123,14 +134,20 @@ bool ConfigManager::writeToFile(const QString &filename)
         {
             QTemporaryFile newTempFile;
             if(!newTempFile.open())
+            {
+                qDebug("[CM::writeToFile] Temporary file could not be opened", filename.toLatin1().constData());
                 return false;
+            }
             tempFilename = newTempFile.fileName();
             newTempFile.close();
         }
 
         QFile newFile(tempFilename);
         if(!newFile.open(QIODevice::WriteOnly | QIODevice::Text))
+        {
+            qDebug("[CM::writeToFile] File %s could not be opened for write", filename.toLatin1().constData());
             return false;
+        }
 
         QHash<QString, int>  alreadyWritten;
 
@@ -204,6 +221,10 @@ bool ConfigManager::writeToFile(const QString &filename)
 
         return true;
     }
+    else
+    {
+        qDebug("[CM::writeToFile] Config file %s not found", filename.toLatin1().constData());
+    }
 
     return false;
 }
@@ -220,6 +241,14 @@ QString ConfigManager::getOptionValue(const QString &filename, const QString &op
         {
             return *j;
         }
+        else
+        {
+            qDebug("[CM::getOptionValue] Config option %s (in file %s) does not exist", optName.toLatin1().constData(), filename.toLatin1().constData());
+        }
+    }
+    else
+    {
+        qDebug("[CM::getOptionValue] Config file %s not found", filename.toLatin1().constData());
     }
 
     return "";
@@ -237,6 +266,14 @@ bool ConfigManager::setOptionValue(const QString &filename, const QString &optNa
             *j = optValue;
             return true;
         }
+        else
+        {
+            qDebug("[CM::setOptionValue] Config option %s (in file %s) does not exist", optName.toLatin1().constData(), filename.toLatin1().constData());
+        }
+    }
+    else
+    {
+        qDebug("[CM::setOptionValue] Config file %s not found", filename.toLatin1().constData());
     }
 
     return false;

@@ -1,0 +1,51 @@
+/*
+ *  Conviersa Qt Stylesheet
+ */
+
+cv--gui--WindowManager {
+  selection-background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                              stop: 0 #9CBBD9,
+                                              stop: 1 #6D8CAA);
+  selection-color: #FFFFFF;
+}
+cv--gui--WindowManager::item {
+  padding: 5px;
+}
+
+cv--gui--OutputControl {
+  border-radius: 3px;
+  border: 1px solid #999;
+  background: #fff;
+  padding: 2px;
+}
+
+QPlainTextEdit {
+  border-radius: 3px;
+  border: 1px solid #999;
+  background: #fff;
+}
+
+cv--gui--ServerConnectionPanel {
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+  border-width: 1px;
+  border-style: solid;
+  border-top-width: 0px;
+  background-color: palette(window);
+  border-color: palette(mid);
+}
+
+cv--gui--ServerConnectionPanel QLineEdit {
+  border-radius: 3px;
+  border: 1px solid #999;
+}
+
+QListWidget {
+  border-radius: 3px;
+  border: 1px solid #999;
+  background: #fff;
+}
+
+QListWidget::item {
+  padding: 1px;
+}

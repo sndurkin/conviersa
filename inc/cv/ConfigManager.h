@@ -24,9 +24,12 @@ class ConfigManager
     // comments start the line with '#'
     QRegExp m_commentRegex;
 
+    QString m_defaultFilename;
+
 public:
-    ConfigManager()
-      : m_commentRegex("^\\s*#")
+    ConfigManager(const QString &defaultFilename)
+      : m_commentRegex("^\\s*#"),
+        m_defaultFilename(defaultFilename)
     { }
 
     // this function puts options (and their values) into memory under
@@ -42,6 +45,12 @@ public:
     // the given array of default ConfigOptions
     bool setupConfigFile(const QString &filename, const QList<ConfigOption> &options);
 
+    // calls setupConfigFile() with the default filename
+    bool setupDefaultConfigFile(const QList<ConfigOption> &options)
+    {
+        return setupConfigFile(m_defaultFilename, options);
+    }
+
     // this writes all the data in memory to the provided file
     //
     // if the file already exists, then for each line it tries to find
@@ -55,12 +64,30 @@ public:
     //      options that are put into memory using SetupConfigFile()
     bool writeToFile(const QString &filename);
 
+    // calls writeToFile with the default filename
+    bool writeToDefaultFile()
+    {
+        return writeToFile(m_defaultFilename);
+    }
+
     // returns the value of the provided option inside the provided file,
     // returns an empty string upon error
     QString getOptionValue(const QString &filename, const QString &optName);
 
+    // fetches the value of the key in the default file
+    inline QString getOptionValue(const QString &optName)
+    {
+        return getOptionValue(m_defaultFilename, optName);
+    }
+
     // sets the provided option's value to optValue
     bool setOptionValue(const QString &filename, const QString &optName, const QString &optValue);
+
+    // sets the option's value to optValue in the default file
+    inline bool setOptionValue(const QString &optName, const QString &optValue)
+    {
+        return setOptionValue(m_defaultFilename, optName, optValue);
+    }
 
     // test function to produce contents of file
     void printFile(const QString &filename);

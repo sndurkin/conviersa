@@ -68,7 +68,7 @@ QString QueryWindow::getTargetNick()
 
 void QueryWindow::onNumericMessage(Event *evt)
 {
-    Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
+    Message msg = DCAST(MessageEvent, evt)->getMessage();
     switch(msg.m_command)
     {
         case 401:   // ERR_NOSUCKNICK
@@ -85,13 +85,13 @@ void QueryWindow::onNumericMessage(Event *evt)
 
 void QueryWindow::onNickMessage(Event *evt)
 {
-    Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
+    Message msg = DCAST(MessageEvent, evt)->getMessage();
 
     // will print a nick change message to the PM window
     // if we get a NICK message, which will only be if we're in
     // a channel with the person (or if the nick being changed is ours)
     QString oldNick = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
-    QString textToPrint = g_pCfgManager->getOptionValue("messages.ini", "nick")
+    QString textToPrint = g_pCfgManager->getOptionValue("message.nick")
                           .arg(oldNick)
                           .arg(msg.m_params[0]);
     if(m_pSession->isMyNick(oldNick))
@@ -102,7 +102,7 @@ void QueryWindow::onNickMessage(Event *evt)
     {
         // if the target nick has changed and there isn't another query with that name
         // already open, then we can safely change the this query's target nick
-        bool queryWindowExists = dynamic_cast<StatusWindow *>(m_pManager->getParentWindow(this))->childIrcWindowExists(msg.m_params[0]);
+        bool queryWindowExists = DCAST(StatusWindow, m_pManager->getParentWindow(this))->childIrcWindowExists(msg.m_params[0]);
         if(isTargetNick(oldNick) && !queryWindowExists)
         {
             setTargetNick(msg.m_params[0]);
@@ -121,7 +121,7 @@ void QueryWindow::onNoticeMessage(Event *evt)
 
 void QueryWindow::onPrivmsgMessage(Event *evt)
 {
-    Message msg = dynamic_cast<MessageEvent *>(evt)->getMessage();
+    Message msg = DCAST(MessageEvent, evt)->getMessage();
     if(m_pSession->isMyNick(msg.m_params[0]))
     {
         QString fromNick = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
@@ -146,7 +146,7 @@ void QueryWindow::onPrivmsgMessage(Event *evt)
                     msgType = MESSAGE_IRC_ACTION;
                     QString msgText = action.mid(8, action.size()-9);
                     shouldHighlight = containsNick(msgText);
-                    textToPrint = g_pCfgManager->getOptionValue("messages.ini", "action")
+                    textToPrint = g_pCfgManager->getOptionValue("message.action")
                                   .arg(fromNick)
                                   .arg(msgText);
                 }
@@ -155,7 +155,7 @@ void QueryWindow::onPrivmsgMessage(Event *evt)
             {
                 msgType = MESSAGE_IRC_SAY;
                 shouldHighlight = containsNick(msg.m_params[1]);
-                textToPrint = g_pCfgManager->getOptionValue("messages.ini", "say")
+                textToPrint = g_pCfgManager->getOptionValue("message.say")
                               .arg(fromNick)
                               .arg(msg.m_params[1]);
             }
@@ -170,9 +170,9 @@ void QueryWindow::onPrivmsgMessage(Event *evt)
     }
 }
 
-void QueryWindow::processOutputEvent(Event *evt)
+void QueryWindow::onOutput(Event *evt)
 {
-    OutputEvent *pOutputEvt = dynamic_cast<OutputEvent *>(evt);
+    OutputEvent *pOutputEvt = DCAST(OutputEvent, evt);
     QRegExp regex(OutputWindow::s_invalidNickPrefix
                 + QRegExp::escape(m_targetNick)
                 + OutputWindow::s_invalidNickSuffix);
@@ -186,16 +186,16 @@ void QueryWindow::processOutputEvent(Event *evt)
     }
 }
 
-void QueryWindow::processDoubleClickLinkEvent(Event *evt)
+void QueryWindow::onDoubleClickLink(Event *evt)
 {
-    DoubleClickLinkEvent *pDblClickLinkEvt = dynamic_cast<DoubleClickLinkEvent *>(evt);
+    DoubleClickLinkEvent *pDblClickLinkEvt = DCAST(DoubleClickLinkEvent, evt);
     m_pSession->sendData(QString().arg(pDblClickLinkEvt->getText()));
 }
 
 // handles the printing/sending of the PRIVMSG message
 void QueryWindow::handleSay(const QString &text)
 {
-    QString textToPrint = g_pCfgManager->getOptionValue("messages.ini", "say")
+    QString textToPrint = g_pCfgManager->getOptionValue("message.say")
                           .arg(m_pSession->getNick())
                           .arg(text);
     printOutput(textToPrint, MESSAGE_IRC_SAY_SELF);
@@ -205,7 +205,7 @@ void QueryWindow::handleSay(const QString &text)
 // handles the printing/sending of the PRIVMSG ACTION message
 void QueryWindow::handleAction(const QString &text)
 {
-    QString textToPrint = g_pCfgManager->getOptionValue("messages.ini", "action")
+    QString textToPrint = g_pCfgManager->getOptionValue("message.action")
                           .arg(m_pSession->getNick())
                           .arg(text);
     printOutput(textToPrint, MESSAGE_IRC_ACTION_SELF);

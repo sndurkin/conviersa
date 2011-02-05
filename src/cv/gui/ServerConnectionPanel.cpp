@@ -33,16 +33,6 @@ ServerConnectionPanel::ServerConnectionPanel(QWidget *parent)
     initialize();
     QObject::connect(this, SIGNAL(panelOpened()), this, SLOT(setFocus()));
 
-    QString css = QString("cv--gui--ServerConnectionPanel { ") %
-                  QString("border-bottom-left-radius: 10px; ") %
-                  QString("border-bottom-right-radius: 10px; ") %
-                  QString("border-width: 1px; ") %
-                  QString("border-style: solid; ") %
-                  QString("border-color: palette(mid); ") %
-                  QString("border-top-width: 0px; ") %
-                  QString("background-color: palette(window); }");
-    setStyleSheet(css);
-
     createForm();
     setFocusProxy(m_pServerInput);
 }
@@ -96,11 +86,9 @@ void ServerConnectionPanel::validateAndConnect()
     emit connect(m_pServerInput->text(), port, m_pNameInput->text(), m_pNickInput->text(), m_pAltNickInput->text());
 
     // save the name, nick, and alternate nick in the config
-    // (and write it to the file)
-    g_pCfgManager->setOptionValue("server.ini", "name", m_pNameInput->text());
-    g_pCfgManager->setOptionValue("server.ini", "nick", m_pNickInput->text());
-    g_pCfgManager->setOptionValue("server.ini", "altNick", m_pAltNickInput->text());
-    g_pCfgManager->writeToFile("server.ini");
+    g_pCfgManager->setOptionValue("server.name", m_pNameInput->text());
+    g_pCfgManager->setOptionValue("server.nick", m_pNickInput->text());
+    g_pCfgManager->setOptionValue("server.altNick", m_pAltNickInput->text());
 }
 
 void ServerConnectionPanel::onCloseClicked()
@@ -160,7 +148,7 @@ void ServerConnectionPanel::createForm()
     m_pNameInput->move(LABEL_START + LABEL_WIDTH + SPACING, rowY);
     m_pNameInput->resize(150, CONTROL_HEIGHT);
     m_pNameInput->setFont(font());
-    m_pNameInput->setText(g_pCfgManager->getOptionValue("server.ini", "name"));
+    m_pNameInput->setText(g_pCfgManager->getOptionValue("server.name"));
     QObject::connect(m_pNameInput, SIGNAL(returnPressed()), this, SLOT(onEnter()));
 
     rowY += CONTROL_HEIGHT + 5;
@@ -174,7 +162,7 @@ void ServerConnectionPanel::createForm()
     m_pNickInput->move(LABEL_START + LABEL_WIDTH + SPACING, rowY);
     m_pNickInput->resize(150, CONTROL_HEIGHT);
     m_pNickInput->setFont(font());
-    m_pNickInput->setText(g_pCfgManager->getOptionValue("server.ini", "nick"));
+    m_pNickInput->setText(g_pCfgManager->getOptionValue("server.nick"));
     QObject::connect(m_pNickInput, SIGNAL(returnPressed()), this, SLOT(onEnter()));
 
     rowY += CONTROL_HEIGHT + 5;
@@ -188,7 +176,7 @@ void ServerConnectionPanel::createForm()
     m_pAltNickInput->move(LABEL_START + LABEL_WIDTH + SPACING, rowY);
     m_pAltNickInput->resize(150, CONTROL_HEIGHT);
     m_pAltNickInput->setFont(font());
-    m_pAltNickInput->setText(g_pCfgManager->getOptionValue("server.ini", "altNick"));
+    m_pAltNickInput->setText(g_pCfgManager->getOptionValue("server.altNick"));
     QObject::connect(m_pAltNickInput, SIGNAL(returnPressed()), this, SLOT(onEnter()));
 
     m_pConnectButton = new QPushButton(this);

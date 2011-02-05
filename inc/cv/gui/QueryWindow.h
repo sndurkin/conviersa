@@ -45,8 +45,8 @@ public:
     void onNoticeMessage(Event *evt);
     void onPrivmsgMessage(Event *evt);
 
-    void processOutputEvent(Event *evt);
-    void processDoubleClickLinkEvent(Event *evt);
+    void onOutput(Event *evt);
+    void onDoubleClickLink(Event *evt);
 
 protected:
     // handles the printing/sending of the PRIVMSG message

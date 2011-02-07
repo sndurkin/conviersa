@@ -42,6 +42,8 @@ public:
     QAbstractSocket::SocketError error() { return m_error; }
 };
 
+//-----------------------------------//
+
 class MessageEvent : public Event
 {
     Message m_msg;
@@ -54,6 +56,8 @@ public:
     Message getMessage() { return m_msg; }
 };
 
+//-----------------------------------//
+
 class DataEvent : public Event
 {
     QString m_data;
@@ -65,6 +69,8 @@ public:
 
     QString getData() { return m_data; }
 };
+
+//-----------------------------------//
 
 // this class provides the entire interface to an IRC server
 class Session : public QObject, public QSharedData
@@ -130,63 +136,17 @@ public:
     QString getNick() { return m_nick; }
     bool isMyNick(const QString &nick) { return (m_nick.compare(nick, Qt::CaseSensitive) == 0); }
 
-    // sets the prefix rules supported by the server
     void setPrefixRules(const QString &prefixRules);
-
-    // sets the channel modes supported by the server
     void setChanModes(const QString &chanModes);
-
-    // returns the string of channel modes
     QString getChanModes() { return m_chanModes; }
-
-    // sets the mode num
     void setModeNum(int modeNum) { m_modeNum = modeNum; }
-
-    // retrieves the mode num
     int getModeNum() { return m_modeNum; }
 
-    // compares two prefix characters in a nickname as per
-    // the server's specification
-    //
-    // returns -1 if prefix1 is less in value than prefix2
-    // returns 0 if prefix1 is equal to prefix2
-    // returns 1 if prefix1 is greater in value than prefix2
     int compareNickPrefixes(const QChar &prefix1, const QChar &prefix2);
-
-    // returns the corresponding prefix rule to the character
-    // provided by match
-    //
-    // match can either be a nick prefix or the corresponding mode
     QChar getPrefixRule(const QChar &match);
-
-    // returns true if the character is a set prefix for the server,
-    // returns false otherwise
-    //
-    // example prefixes: @, %, +
     bool isNickPrefix(const QChar &prefix);
 
-    // handles the preliminary processing for all messages;
-    // this will fire events for specific message types, and store
-    // some information as a result of others (like numerics)
     void processMessage(const Message &msg);
-
-//    // when you are identified on the server
-//    void onIdentify();
-//
-//    // when you get a private message
-//    void onPrivateMessage();
-//
-//    // when you join a channel on the server
-//    void onChannelJoin();
-//
-//    // when any channel event occurs
-//    //void onChannelEvent();
-//
-//    // when a CTCP request is received
-//    void onCTCPRequest();
-//
-//    // when a DCC request is received
-//    void onDCCRequest();
 
 signals:
     void connectToHost(QString, quint16);

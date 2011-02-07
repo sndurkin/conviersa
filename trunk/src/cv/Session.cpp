@@ -49,16 +49,22 @@ Session::Session(const QString& nick)
     g_pEvtManager->hookEvent("sendData", this, MakeDelegate(this, &Session::onSendData));
 }
 
+//-----------------------------------//
+
 Session::~Session()
 {
     delete m_pConn;
     g_pEvtManager->unhookAllEvents(this);
 }
 
+//-----------------------------------//
+
 void Session::connectToServer(const QString &host, int port)
 {
     connectToServer(host, port, "conviersa", "conviersa");
 }
+
+//-----------------------------------//
 
 void Session::connectToServer(const QString &host, int port, const QString &name, const QString &nick)
 {
@@ -77,11 +83,15 @@ void Session::connectToServer(const QString &host, int port, const QString &name
     m_pConn->connectToHost(host, port);
 }
 
+//-----------------------------------//
+
 void Session::disconnectFromServer()
 {
     if(isConnected())
         m_pConn->disconnectFromHost();
 }
+
+//-----------------------------------//
 
 void Session::sendData(const QString &data)
 {
@@ -90,21 +100,29 @@ void Session::sendData(const QString &data)
     delete pEvt;
 }
 
+//-----------------------------------//
+
 // default functionality for the sendData event; it just sends the data
 void Session::onSendData(Event *pEvt)
 {
     m_pConn->send(DCAST(DataEvent, pEvt)->getData() + "\r\n");
 }
 
+//-----------------------------------//
+
 void Session::sendPrivmsg(const QString &target, const QString &msg)
 {
     sendData(QString("PRIVMSG %1 :%2").arg(target).arg(msg));
 }
 
+//-----------------------------------//
+
 void Session::sendAction(const QString &target, const QString &msg)
 {
     sendData(QString("PRIVMSG %1 :\1ACTION %2\1").arg(target).arg(msg));
 }
+
+//-----------------------------------//
 
 // sets the prefix rules supported by the server
 void Session::setPrefixRules(const QString &prefixRules)
@@ -123,6 +141,8 @@ void Session::setPrefixRules(const QString &prefixRules)
     }
 }
 
+//-----------------------------------//
+
 // sets the channel modes supported by the server
 void Session::setChanModes(const QString &chanModes)
 {
@@ -138,6 +158,8 @@ void Session::setChanModes(const QString &chanModes)
             m_chanModes.insert(index+1, m_prefixRules[i]);
     }
 }
+
+//-----------------------------------//
 
 // compares two prefix characters in a nickname as per
 // the server's specification
@@ -162,6 +184,8 @@ int Session::compareNickPrefixes(const QChar &prefix1, const QChar &prefix2)
     return 0;
 }
 
+//-----------------------------------//
+
 // returns the corresponding prefix rule to the character
 // provided by match
 //
@@ -184,6 +208,8 @@ QChar Session::getPrefixRule(const QChar &match)
     return '\0';
 }
 
+//-----------------------------------//
+
 // returns true if the character is a set prefix for the server,
 // returns false otherwise
 //
@@ -199,6 +225,8 @@ bool Session::isNickPrefix(const QChar &prefix)
 
     return false;
 }
+
+//-----------------------------------//
 
 // handles the preliminary processing for all messages;
 // this will fire events for specific message types, and store
@@ -356,12 +384,16 @@ void Session::processMessage(const Message &msg)
     delete evt;
 }
 
+//-----------------------------------//
+
 void Session::onConnecting()
 {
     ConnectionEvent *pEvt = new ConnectionEvent(m_host, m_port);
     g_pEvtManager->fireEvent("connecting", this, pEvt);
     delete pEvt;
 }
+
+//-----------------------------------//
 
 void Session::onConnect()
 {
@@ -373,12 +405,16 @@ void Session::onConnect()
     g_pEvtManager->fireEvent("connected", this, NULL);
 }
 
+//-----------------------------------//
+
 void Session::onFailedConnect()
 {
     ConnectionEvent *pEvt = new ConnectionEvent(m_host, m_port, m_pConn->error());
     g_pEvtManager->fireEvent("connectFailed", this, pEvt);
     delete pEvt;
 }
+
+//-----------------------------------//
 
 void Session::onDisconnect()
 {
@@ -387,6 +423,8 @@ void Session::onDisconnect()
     g_pEvtManager->fireEvent("disconnected", this, pEvt);
     delete pEvt;
 }
+
+//-----------------------------------//
 
 void Session::onReceiveData(const QString &data)
 {

@@ -27,6 +27,8 @@ public:
     }
 };
 
+//-----------------------------------//
+
 WindowManager::WindowManager(QWidget *pParent, WindowContainer *pMainContainer)
     : QTreeWidget(pParent),
       m_pMainContainer(pMainContainer)
@@ -40,6 +42,8 @@ WindowManager::WindowManager(QWidget *pParent, WindowContainer *pMainContainer)
 
     QObject::connect(m_pMainContainer, SIGNAL(subWindowActivated(QMdiSubWindow *)), this, SLOT(onSubWindowActivated(QMdiSubWindow *)));
 }
+
+//-----------------------------------//
 
 WindowManager::~WindowManager()
 {
@@ -71,10 +75,7 @@ WindowManager::~WindowManager()
     }
 }
 
-QSize WindowManager::sizeHint() const
-{
-    return QSize(175, 200);
-}
+//-----------------------------------//
 
 // manages a WindowContainer; it will handle
 // deallocation when the WindowManager is destroyed
@@ -83,12 +84,16 @@ void WindowManager::addContainer(WindowContainer *pCont)
     m_altContainers.append(pCont);
 }
 
+//-----------------------------------//
+
 // removes the WindowContainer from the list
 // of managed containers
 void WindowManager::removeContainer(WindowContainer *pCont)
 {
     m_altContainers.removeOne(pCont);
 }
+
+//-----------------------------------//
 
 // manages a Window under the WindowManager; it
 // will handle its deallocation upon closing
@@ -136,10 +141,12 @@ bool WindowManager::addWindow(Window *pWin,
     return true;
 }
 
+//-----------------------------------//
+
 // removes the respective item in the treeview, but has
 // to let the window close itself due to Qt's design;
 // if the treeview item has children, close events will
-// be sent to their respective IWindows as well
+// be sent to their respective Windows as well
 //
 // todo: optimize
 void WindowManager::removeWindow(Window *pWin)
@@ -151,7 +158,10 @@ void WindowManager::removeWindow(Window *pWin)
 
     int index = getIndexFromWindow(pWin);
     if(index < 0)
+    {
+        qDebug("[WM::removeWindow] Window that was provided was not found");
         return;
+    }
 
     // remove the treeview item
     QTreeWidgetItem *pItem = m_winList[index].m_pTreeItem;
@@ -164,6 +174,8 @@ void WindowManager::removeWindow(Window *pWin)
     // remove it from the list
     m_winList.removeAt(index);
 }
+
+//-----------------------------------//
 
 // moves the window to a window container, or to the desktop
 // if the pointer to the container provided is NULL
@@ -181,9 +193,7 @@ void WindowManager::moveWindow(Window *pWin, WindowContainer *pCont)
         bool max = pCont->currentSubWindow() && pCont->currentSubWindow()->isMaximized();
         pWin->m_pSubWindow = pCont->addSubWindow(pWin);
         if(max)
-        {
             pWin->m_pSubWindow->showMaximized();
-        }
     }
     // we're moving it to the desktop
     else
@@ -198,21 +208,21 @@ void WindowManager::moveWindow(Window *pWin, WindowContainer *pCont)
     pWin->setFocus();
 }
 
+//-----------------------------------//
+
 // returns a pointer to the window based on the title
 // returns NULL if not found
 Window *WindowManager::findWindow(const QString &title)
 {
     int size = m_winList.size();
     for(int i = 0; i < size; ++i)
-    {
         if(title.compare(m_winList[i].m_pWindow->windowTitle(), Qt::CaseInsensitive) == 0)
-        {
             return m_winList[i].m_pWindow;
-        }
-    }
 
     return NULL;
 }
+
+//-----------------------------------//
 
 // returns the a pointer to the hierarchical parent window
 //	of the given window
@@ -222,12 +232,17 @@ Window *WindowManager::getParentWindow(Window *pWin)
 {
     QTreeWidgetItem *pItem = getItemFromWindow(pWin);
     if(!pItem)
+    {
+        qDebug("[WM::getParentWindow] Window that was provided was not found");
         return NULL;
+    }
 
     return getWindowFromItem(pItem->parent());
 }
 
-// returns a QList of pointers to IWindows that are
+//-----------------------------------//
+
+// returns a QList of pointers to Windows that are
 // children to the parent provided
 QList<Window *> WindowManager::getChildWindows(Window *pParent)
 {
@@ -250,12 +265,16 @@ QList<Window *> WindowManager::getChildWindows(Window *pParent)
             }
         }
     }
+    else
+        qDebug("[WM::getChildWindows] Window that was provided was not found");
 
     // if there are no children, list will be empty
     return list;
 }
 
-// retrieves the index in the QList given the pointer to the IWindow
+//-----------------------------------//
+
+// retrieves the index in the QList given the pointer to the Window
 int WindowManager::getIndexFromWindow(Window *pWin)
 {
     int size = m_winList.size();
@@ -269,6 +288,8 @@ int WindowManager::getIndexFromWindow(Window *pWin)
 
     return -1;
 }
+
+//-----------------------------------//
 
 // retrieves the index in the QList give the pointer to the treeview item
 int WindowManager::getIndexFromItem(QTreeWidgetItem *pItem)
@@ -285,7 +306,9 @@ int WindowManager::getIndexFromItem(QTreeWidgetItem *pItem)
     return -1;
 }
 
-// retrieves the pointer to the treeview item given the pointer to the IWindow
+//-----------------------------------//
+
+// retrieves the pointer to the treeview item given the pointer to the Window
 QTreeWidgetItem *WindowManager::getItemFromWindow(Window *pWin)
 {
     int size = m_winList.size();
@@ -298,7 +321,9 @@ QTreeWidgetItem *WindowManager::getItemFromWindow(Window *pWin)
     return NULL;
 }
 
-// retrieves the pointer to the IWindow given the pointer to the treeview item
+//-----------------------------------//
+
+// retrieves the pointer to the Window given the pointer to the treeview item
 Window *WindowManager::getWindowFromItem(QTreeWidgetItem *pItem)
 {
     int size = m_winList.size();
@@ -311,12 +336,7 @@ Window *WindowManager::getWindowFromItem(QTreeWidgetItem *pItem)
     return NULL;
 }
 
-// returns true if the current window is focused in the tree
-// false otherwise
-bool WindowManager::isWindowFocused(Window *pWin)
-{
-    return (getWindowFromItem(currentItem()) == pWin);
-}
+//-----------------------------------//
 
 // activates the window in the treeview
 void WindowManager::onSubWindowActivated(QMdiSubWindow *pSubWin)
@@ -334,6 +354,8 @@ void WindowManager::onSubWindowActivated(QMdiSubWindow *pSubWin)
         }
     }
 }
+
+//-----------------------------------//
 
 void WindowManager::setupContextMenu()
 {
@@ -355,6 +377,8 @@ void WindowManager::setupContextMenu()
     m_pActMoveNewCont = new QAction("New Container...", pMoveMenu);
     pMoveMenu->addAction(m_pActMoveNewCont);
 }
+
+//-----------------------------------//
 
 //
 // Overridden event functions
@@ -394,6 +418,8 @@ void WindowManager::mousePressEvent(QMouseEvent *event)
         event->ignore();
     }
 }
+
+//-----------------------------------//
 
 void WindowManager::contextMenuEvent(QContextMenuEvent *event)
 {

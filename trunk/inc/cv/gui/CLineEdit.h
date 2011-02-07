@@ -35,17 +35,12 @@ protected:
     // returns the ideal size for the line edit
     QSize sizeHint() const;
 
-    // imitate firefox search bar behavior
     void mousePressEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
 
-    // when the line edit gets focus
     void focusInEvent(QFocusEvent *event);
-
-    // when the line edit loses focus
     void focusOutEvent(QFocusEvent *event);
 
-    // called when the line edit needs to be repainted
     void paintEvent(QPaintEvent *event);
 };
 

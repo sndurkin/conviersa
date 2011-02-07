@@ -30,16 +30,9 @@ public:
     OutputWindowScrollBar(QWidget *pParent = NULL);
 
     int getSliderHeight();
-
-    // adds a line to be painted, located at sliderVal,
-    // and repaints with the new line
     void addLine(qreal posRatio);
-
-    // clears all the lines, and repaints
     void clearLines();
-
     void setDefaultBehavior(bool db) { m_defaultBehavior = db; }
-
     bool getDefaultBehavior() { return m_defaultBehavior; }
 
 protected:
@@ -47,8 +40,6 @@ protected:
     void paintEvent(QPaintEvent *event);
 
 public slots:
-    // ensures that the area holding the scrollbar moves it so that
-    // the bottom of the viewport doesn't move
     void updateScrollBar(int min, int max);
 };
 

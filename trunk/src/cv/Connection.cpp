@@ -11,7 +11,6 @@
 #include <QSslSocket>
 #include <QMutexLocker>
 #include <QTimer>
-#include <QDebug>
 
 #include "cv/Connection.h"
 
@@ -235,7 +234,5 @@ void ThreadedConnection::send(const QString &data)
 {
     emit sendSignal(data);
 }
-
-//-----------------------------------//
 
 } // end namespace

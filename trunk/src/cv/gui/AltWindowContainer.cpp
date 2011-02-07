@@ -40,6 +40,8 @@ AltWindowContainer::AltWindowContainer(WindowManager *pManager)
     m_pParent->show();
 }
 
+//-----------------------------------//
+
 void AltWindowContainer::closeEvent(QCloseEvent *event)
 {
     if(m_pManager)

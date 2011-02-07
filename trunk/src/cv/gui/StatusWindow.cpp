@@ -48,7 +48,6 @@ StatusWindow::StatusWindow(const QString &title/* = tr("Server Window")*/,
     g_pEvtManager->hookEvent("connectFailed",  m_pSession, MakeDelegate(this, &StatusWindow::onServerConnectFailed));
     g_pEvtManager->hookEvent("connected",      m_pSession, MakeDelegate(this, &StatusWindow::onServerConnect));
     g_pEvtManager->hookEvent("disconnected",   m_pSession, MakeDelegate(this, &StatusWindow::onServerDisconnect));
-    g_pEvtManager->hookEvent("receivedData",   m_pSession, MakeDelegate(this, &StatusWindow::onReceiveData));
     g_pEvtManager->hookEvent("errorMessage",   m_pSession, MakeDelegate(this, &StatusWindow::onErrorMessage));
     g_pEvtManager->hookEvent("inviteMessage",  m_pSession, MakeDelegate(this, &StatusWindow::onInviteMessage));
     g_pEvtManager->hookEvent("joinMessage",    m_pSession, MakeDelegate(this, &StatusWindow::onJoinMessage));
@@ -63,11 +62,15 @@ StatusWindow::StatusWindow(const QString &title/* = tr("Server Window")*/,
     g_pEvtManager->hookEvent("unknownMessage", m_pSession, MakeDelegate(this, &StatusWindow::onUnknownMessage));
 }
 
+//-----------------------------------//
+
 StatusWindow::~StatusWindow()
 {
     delete m_pSession;
     m_pSharedServerConnPanel.reset();
 }
+
+//-----------------------------------//
 
 // returns a pointer to the OutputWindow if it exists
 // 	(and is a child of this status window)
@@ -85,12 +88,7 @@ OutputWindow *StatusWindow::getChildIrcWindow(const QString &name)
     return NULL;
 }
 
-// returns true if the child window with the provided name
-// exists, returns false otherwise
-bool StatusWindow::childIrcWindowExists(const QString &name)
-{
-    return (getChildIrcWindow(name) != NULL);
-}
+//-----------------------------------//
 
 // returns a list of all IrcChanWindows that are currently
 // being managed in the server
@@ -99,12 +97,16 @@ QList<ChannelWindow *> StatusWindow::getChannels()
     return m_chanList;
 }
 
+//-----------------------------------//
+
 // returns a list of all IrcPrivWindows that are currently
 // being managed in the server
 QList<QueryWindow *> StatusWindow::getPrivateMessages()
 {
     return m_privList;
 }
+
+//-----------------------------------//
 
 // adds a channel to the list
 void StatusWindow::addChannelWindow(ChannelWindow *pChanWin)
@@ -116,11 +118,15 @@ void StatusWindow::addChannelWindow(ChannelWindow *pChanWin)
                 this, SLOT(removeChannelWindow(ChannelWindow *)));
 }
 
+//-----------------------------------//
+
 // removes a channel from the list
 void StatusWindow::removeChannelWindow(ChannelWindow *pChanWin)
 {
     m_chanList.removeOne(pChanWin);
 }
+
+//-----------------------------------//
 
 // adds a PM window to the list
 void StatusWindow::addQueryWindow(QueryWindow *pQueryWin, bool giveFocus)
@@ -132,16 +138,22 @@ void StatusWindow::addQueryWindow(QueryWindow *pQueryWin, bool giveFocus)
                 this, SLOT(removeQueryWindow(QueryWindow *)));
 }
 
+//-----------------------------------//
+
 // removes a PM window from the list
 void StatusWindow::removeQueryWindow(QueryWindow *pPrivWin)
 {
     m_privList.removeOne(pPrivWin);
 }
 
+//-----------------------------------//
+
 void StatusWindow::connectToServer(QString server, int port, QString name, QString nick, QString altNick)
 {
     m_pSession->connectToServer(server, port, name, nick);
 }
+
+//-----------------------------------//
 
 // handles the printing/sending of the PRIVMSG message
 void StatusWindow::handleSay(const QString &text)
@@ -149,17 +161,23 @@ void StatusWindow::handleSay(const QString &text)
     printError("Cannot send to status window");
 }
 
+//-----------------------------------//
+
 // handles the printing/sending of the PRIVMSG ACTION message
 void StatusWindow::handleAction(const QString &text)
 {
     printError("Cannot send to status window");
 }
 
+//-----------------------------------//
+
 void StatusWindow::handleTab()
 {
-    QString text = getInputText();
-    int idx = m_pInput->textCursor().position();
+    //QString text = getInputText();
+    //int idx = m_pInput->textCursor().position();
 }
+
+//-----------------------------------//
 
 // handles child widget events
 bool StatusWindow::eventFilter(QObject *obj, QEvent *event)
@@ -171,7 +189,9 @@ bool StatusWindow::eventFilter(QObject *obj, QEvent *event)
     return InputOutputWindow::eventFilter(obj, event);
 }
 
-void StatusWindow::handle321Numeric(const Message &msg)
+//-----------------------------------//
+
+void StatusWindow::handle321Numeric(const Message &)
 {
     if(!m_pChanListWin)
     {
@@ -194,6 +214,8 @@ void StatusWindow::handle321Numeric(const Message &msg)
     m_pChanListWin->beginPopulatingList();
 }
 
+//-----------------------------------//
+
 void StatusWindow::handle322Numeric(const Message &msg)
 {
     // msg.m_params[0]: my nick
@@ -214,13 +236,17 @@ void StatusWindow::handle322Numeric(const Message &msg)
     }
 }
 
-void StatusWindow::handle323Numeric(const Message &msg)
+//-----------------------------------//
+
+void StatusWindow::handle323Numeric(const Message &)
 {
     if(m_pChanListWin)
         m_pChanListWin->endPopulatingList();
 
     m_sentListStopMsg = false;
 }
+
+//-----------------------------------//
 
 void StatusWindow::handle353Numeric(const Message &msg)
 {
@@ -237,6 +263,8 @@ void StatusWindow::handle353Numeric(const Message &msg)
     }
 }
 
+//-----------------------------------//
+
 void StatusWindow::handle366Numeric(const Message &msg)
 {
     // msg.m_params[0]: my nick
@@ -248,6 +276,8 @@ void StatusWindow::handle366Numeric(const Message &msg)
         printOutput(getNumericText(msg), MESSAGE_IRC_NUMERIC);
 }
 
+//-----------------------------------//
+
 void StatusWindow::onServerConnecting(Event *)
 {
     QString textToPrint = g_pCfgManager->getOptionValue("message.connecting")
@@ -255,6 +285,8 @@ void StatusWindow::onServerConnecting(Event *)
                             .arg(QString::number(m_pSession->getPort()));
     printOutput(textToPrint, MESSAGE_INFO);
 }
+
+//-----------------------------------//
 
 void StatusWindow::onServerConnectFailed(Event *pEvt)
 {
@@ -290,10 +322,14 @@ void StatusWindow::onServerConnectFailed(Event *pEvt)
     printOutput(textToPrint, MESSAGE_INFO);
 }
 
+//-----------------------------------//
+
 void StatusWindow::onServerConnect(Event *)
 {
     m_pSharedServerConnPanel->close();
 }
+
+//-----------------------------------//
 
 void StatusWindow::onServerDisconnect(Event *)
 {
@@ -303,14 +339,7 @@ void StatusWindow::onServerDisconnect(Event *)
     m_pSharedServerConnPanel->open();
 }
 
-void StatusWindow::onReceiveData(Event *evt)
-{
-#if DEBUG_MESSAGES
-    QString data = DCAST(DataEvent, evt)->getData();
-    data.remove(data.size()-2,2);
-    printDebug(data);
-#endif
-}
+//-----------------------------------//
 
 void StatusWindow::onNumericMessage(Event *evt)
 {
@@ -334,7 +363,7 @@ void StatusWindow::onNumericMessage(Event *evt)
             // msg.m_params[2]: away message
             QString textToPrint = g_pCfgManager->getOptionValue("message.301")
                                   .arg(msg.m_params[1])
-                                  .arg(convertDataToHtml(msg.m_params[2]));
+                                  .arg(msg.m_params[2]);
             printOutput(textToPrint, MESSAGE_IRC_NUMERIC);
 
             break;
@@ -458,11 +487,15 @@ void StatusWindow::onNumericMessage(Event *evt)
     }
 }
 
+//-----------------------------------//
+
 void StatusWindow::onErrorMessage(Event *evt)
 {
     Message msg = DCAST(MessageEvent, evt)->getMessage();
     printOutput(msg.m_params[0], MESSAGE_IRC_ERROR);
 }
+
+//-----------------------------------//
 
 void StatusWindow::onInviteMessage(Event *evt)
 {
@@ -472,6 +505,8 @@ void StatusWindow::onInviteMessage(Event *evt)
                           .arg(msg.m_params[1]);
     printOutput(textToPrint, MESSAGE_IRC_INVITE);
 }
+
+//-----------------------------------//
 
 void StatusWindow::onJoinMessage(Event *evt)
 {
@@ -487,6 +522,8 @@ void StatusWindow::onJoinMessage(Event *evt)
         pChanWin->printOutput(textToPrint, MESSAGE_IRC_JOIN);
     }
 }
+
+//-----------------------------------//
 
 void StatusWindow::onModeMessage(Event *evt)
 {
@@ -506,6 +543,8 @@ void StatusWindow::onModeMessage(Event *evt)
     }
 }
 
+//-----------------------------------//
+
 void StatusWindow::onNickMessage(Event *evt)
 {
     Message msg = DCAST(MessageEvent, evt)->getMessage();
@@ -519,6 +558,8 @@ void StatusWindow::onNickMessage(Event *evt)
         printOutput(textToPrint, MESSAGE_IRC_NICK);
     }
 }
+
+//-----------------------------------//
 
 void StatusWindow::onPongMessage(Event *evt)
 {
@@ -536,6 +577,8 @@ void StatusWindow::onPongMessage(Event *evt)
                           .arg(msg.m_params[1]);
     printOutput(textToPrint, MESSAGE_IRC_PONG);
 }
+
+//-----------------------------------//
 
 void StatusWindow::onPrivmsgMessage(Event *evt)
 {
@@ -602,6 +645,8 @@ void StatusWindow::onPrivmsgMessage(Event *evt)
     }
 }
 
+//-----------------------------------//
+
 void StatusWindow::onQuitMessage(Event *evt)
 {
     Message msg = DCAST(MessageEvent, evt)->getMessage();
@@ -638,6 +683,8 @@ void StatusWindow::onQuitMessage(Event *evt)
     }
 }
 
+//-----------------------------------//
+
 void StatusWindow::onWallopsMessage(Event *evt)
 {
     Message msg = DCAST(MessageEvent, evt)->getMessage();
@@ -647,6 +694,8 @@ void StatusWindow::onWallopsMessage(Event *evt)
     printOutput(textToPrint, MESSAGE_IRC_WALLOPS);
 }
 
+//-----------------------------------//
+
 void StatusWindow::onUnknownMessage(Event *evt)
 {
     Message msg = DCAST(MessageEvent, evt)->getMessage();
@@ -655,14 +704,9 @@ void StatusWindow::onUnknownMessage(Event *evt)
     // todo: decide what to do here
 }
 
-void StatusWindow::onOutput(Event *evt)
-{
+//-----------------------------------//
 
-}
-
-void StatusWindow::onDoubleClickLink(Event *evt)
-{
-
-}
+void StatusWindow::onOutput(Event *) { }
+void StatusWindow::onDoubleClickLink(Event *) { }
 
 } } // end namespaces

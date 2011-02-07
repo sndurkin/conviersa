@@ -32,12 +32,10 @@ public:
     InputEvent(InputOutputWindow *pWindow,
                Session *pSession,
                const QString &input)
-        : m_pSession(pSession),
-          m_pWindow(pWindow),
+        : m_pWindow(pWindow),
+          m_pSession(pSession),
           m_input(input)
-    {
-        m_pSession = pSession;
-    }
+    { }
 
     InputOutputWindow *getWindow() { return m_pWindow; }
     Session *getSession() { return m_pSession; }
@@ -68,19 +66,15 @@ public:
     void onNoticeMessage(Event *evt);
 
 protected:
+    void moveCursorEnd();
+    bool eventFilter(QObject *obj, QEvent *event);
+    QString getInputText() { return m_pInput->toPlainText(); }
+
     // handles the printing/sending of the PRIVMSG message
     virtual void handleSay(const QString &msg) = 0;
 
     // handles the printing/sending of the PRIVMSG ACTION message
     virtual void handleAction(const QString &msg) = 0;
-
-    // moves the input cursor to the end of the line
-    void moveCursorEnd();
-
-    QString getInputText() { return m_pInput->toPlainText(); }
-
-    // handles child widget events
-    bool eventFilter(QObject *obj, QEvent *event);
 
     virtual void handleTab() = 0;
 };

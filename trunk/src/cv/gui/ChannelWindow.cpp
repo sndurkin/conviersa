@@ -74,6 +74,8 @@ ChannelWindow::ChannelWindow(Session *pSession,
     g_pEvtManager->hookEvent("topicMessage",    m_pSession, MakeDelegate(this, &ChannelWindow::onTopicMessage));
 }
 
+//-----------------------------------//
+
 ChannelWindow::~ChannelWindow()
 {
     g_pEvtManager->unhookEvent("numericMessage", m_pSession, MakeDelegate(this, &ChannelWindow::onNumericMessage));
@@ -88,12 +90,7 @@ ChannelWindow::~ChannelWindow()
     m_pSharedServerConnPanel.reset();
 }
 
-// returns true if the user is in the channel,
-// returns false otherwise
-bool ChannelWindow::hasUser(const QString &user)
-{
-    return (findUser(user) != NULL);
-}
+//-----------------------------------//
 
 // adds the user to the channel's userlist in the proper place
 //
@@ -114,7 +111,12 @@ bool ChannelWindow::addUser(const QString &user)
     return true;
 }
 
+//-----------------------------------//
+
 // removes the user from the channel's userlist
+//
+// returns true if the user was removed,
+// returns false otherwise
 bool ChannelWindow::removeUser(const QString &user)
 {
     for(int i = 0; i < m_users.size(); ++i)
@@ -129,6 +131,8 @@ bool ChannelWindow::removeUser(const QString &user)
 
     return false;
 }
+
+//-----------------------------------//
 
 // changes the user's nickname from oldNick to newNick, unless
 // the user is not in the channel
@@ -153,6 +157,8 @@ void ChannelWindow::changeUserNick(const QString &oldNick, const QString &newNic
     delete pUser;
 }
 
+//-----------------------------------//
+
 // adds the specified prefix to the user, and updates the user list display
 // (if necessary)
 void ChannelWindow::addPrefixToUser(const QString &user, const QChar &prefixToAdd)
@@ -166,6 +172,8 @@ void ChannelWindow::addPrefixToUser(const QString &user, const QChar &prefixToAd
     }
 }
 
+//-----------------------------------//
+
 // removes the specified prefix from the user, and updates the user list
 // display (if necessary) - assuming the user has the given prefix
 void ChannelWindow::removePrefixFromUser(const QString &user, const QChar &prefixToRemove)
@@ -178,6 +186,8 @@ void ChannelWindow::removePrefixFromUser(const QString &user, const QChar &prefi
         addUser(pUser);
     }
 }
+
+//-----------------------------------//
 
 void ChannelWindow::onNumericMessage(Event *evt)
 {
@@ -258,6 +268,8 @@ void ChannelWindow::onNumericMessage(Event *evt)
     }
 }
 
+//-----------------------------------//
+
 void ChannelWindow::onJoinMessage(Event *evt)
 {
     Message msg = DCAST(MessageEvent, evt)->getMessage();
@@ -283,6 +295,8 @@ void ChannelWindow::onJoinMessage(Event *evt)
     }
 }
 
+//-----------------------------------//
+
 void ChannelWindow::onKickMessage(Event *evt)
 {
     Message msg = DCAST(MessageEvent, evt)->getMessage();
@@ -298,7 +312,7 @@ void ChannelWindow::onKickMessage(Event *evt)
         else
         {
             removeUser(msg.m_params[1]);
-            textToPrint = g_pCfgManager->getOptionValue("message.kick.self")
+            textToPrint = g_pCfgManager->getOptionValue("message.kick")
                             .arg(msg.m_params[1])
                             .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName));
         }
@@ -312,6 +326,8 @@ void ChannelWindow::onKickMessage(Event *evt)
         printOutput(textToPrint, MESSAGE_IRC_KICK);
     }
 }
+
+//-----------------------------------//
 
 void ChannelWindow::onModeMessage(Event *evt)
 {
@@ -376,6 +392,8 @@ void ChannelWindow::onModeMessage(Event *evt)
     }
 }
 
+//-----------------------------------//
+
 void ChannelWindow::onNickMessage(Event *evt)
 {
     Message msg = DCAST(MessageEvent, evt)->getMessage();
@@ -391,6 +409,8 @@ void ChannelWindow::onNickMessage(Event *evt)
     }
 }
 
+//-----------------------------------//
+
 void ChannelWindow::onNoticeMessage(Event *evt)
 {
     if(m_pManager->isWindowFocused(this))
@@ -398,6 +418,8 @@ void ChannelWindow::onNoticeMessage(Event *evt)
         InputOutputWindow::onNoticeMessage(evt);
     }
 }
+
+//-----------------------------------//
 
 void ChannelWindow::onPartMessage(Event *evt)
 {
@@ -433,6 +455,8 @@ void ChannelWindow::onPartMessage(Event *evt)
         printOutput(textToPrint, MESSAGE_IRC_PART);
     }
 }
+
+//-----------------------------------//
 
 void ChannelWindow::onPrivmsgMessage(Event *evt)
 {
@@ -486,6 +510,8 @@ void ChannelWindow::onPrivmsgMessage(Event *evt)
     }
 }
 
+//-----------------------------------//
+
 void ChannelWindow::onTopicMessage(Event *evt)
 {
     Message msg = DCAST(MessageEvent, evt)->getMessage();
@@ -507,6 +533,8 @@ void ChannelWindow::onTopicMessage(Event *evt)
     }
 }
 
+//-----------------------------------//
+
 void ChannelWindow::onOutput(Event *evt)
 {
     OutputEvent *pOutputEvt = DCAST(OutputEvent, evt);
@@ -525,6 +553,8 @@ void ChannelWindow::onOutput(Event *evt)
         }
     }
 }
+
+//-----------------------------------//
 
 void ChannelWindow::onDoubleClickLink(Event *evt)
 {
@@ -545,6 +575,8 @@ void ChannelWindow::onDoubleClickLink(Event *evt)
     }
 }
 
+//-----------------------------------//
+
 // adds a message to the "in-limbo" queue, where messages are
 // stored before the channel has been officially "joined" (when
 // the userlist has been received)
@@ -555,6 +587,8 @@ void ChannelWindow::enqueueMessage(const QString &msg, OutputMessageType msgType
     qom.messageType = msgType;
     m_messageQueue.enqueue(qom);
 }
+
+//-----------------------------------//
 
 // "joins" the channel by flushing all messages received since creating
 // the channel (but before the list of users was received)
@@ -568,6 +602,8 @@ void ChannelWindow::joinChannel()
     }
 }
 
+//-----------------------------------//
+
 // removes all the users from memory
 void ChannelWindow::leaveChannel()
 {
@@ -579,6 +615,8 @@ void ChannelWindow::leaveChannel()
     }
 }
 
+//-----------------------------------//
+
 // handles the printing/sending of the PRIVMSG message
 void ChannelWindow::handleSay(const QString &text)
 {
@@ -588,6 +626,8 @@ void ChannelWindow::handleSay(const QString &text)
     printOutput(textToPrint, MESSAGE_IRC_SAY_SELF);
     m_pSession->sendPrivmsg(getWindowName(), text);
 }
+
+//-----------------------------------//
 
 // handles the printing/sending of the PRIVMSG ACTION message
 void ChannelWindow::handleAction(const QString &text)
@@ -599,23 +639,7 @@ void ChannelWindow::handleAction(const QString &text)
     m_pSession->sendAction(getWindowName(), text);
 }
 
-bool ChannelWindow::eventFilter(QObject *obj, QEvent *event)
-{
-    if(obj == m_pInput)
-    {
-        if(event->type() == QEvent::KeyPress)
-        {
-            QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
-            if(keyEvent->key() != Qt::Key_Tab)
-            {
-                m_matchesIdx = -1;
-                m_autocompleteMatches.clear();
-            }
-        }
-    }
-
-    return InputOutputWindow::eventFilter(obj, event);
-}
+//-----------------------------------//
 
 void ChannelWindow::handleTab()
 {
@@ -666,6 +690,28 @@ void ChannelWindow::handleTab()
     }
 }
 
+//-----------------------------------//
+
+// handles child widget events
+bool ChannelWindow::eventFilter(QObject *obj, QEvent *event)
+{
+    if(obj == m_pInput)
+    {
+        if(event->type() == QEvent::KeyPress)
+        {
+            QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+            if(keyEvent->key() != Qt::Key_Tab)
+            {
+                m_matchesIdx = -1;
+                m_autocompleteMatches.clear();
+            }
+        }
+    }
+
+    return InputOutputWindow::eventFilter(obj, event);
+}
+
+//-----------------------------------//
 
 void ChannelWindow::closeEvent(QCloseEvent *event)
 {
@@ -680,7 +726,10 @@ void ChannelWindow::closeEvent(QCloseEvent *event)
     return Window::closeEvent(event);
 }
 
-// adds a user by pointer to IrcChanUser
+//-----------------------------------//
+
+// adds a ChannelUser to both the list in memory and the
+// list view which is seen by the user
 bool ChannelWindow::addUser(ChannelUser *pNewUser)
 {
     QListWidgetItem *pListItem = new QListWidgetItem(pNewUser->getProperNickname());
@@ -715,7 +764,10 @@ bool ChannelWindow::addUser(ChannelUser *pNewUser)
     return true;
 }
 
-// removes a user by pointer to IrcChanUser
+//-----------------------------------//
+
+// removes a ChannelUser from both the list in memory and the
+// list view which is seen by the user
 void ChannelWindow::removeUser(ChannelUser *pUser)
 {
     for(int i = 0; i < m_users.size(); ++i)
@@ -729,10 +781,12 @@ void ChannelWindow::removeUser(ChannelUser *pUser)
     }
 }
 
+//-----------------------------------//
+
 // finds the user within the channel, based on nickname
 // (regardless if there are prefixes or a user/host in it)
 //
-// returns a pointer to the IrcChanUser if found in the channel,
+// returns a pointer to the Channeluser if found in the channel,
 // returns NULL otherwise
 ChannelUser *ChannelWindow::findUser(const QString &user)
 {
@@ -743,6 +797,8 @@ ChannelUser *ChannelWindow::findUser(const QString &user)
 
     return NULL;
 }
+
+//-----------------------------------//
 
 void ChannelWindow::onUserDoubleClicked(QListWidgetItem *pItem)
 {
@@ -757,15 +813,4 @@ void ChannelWindow::onUserDoubleClicked(QListWidgetItem *pItem)
         }
 }
 
-/*
-void ChannelWindow::onServerConnect() { }
-
-void ChannelWindow::onServerDisconnect()
-{
-    printOutput("* Disconnected");
-    m_pUserList->setEnabled(false);
-}
-
-void ChannelWindow::onReceiveMessage(const Message &msg) { }
-*/
 } } // end namespaces

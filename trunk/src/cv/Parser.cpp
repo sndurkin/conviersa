@@ -141,6 +141,8 @@ Message parseData(const QString &data)
     return msg;
 }
 
+//-----------------------------------//
+
 QString getNetworkNameFrom001(const Message &msg)
 {
     // msg.m_params[0]: my nick
@@ -157,6 +159,8 @@ QString getNetworkNameFrom001(const Message &msg)
 
     return "";
 }
+
+//-----------------------------------//
 
 QString getIdleTextFrom317(const Message &msg)
 {
@@ -253,443 +257,7 @@ QString getIdleTextFrom317(const Message &msg)
     return idleText;
 }
 
-// helper function for ConvertDataToHtml()
-QString getFontStyle(bool leadingFontTag, const QColor &defaultFg, const QColor &defaultBg,
-                     const QColor &fg, const QColor &bg, bool reverse, bool underline, bool bold)
-{
-    QString fontTag;
-
-    if(leadingFontTag)
-    {
-        fontTag += "</font>";
-    }
-
-    fontTag += "<font style=\"";
-
-    QColor actualFg;
-    QColor actualBg;
-
-    if(reverse)
-    {
-        actualFg = defaultBg;
-        actualBg = defaultFg;
-    }
-    else
-    {
-        actualFg = fg;
-        actualBg = bg;
-    }
-
-    fontTag += "color:";
-    fontTag += actualFg.name();
-    fontTag += ";background-color:";
-    fontTag += actualBg.name();
-
-    fontTag += ";text-decoration:";
-    if(underline)
-    {
-        fontTag += "underline";
-    }
-    else
-    {
-        fontTag += "none";
-    }
-
-    fontTag += ";font-weight:";
-    if(bold)
-    {
-        fontTag += "bold";
-    }
-    else
-    {
-        fontTag += "normal";
-    }
-
-    fontTag += "\">";
-
-    return fontTag;
-}
-#if 1
-// converts data received from the server, complete
-// with any control codes, to HTML-formatted text
-// ready for display
-//
-// we need the default fg and bg colors of the QTextEdit we're creating HTML for
-// so we can implement reversing colors (default is black on white)
-QString convertDataToHtml(const QString &text, const QColor &defaultFg/* = QColor(0, 0, 0)*/,
-                          const QColor &defaultBg/* = QColor(255, 255, 255)*/)
-{
-    QString textToReturn = escapeEx(text);
-
-    // standard tag format: <font style="color:<fgcolor>;background-color:<bgcolor>;
-    //                      text-decoration:<decoration>;font-weight:<weight>">
-    bool bold = false;
-    bool reverse = false;
-    bool underline = false;
-    bool leadingFontTag = false;
-
-    int charsToReplace;
-
-    QColor currFg = defaultFg;
-    QColor currBg = defaultBg;
-
-    for(int i = 0; i < textToReturn.size(); ++i)
-    {
-        QString replaceWith;
-        bool specialChar = true;
-
-        switch(textToReturn[i].toAscii())
-        {
-            case 2:     // bold
-            {
-                charsToReplace = 1;
-                bold = !bold;
-                replaceWith = getFontStyle(leadingFontTag, defaultFg, defaultBg, currFg, currBg,
-                                    reverse, underline, bold);
-                leadingFontTag = true;
-
-                break;
-            }
-            case 15:    // causes formatting to return to normal
-            {
-                charsToReplace = 1;
-
-                if(reverse || underline || bold)
-                {
-                    if(reverse)
-                        reverse = false;
-
-                    if(underline)
-                        underline = false;
-
-                    if(bold)
-                        bold = false;
-
-                    replaceWith = "</font>";
-                    leadingFontTag = false;
-                }
-
-                // [17:16:03] <Chaz6> drop me a mail sometime - chaz@chaz6.com
-                // [17:16:05] <Chaz6> i can help with packaging on linux
-                break;
-            }
-            case 22:    // reverse
-            {
-                charsToReplace = 1;
-                reverse = !reverse;
-                replaceWith = getFontStyle(leadingFontTag, defaultFg, defaultBg, currFg, currBg,
-                                    reverse, underline, bold);
-                leadingFontTag = true;
-
-                break;
-            }
-            case 31:    // underline
-            {
-                charsToReplace = 1;
-                underline = !underline;
-                replaceWith = getFontStyle(leadingFontTag, defaultFg, defaultBg, currFg, currBg,
-                                    reverse, underline, bold);
-                leadingFontTag = true;
-
-                break;
-            }
-            case 3:   // color
-            {
-                charsToReplace = 1;
-
-                // follows mIRC's method for coloring, where the
-                // foreground color comes first (up to two digits),
-                // and the optional background color comes last (up
-                // to two digits) and they are separated by a single comma
-                //
-                // ex: '\3'05,02
-                //
-                // max length of color specification is 5
-                // (four numbers and one comma)
-                QString firstNum, secondNum;
-
-                int tempIdx = i + 1;
-                for(int j = 0; j < 2; ++j, ++tempIdx)
-                {
-                    if(!textToReturn[tempIdx].isDigit())
-                    {
-                        if(j > 0 && textToReturn[tempIdx] == ',')
-                            break;
-                        goto end_color_spec;
-                    }
-                    ++charsToReplace;
-                    firstNum += textToReturn[tempIdx];
-                }
-
-                if(textToReturn[tempIdx] != ',')
-                {
-                    goto end_color_spec;
-                }
-
-                ++tempIdx;
-                ++charsToReplace;
-                for(int j = 0; j < 2; ++j, ++tempIdx)
-                {
-                    if(!textToReturn[tempIdx].isDigit())
-                    {
-                        goto end_color_spec;
-                    }
-                    ++charsToReplace;
-                    secondNum += textToReturn[tempIdx];
-                }
-
-            end_color_spec:
-
-                // get the foreground color
-                if(!firstNum.isEmpty())
-                {
-                    QString colorStr = getHtmlColor(firstNum.toInt());
-                    if(!colorStr.isEmpty())
-                    {
-                        currFg.setNamedColor(colorStr);
-                    }
-                }
-                else
-                {
-                    currFg = defaultFg;
-                    currBg = defaultBg;
-                }
-
-                // get the background color
-                if(!secondNum.isEmpty())
-                {
-                    QString colorStr = getHtmlColor(secondNum.toInt());
-                    if(!colorStr.isEmpty())
-                    {
-                        currBg.setNamedColor(colorStr);
-                    }
-                }
-
-                replaceWith = getFontStyle(leadingFontTag, defaultFg, defaultBg, currFg, currBg,
-                                           reverse, underline, bold);
-                break;
-            }
-            default:
-            {
-                specialChar = false;
-            }
-        }
-
-        if(specialChar)
-        {
-            textToReturn.replace(i, charsToReplace, replaceWith);
-
-            // we increment i to 1 less than the size we're replacing with,
-            // because the end of the loop already increments i by 1
-            i += replaceWith.size()-1;
-        }
-    }
-
-    return textToReturn;
-}
-
-// converts HTML-formatted text (sent from the input window)
-// into IRC protocol
-QString convertHtmlToData(const QString &text)
-{
-    /*
-    QTextDocument doc;
-    QString data;
-    QString tag;
-
-    for(int i = 0; i < text.size(); ++i)
-    {
-        // entering an HTML tag
-        if(text[i] == '<')
-        {
-            ++i;
-            tag = text.right(text.size() - i).section('>', 0, 0);
-            i +=
-        }
-    }
-    */
-    return text;
-}
-#endif
-// uses data received from the server, complete
-// with any control codes, to color the text
-// in the text block that the text cursor provided is
-// pointing to
-void addColorsToText(const QString &text, QTextCursor &cursor,
-                     const QColor &defaultFg/* = QColor(0, 0, 0)*/,
-                     const QColor &defaultBg/* = QColor(255, 255, 255)*/)
-{
-    bool bold = false;
-    bool underline = false;
-    bool reverse = false;
-    bool foregroundColor = false;
-    bool backgroundColor = false;
-
-    QColor currFg, currBg;
-
-    QTextCharFormat currFormat = cursor.charFormat();
-    currFormat.setForeground(defaultFg);
-
-    QTextBlock currBlock = cursor.block();
-
-    for(int i = 0; i < text.size(); ++i)
-    {
-        switch(text[i].toAscii())
-        {
-            case 2:     // bold
-            {
-                bold = !bold;
-                QFont currFont = currFormat.font();
-                currFont.setBold(bold);
-                currFormat.setFont(currFont);
-
-                break;
-            }
-            case 15:    // causes formatting to return to normal
-            {
-                currFormat.setForeground(defaultFg);
-                currFormat.clearBackground();
-                QFont currFont = currFormat.font();
-                currFont.setBold(false);
-                currFont.setUnderline(false);
-                currFormat.setFont(currFont);
-
-                bold = false;
-                underline = false;
-                reverse = false;
-                foregroundColor = false;
-                backgroundColor = false;
-
-                // [17:16:03] <Chaz6> drop me a mail sometime - chaz@chaz6.com
-                // [17:16:05] <Chaz6> i can help with packaging on linux
-                break;
-            }
-            case 22:    // reverse
-            {
-                if(!reverse)
-                {
-                    reverse = true;
-                    currFormat.setForeground(defaultBg);
-                    currFormat.setBackground(defaultFg);
-                }
-                else
-                {
-                    reverse = false;
-
-                    if(foregroundColor)
-                        currFormat.setForeground(currFg);
-                    else
-                        currFormat.setForeground(defaultFg);
-
-                    if(backgroundColor)
-                        currFormat.setBackground(currBg);
-                    else
-                        currFormat.clearBackground();
-                }
-
-                break;
-            }
-            case 31:    // underline
-            {
-                underline = !underline;
-                QFont currFont = currFormat.font();
-                currFont.setUnderline(underline);
-                currFormat.setFont(currFont);
-
-                break;
-            }
-            case 3:     // color
-            {
-                // if the reverse control code is spotted before
-                // this, then colors are ignored
-                if(reverse)
-                    break;
-
-                // follows mIRC's method for coloring, where the
-                // foreground color comes first (up to two digits),
-                // and the optional background color comes last (up
-                // to two digits) and they are separated by a single comma
-                //
-                // ex: '\3'05,02
-                //
-                // max length of color specification is 5
-                // (four numbers and one comma)
-                QString firstNum, secondNum;
-
-                ++i;
-                for(int j = 0; j < 2; ++j, ++i)
-                {
-                    if(i >= text.size())
-                        goto end_color_spec;
-                    if(!text[i].isDigit())
-                    {
-                        if(j > 0 && text[i] == ',')
-                            break;
-                        goto end_color_spec;
-                    }
-                    firstNum += text[i];
-                }
-
-                if(i >= text.size() || text[i] != ',')
-                    goto end_color_spec;
-
-                ++i;
-                for(int j = 0; j < 2; ++j, ++i)
-                {
-                    if(i >= text.size())
-                        goto end_color_spec;
-                    if(!text[i].isDigit())
-                    {
-                        goto end_color_spec;
-                    }
-                    secondNum += text[i];
-                }
-
-            end_color_spec:
-                if(i < text.size())
-                    --i;
-
-                // get the foreground color
-                if(!firstNum.isEmpty())
-                {
-                    QString colorStr = getHtmlColor(firstNum.toInt());
-                    if(!colorStr.isEmpty())
-                    {
-                        foregroundColor = true;
-                        currFg.setNamedColor(colorStr);
-                        currFormat.setForeground(currFg);
-                    }
-                }
-                else    // otherwise, the color is being terminated
-                {
-                    foregroundColor = false;
-                    backgroundColor = false;
-                    currFormat.setForeground(defaultFg);
-                    currFormat.clearBackground();
-                }
-
-                // get the background color
-                if(!secondNum.isEmpty())
-                {
-                    QString colorStr = getHtmlColor(secondNum.toInt());
-                    if(!colorStr.isEmpty())
-                    {
-                        backgroundColor = true;
-                        currBg.setNamedColor(colorStr);
-                        currFormat.setBackground(currBg);
-                    }
-                }
-                break;
-            }
-            default:
-            {
-                cursor.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor);
-                cursor.setCharFormat(currFormat);
-                cursor.clearSelection();
-            }
-        }
-    }
-}
+//-----------------------------------//
 
 // returns the completely stripped version of the text,
 // so it doesn't contain any bold, underline, color, or other
@@ -764,6 +332,8 @@ QString stripCodes(const QString &text)
 
     return strippedText;
 }
+
+//-----------------------------------//
 
 // returns the color corresponding to the 1- or 2-digit
 // number in the format "#XXXXXX" so it can be used
@@ -845,6 +415,8 @@ QString getHtmlColor(int number)
     }
 }
 
+//-----------------------------------//
+
 // returns the type of the channel mode
 ChanModeType getChanModeType(const QString &chanModes, const QChar &letter)
 {
@@ -859,6 +431,8 @@ ChanModeType getChanModeType(const QString &chanModes, const QChar &letter)
 
     return ModeTypeUnknown;
 }
+
+//-----------------------------------//
 
 // checks for the PREFIX section in a 005 numeric, and if
 // it exists, it parses it and returns it
@@ -896,6 +470,8 @@ QString getPrefixRules(const QString &param)
     return prefixRules;
 }
 
+//-----------------------------------//
+
 // returns the specific CtcpRequestType of the message
 CtcpRequestType getCtcpRequestType(const Message &msg)
 {
@@ -932,6 +508,8 @@ CtcpRequestType getCtcpRequestType(const Message &msg)
     return RequestTypeUnknown;
 }
 
+//-----------------------------------//
+
 // forms the text that can be printed to the output for all numeric commands
 QString getNumericText(const Message &msg)
 {
@@ -947,6 +525,8 @@ QString getNumericText(const Message &msg)
     // return the text
     return text;
 }
+
+//-----------------------------------//
 
 // used to parse the msg prefix to get a specific part
 QString parseMsgPrefix(const QString &prefix, MsgPrefixPart part)
@@ -975,6 +555,8 @@ QString parseMsgPrefix(const QString &prefix, MsgPrefixPart part)
     }
 }
 
+//-----------------------------------//
+
 // returns the date based on the string representation
 // of unix time; if the string passed is not a valid number or
 // is not in unix time, returns an empty string
@@ -992,6 +574,8 @@ QString getDate(QString strUnixTime)
     return "";
 }
 
+//-----------------------------------//
+
 // returns the time based on the string representation
 // of unix time; if the string passed is not a valid number or
 // is not in unix time, returns an empty string
@@ -1008,6 +592,8 @@ QString getTime(QString strUnixTime)
 
     return "";
 }
+
+//-----------------------------------//
 
 // used to differentiate between a channel and a nickname
 //

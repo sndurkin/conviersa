@@ -77,19 +77,16 @@ private:
 public:
     OverlayPanel(QWidget *parent);
 
-    // realigns the OverlayPanel to the parent widget
-    void realignPanel(QPushButton *pOpenButton = NULL);
-
     OverlayState getCurrentState() { return m_state; }
 
-    // adds an open button for the OverlayPanel
+    void realignPanel(QPushButton *pOpenButton = NULL);
     QPushButton *addOpenButton(QWidget *pParent, const QString &btnText, int w, int h);
 
     // open/close functions for panel
     void open(bool animate = true);
     void close(bool animate = true);
     void toggle(bool animate = true);
-    bool isOpen(QWidget *pParent);
+    bool isOpen(QWidget *pParent) { return (m_state == OPEN && pParent == parentWidget()); }
 
 signals:
     void panelOpened();
@@ -100,29 +97,15 @@ public slots:
     void onPanelClosed();
 
 protected:
-    // sets the duration for the OverlayPanel
     void setDuration(int duration);
-
-    // sets the button alignment and offset
     void setButtonConfig(Qt::AlignmentFlag btnAlignment, int btnOffset);
-
-    // sets the alignment for the OverlayPanel
     void setAlignment(Qt::AlignmentFlag alignment);
-
-    // sets the secondary alignment for the OverlayPanel
     void setSecondaryAlignment(Qt::Alignment alignment, int firstOffset, int secondOffset);
-
-    // sets the initial state of the OverlayPanel
     void setInitialState(OverlayState state);
-
-    // initializes everything so that the OverlayPanel can be used; assumes
-    // that the panel's current x and y are for the OPEN state
     void initialize();
 
-    // find the offsets for the button, and move it
     void realignButton(QPushButton *pButton, int x, int y);
 
-    // retrieve button positions for when it's open and closed
     void getCurrButtonShownPosition(int &x, int &y);
     void getCurrButtonHiddenPosition(int &x, int &y);
 

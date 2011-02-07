@@ -26,7 +26,6 @@ class OutputControl;
 
 //-----------------------------------//
 
-
 enum OutputMessageType {
 
     // IRC types
@@ -62,20 +61,18 @@ enum OutputMessageType {
 
 };
 
+//-----------------------------------//
 
-/*
- *  IRC window hierarchy
- *  + indicates an abstract class
- *
- *  + Window
- *      - ChannelListWindow
- *      + OutputWindow
- *          - DebugWindow
- *          + InputOutputWindow
- *              - StatusWindow
- *              - ChannelWindow
- *              - QueryWindow
- */
+// IRC window hierarchy (+ indicates an abstract class)
+//
+// + Window
+//   - ChannelListWindow
+//   + OutputWindow
+//     - DebugWindow
+//     + InputOutputWindow
+//       - StatusWindow
+//       - ChannelWindow
+//       - QueryWindow
 class OutputWindow : public Window
 {
     Q_OBJECT
@@ -119,10 +116,7 @@ public:
     void printError(const QString &text);
     void printDebug(const QString &text);
 
-    // returns true if the user's nick is within
-    // the provided text, false otherwise
     bool containsNick(const QString &text);
-
     void focusedInTree();
 
     virtual void onOutput(Event *evt) = 0;
@@ -132,15 +126,6 @@ protected:
     // imitates Google Chrome's search, with lines drawn in the scrollbar
     // and keywords highlighted in the document
     //void search(const QString &textToFind);
-
-    // handles child widget events
-    bool eventFilter(QObject *obj, QEvent *event);
-
-public slots:
-    // changes the vertical offset that ensures that the
-    // text always starts at the bottom of the screen
-    // (for the user)
-    //void resizeTopMargin();
 };
 
 //-----------------------------------//

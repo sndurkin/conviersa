@@ -68,11 +68,15 @@ ChannelListWindow::ChannelListWindow(Session *pSession, const QSize &size/* = QS
     setLayout(m_pVLayout);
 }
 
+//-----------------------------------//
+
 void ChannelListWindow::giveFocus()
 {
     if(m_pView)
         m_pView->setFocus();
 }
+
+//-----------------------------------//
 
 // perform anything that needs to be done before
 // channels are added
@@ -94,6 +98,8 @@ void ChannelListWindow::beginPopulatingList()
     m_savedTopicDisplay = (m_pTopicDisplay->checkState() == Qt::Checked);
 }
 
+//-----------------------------------//
+
 // add a channel to the QTreeWidget
 void ChannelListWindow::addChannel(const QString &channel, const QString &numUsers, const QString &topic)
 {
@@ -108,7 +114,7 @@ void ChannelListWindow::addChannel(const QString &channel, const QString &numUse
         QString strippedTopic = stripCodes(topic);
         if(m_pTopicDisplay->checkState() == Qt::Checked)
         {
-            pItem->setData(convertDataToHtml(topic), Qt::DisplayRole);
+            pItem->setData(topic, Qt::DisplayRole);
         }
         else
         {
@@ -153,6 +159,8 @@ void ChannelListWindow::addChannel(const QString &channel, const QString &numUse
     }
 }
 
+//-----------------------------------//
+
 // perform anything that needs to be done when all
 // channels have been added
 void ChannelListWindow::endPopulatingList()
@@ -174,6 +182,8 @@ void ChannelListWindow::endPopulatingList()
     }
 }
 
+//-----------------------------------//
+
 // clear the list of all channels
 void ChannelListWindow::clearList()
 {
@@ -188,6 +198,8 @@ void ChannelListWindow::clearList()
     m_pChannelsLabel->setText("0 / 0 Channels");
     m_pSaveButton->setEnabled(false);
 }
+
+//-----------------------------------//
 
 // sets up all the controls that i'll be using to interact
 // with the channel list
@@ -278,12 +290,16 @@ void ChannelListWindow::setupControls()
     QObject::connect(m_pStopFilterButton, SIGNAL(clicked()), this, SLOT(stopFilter()));
 }
 
+//-----------------------------------//
+
 // handles a connection fired from the Connection object
 void ChannelListWindow::handleConnect()
 {
     clearList();
     m_pDownloadingGroup->setEnabled(true);
 }
+
+//-----------------------------------//
 
 // handles a disconnection fired from the Connection object
 void ChannelListWindow::handleDisconnect()
@@ -296,6 +312,8 @@ void ChannelListWindow::handleDisconnect()
         m_pView->resizeColumnToContents(2);
     }
 }
+
+//-----------------------------------//
 
 // requests a new list of channels from the server
 void ChannelListWindow::downloadList()
@@ -316,11 +334,15 @@ void ChannelListWindow::downloadList()
     m_pSession->sendData(textToSend);
 }
 
+//-----------------------------------//
+
 // requests to stop the download of the channels from the server
 void ChannelListWindow::stopDownload()
 {
     m_pSession->sendData("LIST STOP");
 }
+
+//-----------------------------------//
 
 // joins the channel which is found with the given index
 void ChannelListWindow::joinChannel(const QModelIndex &index)
@@ -332,6 +354,8 @@ void ChannelListWindow::joinChannel(const QModelIndex &index)
         m_pSession->sendData(QString("JOIN :%1").arg(index.sibling(index.row(), 0).data().toString()));
     }
 }
+
+//-----------------------------------//
 
 // searches for the given string within the list of channels
 void ChannelListWindow::startFilter()
@@ -407,6 +431,8 @@ void ChannelListWindow::startFilter()
     m_pSearchTimer->setInterval(0);
     m_pSearchTimer->start();
 }
+
+//-----------------------------------//
 
 // performs one iteration of a search from the search bar
 void ChannelListWindow::performSearchIteration()
@@ -492,6 +518,8 @@ void ChannelListWindow::performSearchIteration()
     m_pChannelsLabel->setText(QString("%1 / %2 Channels").arg(m_numVisible).arg(m_pModel->rowCount()));
 }
 
+//-----------------------------------//
+
 void ChannelListWindow::stopFilter()
 {
     m_pSearchTimer->stop();
@@ -512,6 +540,8 @@ void ChannelListWindow::stopFilter()
         m_pDownloadingGroup->setEnabled(true);
     m_pSaveButton->setEnabled(true);
 }
+
+//-----------------------------------//
 
 // saves the entire list to a file
 void ChannelListWindow::saveList()

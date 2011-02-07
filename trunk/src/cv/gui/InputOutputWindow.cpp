@@ -186,6 +186,7 @@ void InputOutputWindow::onNoticeMessage(Event *evt)
 
 //-----------------------------------//
 
+// moves the input cursor to the end of the line
 void InputOutputWindow::moveCursorEnd()
 {
     QTextCursor cursor = m_pInput->textCursor();

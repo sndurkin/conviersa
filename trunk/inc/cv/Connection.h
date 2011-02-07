@@ -50,6 +50,7 @@ public slots:
     void onReadyRead();
 };
 
+//-----------------------------------//
 
 class ThreadedConnection : public QThread
 {

@@ -276,52 +276,5 @@ void OutputWindow::focusedInTree()
     pItem->setForeground(0, QBrush(QColor("black"), Qt::SolidPattern));
 }
 
-//-----------------------------------//
-
-// handles child widget events
-bool OutputWindow::eventFilter(QObject *obj, QEvent *event)
-{
-    /*
-    if(obj == m_pOutput)
-    {
-        if(event->type() == QEvent::Resize)
-        {
-            QResizeEvent *resizeEvent = static_cast<QResizeEvent *>(event);
-
-            QString hi = "resizeEvent: ";
-            hi += QString::number(resizeEvent->size().width());
-            hi += ",";
-            hi += QString::number(resizeEvent->size().height());
-            m_pOutput->append(hi);
-
-
-            if(!m_pResizeMarginTimer->isActive())
-            {
-                m_pResizeMarginTimer->start(30);
-            }
-
-            resizeTopMargin();
-        }
-    }
-    */
-
-    return Window::eventFilter(obj, event);
-}
-
-//-----------------------------------//
-
-/*
-// changes the vertical offset that ensures that the
-// text always starts at the bottom of the screen
-// (for the user)
-void OutputWindow::resizeTopMargin()
-{
-    QTextFrameFormat format;
-    m_startOfText = m_pOutput->height() - 36;
-    format.setTopMargin(m_startOfText);
-    m_pOutput->document()->rootFrame()->setFrameFormat(format);
-}
-*/
-
 } } // end namespaces
 

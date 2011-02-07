@@ -16,7 +16,7 @@ namespace cv { namespace gui {
 class Window;
 
 // custom QMdiArea that i'm using as a container
-// to hold IWindows
+// to hold Windows
 class WindowContainer : public QMdiArea
 {
 protected:

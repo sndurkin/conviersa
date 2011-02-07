@@ -62,6 +62,8 @@ QColor OutputControl::COLORS[36] = {
     QColor("red")           // COLOR_ERROR
 };
 
+//-----------------------------------//
+
 int OutputLine::getSelectionStartIdx() const
 {
     if(QApplication::keyboardModifiers() & Qt::ControlModifier)
@@ -69,12 +71,16 @@ int OutputLine::getSelectionStartIdx() const
     return 0;
 }
 
+//-----------------------------------//
+
 int OutputLine::getSelectionStart() const
 {
     if(QApplication::keyboardModifiers() & Qt::ControlModifier)
         return m_alternateSelectionStart;
     return OutputControl::TEXT_START_POS;
 }
+
+//-----------------------------------//
 
 OutputControl::OutputControl(QWidget *parent/*= NULL*/)
     : QAbstractScrollArea(parent),
@@ -96,10 +102,14 @@ OutputControl::OutputControl(QWidget *parent/*= NULL*/)
     m_pEvt = m_evtBlock;
 }
 
+//-----------------------------------//
+
 QSize OutputControl::sizeHint() const
 {
     return QSize(800, 500);
 }
+
+//-----------------------------------//
 
 void OutputControl::appendMessage(const QString &msg, OutputColor defaultMsgColor)
 {
@@ -357,6 +367,8 @@ void OutputControl::appendMessage(const QString &msg, OutputColor defaultMsgColo
     appendLine(line);
 }
 
+//-----------------------------------//
+
 void OutputControl::appendLine(OutputLine &line)
 {
     // if we're appending the first line
@@ -378,6 +390,8 @@ void OutputControl::appendLine(OutputLine &line)
     // initiate a repaint of the viewport
     flushOutputLines();
 }
+
+//-----------------------------------//
 
 void OutputControl::flushOutputLines()
 {
@@ -401,6 +415,8 @@ void OutputControl::flushOutputLines()
         }
     }
 }
+
+//-----------------------------------//
 
 // changes the font for the OutputControl by resetting
 // the widths of the chunks in every line and creating
@@ -464,6 +480,8 @@ void OutputControl::changeFont(const QFont &newFont)
     resizeEvent(new QResizeEvent(size(), oldSize));
 }
 
+//-----------------------------------//
+
 void OutputControl::resizeEvent(QResizeEvent *event)
 {
     if(event->oldSize().width() != event->size().width())
@@ -509,6 +527,8 @@ void OutputControl::resizeEvent(QResizeEvent *event)
         verticalScrollBar()->setValue(scrollbarValue);
     }
 }
+
+//-----------------------------------//
 
 void OutputControl::calculateLineWraps(OutputLine &currLine, QLinkedList<int> &splits, int vpWidth, QFont font)
 {
@@ -876,6 +896,8 @@ void OutputControl::calculateLineWraps(OutputLine &currLine, QLinkedList<int> &s
     fm->~QFontMetrics();
 }
 
+//-----------------------------------//
+
 void OutputControl::mousePressEvent(QMouseEvent *event)
 {
     if(event->button() == Qt::LeftButton)
@@ -884,6 +906,8 @@ void OutputControl::mousePressEvent(QMouseEvent *event)
         m_dragStartPos = event->pos();
     }
 }
+
+//-----------------------------------//
 
 void OutputControl::mouseMoveEvent(QMouseEvent *event)
 {
@@ -980,11 +1004,6 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
                         int currTextRunIdx = 0;
                         QFont font(this->font());
                         QFontMetrics *fm = new(m_pFM) QFontMetrics(font);
-
-                        // this boolean allows us to keep track of whether
-                        // we found the drag position within the line (so
-                        // we can check after the loop for the second case)
-                        bool foundPosInLoop = false;
 
                         // iterate through all the characters in the line
                         int lastTextIdx = (j < numSplits) ? splitsArray[j] - 1
@@ -1362,6 +1381,8 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
     viewport()->update();
 }
 
+//-----------------------------------//
+
 bool OutputControl::linkHitTest(int x, int y, int &lineIdx, Link *&link)
 {
     // find which OutputLine the cursor is within
@@ -1426,7 +1447,9 @@ bool OutputControl::linkHitTest(int x, int y, int &lineIdx, Link *&link)
     return false;
 }
 
-void OutputControl::mouseReleaseEvent(QMouseEvent *event)
+//-----------------------------------//
+
+void OutputControl::mouseReleaseEvent(QMouseEvent *)
 {
     m_isMouseDown = false;
     viewport()->update();
@@ -1480,6 +1503,8 @@ void OutputControl::mouseReleaseEvent(QMouseEvent *event)
     }
 }
 
+//-----------------------------------//
+
 void OutputControl::mouseDoubleClickEvent(QMouseEvent *event)
 {
     int lineIdx;
@@ -1492,6 +1517,8 @@ void OutputControl::mouseDoubleClickEvent(QMouseEvent *event)
         delete evt;
     }
 }
+
+//-----------------------------------//
 
 // this algorithm is complex, so it was broken down into parts:
 //
@@ -1512,7 +1539,7 @@ void OutputControl::mouseDoubleClickEvent(QMouseEvent *event)
 //        - start from the last visible OutputLine (determined in part 1)
 //          and draw each one until we reach the top of the viewport
 //
-void OutputControl::paintEvent(QPaintEvent *event)
+void OutputControl::paintEvent(QPaintEvent *)
 {
     int vpWidth = viewport()->width(),
         vpHeight = viewport()->height();
@@ -1831,6 +1858,8 @@ void OutputControl::paintEvent(QPaintEvent *event)
     painter.drawLine(vpWidth - 1,            1, vpWidth - 1, vpHeight - 1);
     */
 }
+
+//-----------------------------------//
 
 // updates the last visible line by using the new scrollbar value
 // and current line splits

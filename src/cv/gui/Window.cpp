@@ -28,10 +28,14 @@ Window::Window(const QString &title/* = tr("Untitled")*/,
     hide();
 }
 
+//-----------------------------------//
+
 QSize Window::sizeHint() const
 {
     return m_defSize;
 }
+
+//-----------------------------------//
 
 // returns the title of the window, whether it's
 // in a container or on the desktop
@@ -39,6 +43,8 @@ QString Window::getTitle() const
 {
     return windowTitle();
 }
+
+//-----------------------------------//
 
 // sets the title of the window, whether it's
 // in a container or on the desktop
@@ -51,6 +57,8 @@ void Window::setTitle(const QString &title)
 
     setWindowTitle(title);
 }
+
+//-----------------------------------//
 
 // the name returned is the short name displayed in the WindowManager
 QString Window::getWindowName()
@@ -67,6 +75,8 @@ QString Window::getWindowName()
     return "";
 }
 
+//-----------------------------------//
+
 // sets the short name of the window (displayed in the WM)
 void Window::setWindowName(const QString &name)
 {
@@ -79,6 +89,8 @@ void Window::setWindowName(const QString &name)
         }
     }
 }
+
+//-----------------------------------//
 
 //
 // Overridden event functions
@@ -94,7 +106,7 @@ void Window::closeEvent(QCloseEvent *event)
             // close the child windows first
             QList<Window *> cList = m_pManager->getChildWindows(this);
 
-            // iterate over the children and delete their respective IWindows
+            // iterate over the children and delete their respective Windows
             int size = cList.size();
             for(int i = 0; i < size; ++i)
             {
@@ -120,6 +132,8 @@ void Window::closeEvent(QCloseEvent *event)
     // deletes the window
     event->accept();
 }
+
+//-----------------------------------//
 
 void Window::resizeEvent(QResizeEvent *event)
 {

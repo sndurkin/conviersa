@@ -33,7 +33,9 @@ struct LinkInfo {
     int endIdx;
 };
 
-// event that is used for the "onOutput" event; allows
+//-----------------------------------//
+
+// event that is used for the "output" event; allows
 // callbacks to add actionable links before the line
 // is displayed in the control
 class OutputEvent : public Event
@@ -81,6 +83,8 @@ public:
     }
 };
 
+//-----------------------------------//
+
 // event that is used for the "doubleClickedLink" event
 class DoubleClickLinkEvent : public Event
 {
@@ -94,6 +98,8 @@ public:
     // accessors
     QString getText() { return m_text; }
 };
+
+//-----------------------------------//
 
 enum OutputColor {
     COLOR_NONE = -1,
@@ -138,6 +144,8 @@ enum OutputColor {
     COLOR_DEBUG,
     COLOR_ERROR
 };
+
+//-----------------------------------//
 
 // section of consecutive characters
 // that all share the same style and color
@@ -201,6 +209,8 @@ public:
     }
 };
 
+//-----------------------------------//
+
 enum ChunkType
 {
     UNKNOWN,
@@ -238,6 +248,8 @@ public:
     void setChunkType(ChunkType chunkType) { m_chunkType = chunkType; }
 };
 
+//-----------------------------------//
+
 class LinkFragment
 {
     int m_x,
@@ -266,6 +278,8 @@ public:
     // modifiers
     void setNextLinkFragment(LinkFragment *nextLinkFragment) { m_nextLinkFragment = nextLinkFragment; }
 };
+
+//-----------------------------------//
 
 class Link
 {
@@ -308,6 +322,8 @@ public:
         m_firstLinkFragment = NULL;
     }
 };
+
+//-----------------------------------//
 
 class OutputLine
 {
@@ -386,6 +402,8 @@ public:
         }
     }
 };
+
+//-----------------------------------//
 
 class OutputControl : public QAbstractScrollArea
 {

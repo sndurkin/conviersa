@@ -41,6 +41,8 @@ QueryWindow::QueryWindow(Session *pSession,
     g_pEvtManager->hookEvent("privmsgMessage", m_pSession, MakeDelegate(this, &QueryWindow::onPrivmsgMessage));
 }
 
+//-----------------------------------//
+
 QueryWindow::~QueryWindow()
 {
     g_pEvtManager->unhookEvent("numericMessage", m_pSession, MakeDelegate(this, &QueryWindow::onNumericMessage));
@@ -51,6 +53,8 @@ QueryWindow::~QueryWindow()
     m_pSharedServerConnPanel.reset();
 }
 
+//-----------------------------------//
+
 // changes the nickname of the person we're chatting with
 void QueryWindow::setTargetNick(const QString &nick)
 {
@@ -59,12 +63,16 @@ void QueryWindow::setTargetNick(const QString &nick)
     setTitle(nick);
 }
 
+//-----------------------------------//
+
 // returns the target nick that we're chatting with
-// (same as IWindow::GetWindowName() & IWindow::GetTitle())
+// (same as Window::getWindowName() & Window::getTitle())
 QString QueryWindow::getTargetNick()
 {
     return m_targetNick;
 }
+
+//-----------------------------------//
 
 void QueryWindow::onNumericMessage(Event *evt)
 {
@@ -82,6 +90,8 @@ void QueryWindow::onNumericMessage(Event *evt)
         }
     }
 }
+
+//-----------------------------------//
 
 void QueryWindow::onNickMessage(Event *evt)
 {
@@ -111,6 +121,8 @@ void QueryWindow::onNickMessage(Event *evt)
     }
 }
 
+//-----------------------------------//
+
 void QueryWindow::onNoticeMessage(Event *evt)
 {
     if(m_pManager->isWindowFocused(this))
@@ -118,6 +130,8 @@ void QueryWindow::onNoticeMessage(Event *evt)
         InputOutputWindow::onNoticeMessage(evt);
     }
 }
+
+//-----------------------------------//
 
 void QueryWindow::onPrivmsgMessage(Event *evt)
 {
@@ -170,6 +184,8 @@ void QueryWindow::onPrivmsgMessage(Event *evt)
     }
 }
 
+//-----------------------------------//
+
 void QueryWindow::onOutput(Event *evt)
 {
     OutputEvent *pOutputEvt = DCAST(OutputEvent, evt);
@@ -186,31 +202,39 @@ void QueryWindow::onOutput(Event *evt)
     }
 }
 
+//-----------------------------------//
+
 void QueryWindow::onDoubleClickLink(Event *evt)
 {
     DoubleClickLinkEvent *pDblClickLinkEvt = DCAST(DoubleClickLinkEvent, evt);
     m_pSession->sendData(QString().arg(pDblClickLinkEvt->getText()));
 }
 
+//-----------------------------------//
+
 // handles the printing/sending of the PRIVMSG message
 void QueryWindow::handleSay(const QString &text)
 {
     QString textToPrint = g_pCfgManager->getOptionValue("message.say")
-                          .arg(m_pSession->getNick())
-                          .arg(text);
+                            .arg(m_pSession->getNick())
+                            .arg(text);
     printOutput(textToPrint, MESSAGE_IRC_SAY_SELF);
     m_pSession->sendPrivmsg(getWindowName(), text);
 }
+
+//-----------------------------------//
 
 // handles the printing/sending of the PRIVMSG ACTION message
 void QueryWindow::handleAction(const QString &text)
 {
     QString textToPrint = g_pCfgManager->getOptionValue("message.action")
-                          .arg(m_pSession->getNick())
-                          .arg(text);
+                            .arg(m_pSession->getNick())
+                            .arg(text);
     printOutput(textToPrint, MESSAGE_IRC_ACTION_SELF);
     m_pSession->sendAction(getWindowName(), text);
 }
+
+//-----------------------------------//
 
 void QueryWindow::handleTab()
 {
@@ -218,19 +242,12 @@ void QueryWindow::handleTab()
     int idx = m_pInput->textCursor().position();
 }
 
+//-----------------------------------//
+
 void QueryWindow::closeEvent(QCloseEvent *event)
 {
     emit privWindowClosing(this);
     return Window::closeEvent(event);
 }
-/*
-void QueryWindow::onServerConnect() { }
 
-void QueryWindow::onServerDisconnect()
-{
-    printOutput("* Disconnected");
-}
-
-void QueryWindow::onReceiveMessage(const Message &msg) { }
-*/
 } } // end namespaces

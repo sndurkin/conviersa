@@ -40,10 +40,6 @@ class ServerConnectionPanel : public OverlayPanel, public QSharedData
 public:
     ServerConnectionPanel(QWidget *parent);
 
-    // if all fields are valid:
-    //   connect to the server
-    // otherwise:
-    //   set the focus to the first invalid field
     void validateAndConnect();
 
 signals:

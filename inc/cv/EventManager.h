@@ -26,17 +26,23 @@ public:
     virtual ~Event() { }
 };
 
+//-----------------------------------//
+
 enum CallbackReturnType
 {
     EVENT_CONTINUE,
     EVENT_HANDLED
 };
 
+//-----------------------------------//
+
 enum HookType
 {
     PRE_HOOK,
     POST_HOOK
 };
+
+//-----------------------------------//
 
 typedef FastDelegate1<Event *> EventCallback;
 class EventManager;
@@ -49,7 +55,24 @@ struct EventInfo
     QList<EventCallback>    callbacksToRemove;
 };
 
-// TODO: make thread-safe, with maybe some sort of reference counting
+//-----------------------------------//
+
+// This class is used to achieve a system for one class
+// to notify unrelated classes of events and provide information
+// about them; it helps minimize decoupling across the project.
+//
+// The implementation is fairly straightforward:
+//  - there is one globally shared EventManager object
+//  - each event is uniquely identified by name
+//  - each event has an arbitrary number of instances (of any type)
+//  - each instance has an arbitrary number of callbacks (functions
+//    that get called when the event is fired)
+//
+// More information:
+// http://code.google.com/p/conviersa/wiki/Event_System
+//
+// TODO
+//  - make thread-safe, with maybe some sort of reference counting
 class EventManager
 {
     QHash<QString, QHash<uintptr_t, EventInfo> > m_eventsHash;

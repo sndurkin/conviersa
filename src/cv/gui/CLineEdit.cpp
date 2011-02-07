@@ -19,12 +19,15 @@ CLineEdit::CLineEdit(const QString &textToPrint, QWidget *pParent/* = NULL*/)
       m_printText(true)
 { }
 
+//-----------------------------------//
+
 // returns the ideal size for the line edit
 QSize CLineEdit::sizeHint() const
 {
     return QSize(150, 20);
 }
 
+//-----------------------------------//
 
 // imitate firefox search bar behavior
 void CLineEdit::mousePressEvent(QMouseEvent *event)
@@ -36,6 +39,8 @@ void CLineEdit::mousePressEvent(QMouseEvent *event)
 
     QLineEdit::mousePressEvent(event);
 }
+
+//-----------------------------------//
 
 void CLineEdit::mouseReleaseEvent(QMouseEvent *event)
 {
@@ -51,7 +56,9 @@ void CLineEdit::mouseReleaseEvent(QMouseEvent *event)
     m_selectAll = false;
 }
 
-// when the search bar gets focus
+//-----------------------------------//
+
+// when the line edit gets focus
 void CLineEdit::focusInEvent(QFocusEvent *event)
 {
     if(!hasSelectedText())
@@ -61,6 +68,8 @@ void CLineEdit::focusInEvent(QFocusEvent *event)
     m_printText = false;
     QLineEdit::focusInEvent(event);
 }
+
+//-----------------------------------//
 
 // when the line edit loses focus
 void CLineEdit::focusOutEvent(QFocusEvent *event)
@@ -90,6 +99,8 @@ void CLineEdit::focusOutEvent(QFocusEvent *event)
 
     QLineEdit::focusOutEvent(event);
 }
+
+//-----------------------------------//
 
 // called when the line edit needs to be repainted
 void CLineEdit::paintEvent(QPaintEvent *event)

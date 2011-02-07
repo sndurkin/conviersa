@@ -20,6 +20,8 @@ ChannelTopicDelegate::ChannelTopicDelegate(QObject *parent/* = NULL*/)
     : QAbstractItemDelegate(parent)
 { }
 
+//-----------------------------------//
+
 void ChannelTopicDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
     // highlight the item
@@ -46,6 +48,8 @@ void ChannelTopicDelegate::paint(QPainter *painter, const QStyleOptionViewItem &
 
     painter->restore();
 }
+
+//-----------------------------------//
 
 QSize ChannelTopicDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const
 {

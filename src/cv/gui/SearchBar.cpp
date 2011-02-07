@@ -29,6 +29,8 @@ SearchBar::SearchBar(QWidget *pParent/* = NULL*/)
     m_pBrush = new QBrush(*pGrad);
 }
 
+//-----------------------------------//
+
 // updates the progress within the search bar
 void SearchBar::updateProgress(double newProgress)
 {
@@ -36,12 +38,16 @@ void SearchBar::updateProgress(double newProgress)
     update();
 }
 
+//-----------------------------------//
+
 // clears the progress within the search bar
 void SearchBar::clearProgress()
 {
     m_searchProgress = 0.0;
     update();
 }
+
+//-----------------------------------//
 
 // called when the search bar needs to be repainted
 void SearchBar::paintEvent(QPaintEvent *event)

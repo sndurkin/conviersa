@@ -28,6 +28,8 @@ EventManager::~EventManager()
     }
 }
 
+//-----------------------------------//
+
 void EventManager::createEvent(const QString &evtName)
 {
     if(m_eventsHash.find(evtName) == m_eventsHash.end())
@@ -35,13 +37,21 @@ void EventManager::createEvent(const QString &evtName)
         QHash<uintptr_t, EventInfo> instancesHash;
         m_eventsHash.insert(evtName, instancesHash);
     }
+    else
+        qDebug("[EM::createEvent] Event '%s' already exists", evtName.toLatin1().constData());
 }
+
+//-----------------------------------//
 
 void EventManager::hookEvent(const QString &evtName, void *pEvtInstance, EventCallback callback)
 {
     QHash<uintptr_t, EventInfo> *pInstancesHash = getInstancesHash(evtName);
     if(pInstancesHash == NULL)
+    {
+        qDebug("[EM::hookEvent] Attempted to hook event '%s' which doesn't exist", evtName.toLatin1().constData());
         return;
+    }
+
     EventInfo *pEvtInfo = getEventInfo(pInstancesHash, pEvtInstance);
     if(pEvtInfo == NULL)
     {
@@ -62,11 +72,16 @@ void EventManager::hookEvent(const QString &evtName, void *pEvtInstance, EventCa
         pEvtInfo->callbacks.prepend(callback);
 }
 
+//-----------------------------------//
+
 void EventManager::unhookEvent(const QString &evtName, void *pEvtInstance, EventCallback callback)
 {
     EventInfo *pEvtInfo = getEventInfo(evtName, pEvtInstance);
     if(pEvtInfo == NULL)
+    {
+        qDebug("[EM::unhookEvent] Attempted to unhook event '%s', which wasn't being hooked", evtName.toLatin1().constData());
         return;
+    }
 
     // if we're currently firing the event, then add the callback
     // to a temp list which will get removed after the event is
@@ -90,6 +105,8 @@ void EventManager::unhookEvent(const QString &evtName, void *pEvtInstance, Event
     }
 }
 
+//-----------------------------------//
+
 void EventManager::unhookAllEvents(void *pEvtInstance)
 {
     QHash<QString, QHash<uintptr_t, EventInfo> >::iterator iter = m_eventsHash.begin();
@@ -100,12 +117,14 @@ void EventManager::unhookAllEvents(void *pEvtInstance)
     }
 }
 
+//-----------------------------------//
+
 void EventManager::fireEvent(const QString &evtName, void *pEvtInstance, Event *pEvent)
 {
     EventInfo *pEvtInfo = getEventInfo(evtName, pEvtInstance);
     if(pEvtInfo == NULL)
     {
-        qDebug("[EM::fireEvent] Attempted to fire unrecognized event: %s\n", evtName.toLatin1().constData());
+        // there are currently no callbacks hooked into this event, so exit normally
         return;
     }
 
@@ -152,24 +171,27 @@ void EventManager::fireEvent(const QString &evtName, void *pEvtInstance, Event *
     }
 }
 
-CallbackReturnType EventManager::execPluginCallbacks(Event *pEvent, HookType type)
+//-----------------------------------//
+
+CallbackReturnType EventManager::execPluginCallbacks(Event *, HookType)
 {
     // TODO: fill in
     return EVENT_CONTINUE;
 }
+
+//-----------------------------------//
 
 EventInfo *EventManager::getEventInfo(const QString &evtName, void *pEvtInstance)
 {
     QHash<uintptr_t, EventInfo> *pInstancesHash = getInstancesHash(evtName);
     QHash<uintptr_t, EventInfo>::iterator instancesIter = pInstancesHash->find((uintptr_t) pEvtInstance);
     if(instancesIter == pInstancesHash->end())
-    {
-        qDebug("[EM::getEventInfo] Instance for event %s not found", evtName.toLatin1().constData());
         return NULL;
-    }
 
     return &(*instancesIter);
 }
+
+//-----------------------------------//
 
 EventInfo *EventManager::getEventInfo(QHash<uintptr_t, EventInfo> *pInstancesHash, void *pEvtInstance)
 {
@@ -180,14 +202,13 @@ EventInfo *EventManager::getEventInfo(QHash<uintptr_t, EventInfo> *pInstancesHas
     return &(*instancesIter);
 }
 
+//-----------------------------------//
+
 QHash<uintptr_t, EventInfo> *EventManager::getInstancesHash(const QString &evtName)
 {
     QHash<QString, QHash<uintptr_t, EventInfo> >::iterator eventsIter = m_eventsHash.find(evtName);
     if(eventsIter == m_eventsHash.end())
-    {
-        qDebug("[EM::getInstancesHash] Event %s has not been created", evtName.toLatin1().constData());
         return NULL;
-    }
 
     return &(*eventsIter);
 }

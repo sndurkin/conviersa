@@ -22,7 +22,7 @@ class WindowManager;
 
 // AltWindowContainer is implemented a little differently than a
 // WindowContainer, although it is derived from it so we can use
-// one type in the WindowManager and IWindow's functions
+// one type in the WindowManager and Window's functions
 //
 // it has a parent QWidget (which sits on the desktop at all times)
 // and it uses an event filter to maintain its parent

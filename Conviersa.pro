@@ -6,13 +6,14 @@ CONFIG += qt \
 INCLUDEPATH = inc/
 DESTDIR = bin/
 OTHER_FILES += todo.txt \
-    doc/License.txt
+    doc/License.txt \
+    bin/conviersa.qss \
+    doc/coding-style.txt
 HEADERS += inc/cv/qext.h \
     inc/cv/Connection.h \
     inc/cv/ChannelUser.h \
     inc/cv/Session.h \
     inc/cv/Parser.h \
-    inc/cv/ConfigOption.h \
     inc/cv/ConfigManager.h \
     inc/cv/FastDelegate.h \
     inc/cv/gui/definitions.h \

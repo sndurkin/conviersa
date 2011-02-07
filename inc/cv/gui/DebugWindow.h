@@ -20,7 +20,7 @@ public:
                 const QSize &size = QSize(500, 300));
     ~DebugWindow();
 
-    void giveFocus();
+    void giveFocus() { }
 
     void onSendData(Event *pEvt);
     void onReceivedData(Event *pEvt);

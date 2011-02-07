@@ -28,37 +28,19 @@ class ChannelUser
     int         m_priority;
 
 public:
-    // parses the input nick into nickname, and
-    // prefixes and user/host (if applicable)
     ChannelUser(Session *pSession, const QString &nick);
 
-    // adds the given prefix to the user, unless it's
-    // already there or it isn't a valid prefix
     void addPrefix(const QChar &prefix);
-
-    // removes the given prefix from the user, if it exists
     void removePrefix(const QChar &prefix);
 
-    // sets the user's nickname
+    // sets and gets only the nickname, without any prefixes
     void setNickname(const QString &nick) { m_nickname = nick; }
+    QString getNickname() { return m_nickname; }
 
-    // returns only the nickname, without any prefixes
-    QString getNickname();
-
-    // returns the nickname with the most powerful prefix (if any)
-    // prepended to it
     QString getProperNickname();
-
-    // returns the nickname with all prefixes (if any) prepended
-    // to it
     QString getFullNickname();
-
-    // returns the most powerful prefix of the nickname,
-    // or '\0' if there is none
     QChar getPrefix();
-
     void setPriority(int p) { m_priority = p; }
-
     int getPriority() { return m_priority; }
 };
 

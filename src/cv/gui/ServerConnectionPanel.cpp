@@ -37,6 +37,8 @@ ServerConnectionPanel::ServerConnectionPanel(QWidget *parent)
     setFocusProxy(m_pServerInput);
 }
 
+//-----------------------------------//
+
 // if all fields are valid:
 //   connect to the server
 // otherwise:
@@ -91,15 +93,21 @@ void ServerConnectionPanel::validateAndConnect()
     g_pCfgManager->setOptionValue("server.altNick", m_pAltNickInput->text());
 }
 
+//-----------------------------------//
+
 void ServerConnectionPanel::onCloseClicked()
 {
     close();
 }
 
+//-----------------------------------//
+
 void ServerConnectionPanel::onEnter()
 {
     validateAndConnect();
 }
+
+//-----------------------------------//
 
 void ServerConnectionPanel::createForm()
 {

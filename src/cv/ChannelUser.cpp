@@ -42,6 +42,8 @@ ChannelUser::ChannelUser(Session *pSession, const QString &nick)
     }
 }
 
+//-----------------------------------//
+
 // adds the given prefix to the user, unless it's
 // already there or it isn't a valid prefix
 void ChannelUser::addPrefix(const QChar &prefixToAdd)
@@ -67,17 +69,15 @@ void ChannelUser::addPrefix(const QChar &prefixToAdd)
     m_prefixes.append(prefixToAdd);
 }
 
+//-----------------------------------//
+
 // removes the given prefix from the user, if it exists
 void ChannelUser::removePrefix(const QChar &prefix)
 {
     m_prefixes.remove(prefix);
 }
 
-// returns only the nickname, without any prefixes
-QString ChannelUser::getNickname()
-{
-    return m_nickname;
-}
+//-----------------------------------//
 
 // returns the nickname with the most powerful prefix (if any)
 // prepended to it
@@ -94,6 +94,8 @@ QString ChannelUser::getProperNickname()
     return name;
 }
 
+//-----------------------------------//
+
 // returns the nickname with all prefixes (if any) prepended
 // to it
 QString ChannelUser::getFullNickname()
@@ -108,6 +110,8 @@ QString ChannelUser::getFullNickname()
 
     return name;
 }
+
+//-----------------------------------//
 
 // returns the most powerful prefix of the nickname,
 // or '\0' if there is none

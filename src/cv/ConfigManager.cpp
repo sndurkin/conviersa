@@ -36,7 +36,7 @@ bool ConfigManager::setupConfigFile(const QString &filename, const QList<ConfigO
     QMap<QString, QString>  options;
     for(int i = 0; i < defOptions.size(); ++i)
     {
-        options.insert(defOptions[i].getName(), defOptions[i].getValue());
+        options.insert(defOptions[i].name, defOptions[i].value);
     }
 
     if(file.exists())
@@ -89,9 +89,9 @@ bool ConfigManager::setupConfigFile(const QString &filename, const QList<ConfigO
         for(int i = 0; i < defOptions.size(); ++i)
         {
             QByteArray str;
-            str.append(defOptions[i].getName());
+            str.append(defOptions[i].name);
             str.append('=');
-            str.append(defOptions[i].getValue());
+            str.append(defOptions[i].value);
             str.append('\n');
             file.write(str);
         }
@@ -101,6 +101,8 @@ bool ConfigManager::setupConfigFile(const QString &filename, const QList<ConfigO
     m_files.insert(filename, options);
     return true;
 }
+
+//-----------------------------------//
 
 // this writes all the data in memory to the provided file
 //
@@ -229,6 +231,8 @@ bool ConfigManager::writeToFile(const QString &filename)
     return false;
 }
 
+//-----------------------------------//
+
 // returns the value of the provided option inside the provided file,
 // returns an empty string upon error
 QString ConfigManager::getOptionValue(const QString &filename, const QString &optName)
@@ -254,6 +258,8 @@ QString ConfigManager::getOptionValue(const QString &filename, const QString &op
     return "";
 }
 
+//-----------------------------------//
+
 // sets the provided option's value to optValue
 bool ConfigManager::setOptionValue(const QString &filename, const QString &optName, const QString &optValue)
 {
@@ -278,6 +284,8 @@ bool ConfigManager::setOptionValue(const QString &filename, const QString &optNa
 
     return false;
 }
+
+//-----------------------------------//
 
 // test function to produce contents of file
 void ConfigManager::printFile(const QString &filename)

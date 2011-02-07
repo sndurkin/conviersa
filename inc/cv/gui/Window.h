@@ -29,11 +29,11 @@ protected:
     // this is used to maintain the default size of the window
     QSize               m_defSize;
 
-    // we need this pointer so every IWindow instance has the ability
-    // to change other IWindow instances (through the WindowManager)
+    // we need this pointer so every Window instance has the ability
+    // to change other Window instances (through the WindowManager)
     WindowManager *     m_pManager;
 
-    // we need this so we can put our IWindow inside a WindowContainer
+    // we need this so we can put our Window inside a WindowContainer
     // (it has to be inside a QMdiSubWindow so everything will work right)
     QMdiSubWindow *     m_pSubWindow;
 
@@ -44,18 +44,10 @@ public:
 
     QSize sizeHint() const;
 
-    // returns the title of the window, whether it's
-    // in a container or on the desktop
     QString getTitle() const;
-
-    // sets the title of the window, whether it's
-    // in a container or on the desktop
     void setTitle(const QString &title);
 
-    // the name returned is the short name displayed in the WindowManager
     QString getWindowName();
-
-    // sets the short name of the window (displayed in the WM)
     void setWindowName(const QString &name);
 
     bool hasContainer() const { return m_pContainer != NULL; }
@@ -63,8 +55,7 @@ public:
     // called when the user clicks the corresponding item in the WindowManager
     virtual void giveFocus() = 0;
 
-    // called when the corresponding item in the WindowManager becomes
-    // focused
+    // called when the corresponding item in the WindowManager becomes focused
     virtual void focusedInTree() { }
 
 protected:

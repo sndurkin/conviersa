@@ -23,8 +23,6 @@ EventManager *  g_pEvtManager;
 
 namespace gui {
 
-//-----------------------------------//
-
 Client::Client(const QString &title)
 {
     g_pCfgManager = new ConfigManager("conviersa.ini");
@@ -230,7 +228,5 @@ void Client::loadQSS()
         qss.close();
     }
 }
-
-//-----------------------------------//
 
 } } // end namespaces

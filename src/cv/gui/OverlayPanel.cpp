@@ -44,12 +44,16 @@ OverlayPanel::OverlayPanel(QWidget *parent)
     QObject::connect(m_pSlideClosedAnimation, SIGNAL(finished()), this, SLOT(onPanelClosed()));
 }
 
+//-----------------------------------//
+
 // sets the duration for the OverlayPanel
 void OverlayPanel::setDuration(int duration)
 {
     if(!m_isInitialized)
         m_duration = duration;
 }
+
+//-----------------------------------//
 
 // sets the button alignment and offset
 void OverlayPanel::setButtonConfig(Qt::AlignmentFlag btnAlignment, int btnOffset)
@@ -60,6 +64,8 @@ void OverlayPanel::setButtonConfig(Qt::AlignmentFlag btnAlignment, int btnOffset
         m_buttonOffset = btnOffset;
     }
 }
+
+//-----------------------------------//
 
 // adds an open button for the OverlayPanel
 QPushButton *OverlayPanel::addOpenButton(QWidget *pParent, const QString &btnText, int w, int h)
@@ -137,12 +143,18 @@ QPushButton *OverlayPanel::addOpenButton(QWidget *pParent, const QString &btnTex
     return NULL;
 }
 
+//-----------------------------------//
+
+// sets the alignment for the OverlayPanel
 void OverlayPanel::setAlignment(Qt::AlignmentFlag alignment)
 {
     if(!m_isInitialized)
         m_alignment = alignment;
 }
 
+//-----------------------------------//
+
+// sets the secondary alignment for the OverlayPanel
 void OverlayPanel::setSecondaryAlignment(Qt::Alignment alignment, int firstOffset, int secondOffset)
 {
     if(!m_isInitialized)
@@ -153,11 +165,16 @@ void OverlayPanel::setSecondaryAlignment(Qt::Alignment alignment, int firstOffse
     }
 }
 
+//-----------------------------------//
+
+// sets the initial state of the OverlayPanel
 void OverlayPanel::setInitialState(OverlayState state)
 {
     if(!m_isInitialized)
         m_state = state;
 }
+
+//-----------------------------------//
 
 // initializes everything so that the OverlayPanel can be used; assumes
 // that the panel's current x and y are for the OPEN state
@@ -181,6 +198,8 @@ void OverlayPanel::initialize()
         move(closedX, closedY);
     }
 }
+
+//-----------------------------------//
 
 void OverlayPanel::open(bool animate/* = true*/)
 {
@@ -226,6 +245,8 @@ void OverlayPanel::open(bool animate/* = true*/)
         m_state = OPEN;
     }
 }
+
+//-----------------------------------//
 
 void OverlayPanel::close(bool animate/* = true*/)
 {
@@ -284,6 +305,8 @@ void OverlayPanel::close(bool animate/* = true*/)
     }
 }
 
+//-----------------------------------//
+
 void OverlayPanel::toggle(bool animate/* = true*/)
 {
     if(m_state == OPEN)
@@ -292,10 +315,7 @@ void OverlayPanel::toggle(bool animate/* = true*/)
         open(animate);
 }
 
-bool OverlayPanel::isOpen(QWidget *pParent)
-{
-    return (m_state == OPEN && pParent == parentWidget());
-}
+//-----------------------------------//
 
 void OverlayPanel::onOpenClicked(QWidget *pButton)
 {
@@ -320,12 +340,17 @@ void OverlayPanel::onOpenClicked(QWidget *pButton)
     open();
 }
 
+//-----------------------------------//
+
 void OverlayPanel::onPanelClosed()
 {
     if(m_pOpenBtnAnimation != NULL)
         m_pOpenBtnAnimation->start();
 }
 
+//-----------------------------------//
+
+// realigns the OverlayPanel to the parent widget
 void OverlayPanel::realignPanel(QPushButton *pOpenButton/* = NULL*/)
 {
     // update the position for the panel (and, if applicable, the open button)
@@ -390,6 +415,8 @@ void OverlayPanel::realignPanel(QPushButton *pOpenButton/* = NULL*/)
     }
 }
 
+//-----------------------------------//
+
 // find the offsets for the button, and move it
 void OverlayPanel::realignButton(QPushButton *pOpenButton, int x, int y)
 {
@@ -425,6 +452,9 @@ void OverlayPanel::realignButton(QPushButton *pOpenButton, int x, int y)
     }
 }
 
+//-----------------------------------//
+
+// retrieve button position for when it's open
 void OverlayPanel::getCurrButtonShownPosition(int &x, int &y)
 {
     x = m_pCurrOpenButton->x();
@@ -443,6 +473,9 @@ void OverlayPanel::getCurrButtonShownPosition(int &x, int &y)
     }
 }
 
+//-----------------------------------//
+
+// retrieve button position for when it's closed
 void OverlayPanel::getCurrButtonHiddenPosition(int &x, int &y)
 {
     x = m_pCurrOpenButton->x();
@@ -460,6 +493,8 @@ void OverlayPanel::getCurrButtonHiddenPosition(int &x, int &y)
             x = parentWidget()->width();
     }
 }
+
+//-----------------------------------//
 
 void OverlayPanel::paintEvent(QPaintEvent *)
 {

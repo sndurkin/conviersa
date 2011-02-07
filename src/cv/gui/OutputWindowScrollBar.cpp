@@ -21,6 +21,8 @@ OutputWindowScrollBar::OutputWindowScrollBar(QWidget *pParent/* = NULL*/)
     QObject::connect(this, SIGNAL(rangeChanged(int, int)), this, SLOT(updateScrollBar(int, int)));
 }
 
+//-----------------------------------//
+
 int OutputWindowScrollBar::getSliderHeight()
 {
     QStyleOptionSlider opt;
@@ -30,6 +32,8 @@ int OutputWindowScrollBar::getSliderHeight()
 
     return sr.height();
 }
+
+//-----------------------------------//
 
 // adds a line to be painted, located at sliderVal,
 // and repaints with the new line
@@ -50,12 +54,16 @@ void OutputWindowScrollBar::addLine(qreal posRatio)
     update();
 }
 
+//-----------------------------------//
+
 // clears all the lines, and repaints
 void OutputWindowScrollBar::clearLines()
 {
     m_searchLines.clear();
     update();
 }
+
+//-----------------------------------//
 
 void OutputWindowScrollBar::mousePressEvent(QMouseEvent *event)
 {
@@ -94,6 +102,8 @@ void OutputWindowScrollBar::mousePressEvent(QMouseEvent *event)
     }
 }
 
+//-----------------------------------//
+
 void OutputWindowScrollBar::paintEvent(QPaintEvent *event)
 {
     // paint the default scrollbar first
@@ -114,6 +124,8 @@ void OutputWindowScrollBar::paintEvent(QPaintEvent *event)
             painter.drawLine(m_searchLines[i]);
     }
 }
+
+//-----------------------------------//
 
 // ensures that the area holding the scrollbar moves it so that
 // the bottom of the viewport doesn't move

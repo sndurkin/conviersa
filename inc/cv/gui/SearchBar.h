@@ -29,14 +29,10 @@ class SearchBar : public CLineEdit
 public:
     SearchBar(QWidget *pParent = NULL);
 
-    // updates the progress within the search bar
     void updateProgress(double newProgress);
-
-    // clears the progress within the search bar
     void clearProgress();
 
 protected:
-    // called when the search bar needs to be repainted
     void paintEvent(QPaintEvent *event);
 };
 

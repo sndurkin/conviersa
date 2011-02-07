@@ -18,21 +18,17 @@ class QTreeWidgetItem;
 
 namespace cv {
 
-class ConfigOption;
+struct ConfigOption;
 
 namespace gui {
 
 class WindowManager;
 class WindowContainer;
 
-//-----------------------------------//
-
 /**
  * Main class of the IRC client. This manages the menus, toolbars and
- * docked main widgets. It holds a Window Container and also a Window Manager (wtf?)
- *
+ * docked main widgets. It holds a Window Container and also a Window Manager
  */
-
 class Client : public QMainWindow
 {
     Q_OBJECT
@@ -63,12 +59,8 @@ private:
     void setClientSize();
 
 public slots:
-    // creates a blank IRC server window
     void onNewIrcServerWindow();
-
     void loadQSS();
 };
-
-//-----------------------------------//
 
 } } // end namespaces

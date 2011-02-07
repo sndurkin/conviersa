@@ -30,13 +30,8 @@ public:
                 const QString &targetNick);
     ~QueryWindow();
 
-    // changes the nickname of the person we're chatting with
     void setTargetNick(const QString &nick);
-
-    // returns the target nick that we're chatting with
-    // (same as IWindow::GetWindowName() & IWindow::GetTitle())
     QString getTargetNick();
-
     bool isTargetNick(const QString &nick) { return (m_targetNick.compare(nick, Qt::CaseSensitive) == 0); }
 
     // events
@@ -49,18 +44,15 @@ public:
     void onDoubleClickLink(Event *evt);
 
 protected:
-    // handles the printing/sending of the PRIVMSG message
     void handleSay(const QString &text);
-
-    // handles the printing/sending of the PRIVMSG ACTION message
     void handleAction(const QString &text);
-
     void handleTab();
+
     void closeEvent(QCloseEvent *event);
 
 signals:
-    // signifies that the window is closing - this is *only*
-    // for IrcStatusWindow to use
+    // signifies that the window is closing - this is only
+    // used by StatusWindow
     void privWindowClosing(QueryWindow *pWin);
 };
 

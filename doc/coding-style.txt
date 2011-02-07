@@ -1,0 +1,68 @@
+--- CONVIERSA CODING STYLE ---
+
+This outlines the preferred style and guidelines to follow
+when writing code for Conviersa. Following a set of rules
+keeps the code consistent and therefore easier to read. If
+something is unclear or not covered here, use the existing code
+as a guide; the basic idea is to make the code as readable as
+possible.
+
+
+Comments:
+ - All comments should begin with two forward slashes followed by
+   a single space ("// ")
+     -> ex: // this is a comment
+ - Long comments which need to wrap to a new line should follow the
+   same standard outlined above
+     -> ex: // this is a longer comment that needs to wrap to
+            // the next line
+ - Comments for functions should go wherever the body of that function
+   is, unless the comment is used to describe a set of functions (then
+   it can go in the header)
+
+
+Classes & Functions:
+ - Curly braces should have their own line, unless the body is small or
+   non-existent
+     -> ex: void MyClass::func()
+            {
+                doStuff();
+                doMoreStuff();
+            }
+     -> ex: void MyClass::func() { }
+ - Function bodies should go in the source file unless the body
+   is short enough to fit on one line (in which case it can go in the header)
+     -> ex: bool func(int x, int y) { return x == y; }
+ - Functions in the source file should be separated by two newlines and the
+   following comment: //-----------------------------------//
+     -> ex: void MyClass::func1()
+            {
+                doStuff();
+            }
+
+            //-----------------------------------//
+
+            void MyClass::func2()
+            {
+                doStuff();
+            }
+
+
+Naming:
+ - Functions and variables should be written in mixed case
+     -> ex: mixedCaseVariable
+ - Macros and enum values should be written in all caps, with an underscore to
+   separate words
+     -> ex: #define MY_MACRO(x) x
+     -> ex: enum MyEnum
+            {
+                ENUM_VAL_0,
+                ENUM_VAL_1,
+                ENUM_VAL_2
+            };
+ - Member variables should be prefixed with "m_" indicating that they belong
+   to a class; this prefix does not affect the mixed naming of the variable
+     -> ex: bool m_memberVar;
+ - Pointers should be prefixed with 'p'; this prefix DOES affect the mixed naming
+   of the variable
+     -> ex: int intVar, *pIntVar;

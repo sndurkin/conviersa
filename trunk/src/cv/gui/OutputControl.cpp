@@ -20,49 +20,47 @@
 
 namespace cv { namespace gui {
 
-QColor OutputControl::COLORS[36] = {
-    QColor("black"),        // COLOR_CHAT_FOREGROUND
-    QColor("white"),        // COLOR_CHAT_BACKGROUND
+QString OutputControl::COLOR_TO_CONFIG_MAP[COLOR_NUM] = {
+    "output.color.say",             // COLOR_CHAT_FOREGROUND
+    "output.color.background",      // COLOR_CHAT_BACKGROUND
 
-    QColor("white"),        // COLOR_CUSTOM_1
-    QColor("black"),        // COLOR_CUSTOM_2
-    QColor("navy"),         // COLOR_CUSTOM_3
-    QColor("green"),        // COLOR_CUSTOM_4
-    QColor("red"),          // COLOR_CUSTOM_5
-    QColor("maroon"),       // COLOR_CUSTOM_6
-    QColor("purple"),       // COLOR_CUSTOM_7
-    QColor("orange"),       // COLOR_CUSTOM_8
-    QColor("yellow"),       // COLOR_CUSTOM_9
-    QColor("lime"),         // COLOR_CUSTOM_10
-    QColor("darkcyan"),     // COLOR_CUSTOM_11
-    QColor("cyan"),         // COLOR_CUSTOM_12
-    QColor("blue"),         // COLOR_CUSTOM_13
-    QColor("magenta"),      // COLOR_CUSTOM_14
-    QColor("gray"),         // COLOR_CUSTOM_15
-    QColor("lightgray"),    // COLOR_CUSTOM_16
+    "output.color.custom1",         // COLOR_CUSTOM_X
+    "output.color.custom2",
+    "output.color.custom3",
+    "output.color.custom4",
+    "output.color.custom5",
+    "output.color.custom6",
+    "output.color.custom7",
+    "output.color.custom8",
+    "output.color.custom9",
+    "output.color.custom10",
+    "output.color.custom11",
+    "output.color.custom12",
+    "output.color.custom13",
+    "output.color.custom14",
+    "output.color.custom15",
+    "output.color.custom16",
 
-    QColor("black"),        // COLOR_CHAT_SELF
-    QColor("red"),          // COLOR_HIGHLIGHT
-    QColor("magenta"),      // COLOR_ACTION
-    QColor("red"),          // COLOR_CTCP
-    QColor("red"),          // COLOR_NOTICE
-    QColor("green"),        // COLOR_NICK
-    QColor("black"),        // COLOR_INFO
-    QColor("green"),        // COLOR_INVITE
-    QColor("green"),        // COLOR_JOIN
-    QColor("green"),        // COLOR_PART
-    QColor("black"),        // COLOR_KICK
-    QColor("green"),        // COLOR_MODE
-    QColor("green"),        // COLOR_QUIT
-    QColor("green"),        // COLOR_TOPIC
-    QColor("red"),          // COLOR_WALLOPS
-    QColor("black"),        // COLOR_WHOIS
+    "output.color.say.self",        // COLOR_CHAT_SELF
+    "output.color.highlight",       // COLOR_HIGHLIGHT
+    "output.color.action",          // COLOR_ACTION
+    "output.color.ctcp",            // COLOR_CTCP
+    "output.color.notice",          // COLOR_NOTICE
+    "output.color.nick",            // COLOR_NICK
+    "output.color.info",            // COLOR_INFO
+    "output.color.invite",          // COLOR_INVITE
+    "output.color.join",            // COLOR_JOIN
+    "output.color.part",            // COLOR_PART
+    "output.color.kick",            // COLOR_KICK
+    "output.color.mode",            // COLOR_MODE
+    "output.color.quit",            // COLOR_QUIT
+    "output.color.topic",           // COLOR_TOPIC
+    "output.color.wallops",         // COLOR_WALLOPS
+    "output.color.whois",           // COLOR_WHOIS
 
-    QColor("red"),          // COLOR_DEBUG
-    QColor("red")           // COLOR_ERROR
+    "output.color.debug",           // COLOR_DEBUG
+    "output.color.error"            // COLOR_ERROR
 };
-
-//-----------------------------------//
 
 int OutputLine::getSelectionStartIdx() const
 {
@@ -100,6 +98,14 @@ OutputControl::OutputControl(QWidget *parent/*= NULL*/)
     // set pointers for the blocks of memory
     m_pFM = m_fmBlock;
     m_pEvt = m_evtBlock;
+
+    setupColors();
+    g_pEvtManager->hookGlobalEvent("configChanged", STRING_EVENT, MakeDelegate(this, &OutputControl::onConfigChanged));
+}
+
+OutputControl::~OutputControl()
+{
+    g_pEvtManager->unhookGlobalEvent("configChanged", STRING_EVENT, MakeDelegate(this, &OutputControl::onConfigChanged));
 }
 
 //-----------------------------------//
@@ -107,6 +113,46 @@ OutputControl::OutputControl(QWidget *parent/*= NULL*/)
 QSize OutputControl::sizeHint() const
 {
     return QSize(800, 500);
+}
+
+//-----------------------------------//
+
+void OutputControl::setupColors()
+{
+    // TODO: possible optimization would be to create a color manager
+    //       which shares QColor instances within the array
+    for(int i = 0; i < COLOR_NUM; ++i)
+        m_colorsArr[i] = QColor(GET_OPT(COLOR_TO_CONFIG_MAP[i]));
+
+    // the background color is changed a little differently; it uses CSS
+    setStyleSheet(QString("cv--gui--OutputControl { background-color: %1 }").arg(GET_OPT(COLOR_TO_CONFIG_MAP[COLOR_CHAT_BACKGROUND])));
+}
+
+
+//-----------------------------------//
+
+void OutputControl::onConfigChanged(Event *pEvent)
+{
+    ConfigEvent *pCfgEvent = DCAST(ConfigEvent, pEvent);
+    QString optName = pCfgEvent->getName();
+
+    for(int i = 0; i < COLOR_NUM; ++i)
+    {
+        if(optName.compare(COLOR_TO_CONFIG_MAP[i], Qt::CaseInsensitive) == 0)
+        {
+            // if it's not a valid color, don't set it
+            if(!QColor::isValidColor(pCfgEvent->getValue()))
+                return;
+
+            // if it's the background color, we also need to set it in the QSS
+            if(i == COLOR_CHAT_BACKGROUND)
+                setStyleSheet(QString("cv--gui--OutputControl { background-color: %1 }").arg(pCfgEvent->getValue()));
+
+            m_colorsArr[i] = QColor(pCfgEvent->getValue());
+            viewport()->update();
+            break;
+        }
+    }
 }
 
 //-----------------------------------//
@@ -119,9 +165,18 @@ void OutputControl::appendMessage(const QString &msg, OutputColor defaultMsgColo
     currTextRun->setFgColor(defaultMsgColor);
     line.setFirstTextRun(currTextRun);
 
-    QString msgToDisplay = QString("%1 ").arg(QDateTime::currentDateTime().toString(g_pCfgManager->getOptionValue("timestamp.format")));
-    line.setAlternateSelectionIdx(msgToDisplay.length());
-    msgToDisplay += msg;
+    QString msgToDisplay;
+    if(GET_OPT("timestamp").compare("on", Qt::CaseInsensitive) == 0)
+    {
+        msgToDisplay = QString("%1 ").arg(QDateTime::currentDateTime().toString(GET_OPT("timestamp.format")));
+        line.setAlternateSelectionIdx(msgToDisplay.length());
+        msgToDisplay += msg;
+    }
+    else
+    {
+        msgToDisplay = msg;
+        line.setAlternateSelectionIdx(0);
+    }
 
     // iterate through msg, determining the various TextRuns
     for(int i = 0, msgLen = msgToDisplay.length(); i < msgLen; ++i)
@@ -315,8 +370,8 @@ void OutputControl::appendMessage(const QString &msg, OutputColor defaultMsgColo
 
     // fire onOutput event for callbacks to use for adding links
     // to the text
-    OutputEvent *evt = new(m_pEvt) OutputEvent(line.text());
-    g_pEvtManager->fireEvent("output", this, evt);
+    OutputEvent *pEvent = new(m_pEvt) OutputEvent(line.text());
+    g_pEvtManager->fireEvent("output", this, pEvent);
 
     // iterate through the OutputEvent to add the links given the
     // LinkInfo
@@ -327,7 +382,7 @@ void OutputControl::appendMessage(const QString &msg, OutputColor defaultMsgColo
     Link *prevLink = NULL;
     currTextRunIdx = 0;
     currTextRun = line.firstTextRun();
-    for(iter = evt->getLinkInfoList().begin(); iter != evt->getLinkInfoList().end(); ++iter)
+    for(iter = pEvent->getLinkInfoList().begin(); iter != pEvent->getLinkInfoList().end(); ++iter)
     {
         int width = 0;
         LinkInfo linkInfo = *iter;
@@ -362,7 +417,7 @@ void OutputControl::appendMessage(const QString &msg, OutputColor defaultMsgColo
         prevLink = link;
     }
     fm->~QFontMetrics();
-    evt->~OutputEvent();
+    pEvent->~OutputEvent();
 
     appendLine(line);
 }
@@ -672,11 +727,12 @@ void OutputControl::calculateLineWraps(OutputLine &currLine, QLinkedList<int> &s
                 x += fm->width(currLine.text().mid(currTextIdx, len));
                 break;
             }
-
         }
 
         currLine.setAlternateSelectionStart(x);
     }
+    else
+        currLine.setAlternateSelectionStart(TEXT_START_POS);
 
     // now that we have the indices where the OutputLine is split,
     // we can use them to calculate the link fragments for each link
@@ -1512,9 +1568,9 @@ void OutputControl::mouseDoubleClickEvent(QMouseEvent *event)
     if(linkHitTest(event->pos().x(), event->pos().y(), lineIdx, link))
     {
         QString text = m_lines[lineIdx].text().mid(link->getStartIdx(), link->getEndIdx() - link->getStartIdx() + 1);
-        DoubleClickLinkEvent *evt = new DoubleClickLinkEvent(text);
-        g_pEvtManager->fireEvent("doubleClickedLink", this, evt);
-        delete evt;
+        DoubleClickLinkEvent *pEvent = new DoubleClickLinkEvent(text);
+        g_pEvtManager->fireEvent("doubleClickedLink", this, pEvent);
+        delete pEvent;
     }
 }
 
@@ -1549,7 +1605,7 @@ void OutputControl::paintEvent(QPaintEvent *)
         ascent = painter.fontMetrics().ascent();
 
     // draw viewport background
-    //painter.fillRect(0, 0, vpWidth, vpHeight, COLORS[COLOR_CHAT_BACKGROUND]);
+    //painter.fillRect(0, 0, vpWidth, vpHeight, m_colorsArr[COLOR_CHAT_BACKGROUND]);
 
     // 3) TEXT DRAWING
     //     - start from the last visible OutputLine (determined in part 1)
@@ -1671,16 +1727,16 @@ void OutputControl::paintEvent(QPaintEvent *)
                         int fragmentWidth = fm.width(textFragment); \
                         if(currTextRun->isReversed()) \
                         { \
-                            painter.fillRect(currWidth, currHeight - ascent, fragmentWidth, lineSpacing, COLORS[COLOR_CHAT_FOREGROUND]); \
-                            painter.setPen(COLORS[COLOR_CHAT_BACKGROUND]); \
+                            painter.fillRect(currWidth, currHeight - ascent, fragmentWidth, lineSpacing, m_colorsArr[COLOR_CHAT_FOREGROUND]); \
+                            painter.setPen(m_colorsArr[COLOR_CHAT_BACKGROUND]); \
                         } \
                         else \
                         { \
                             if(currTextRun->hasBgColor()) \
                             { \
-                                painter.fillRect(currWidth, currHeight - ascent, fragmentWidth, lineSpacing, COLORS[currTextRun->getBgColor()]); \
+                                painter.fillRect(currWidth, currHeight - ascent, fragmentWidth, lineSpacing, m_colorsArr[currTextRun->getBgColor()]); \
                             } \
-                            painter.setPen(COLORS[currTextRun->getFgColor()]); \
+                            painter.setPen(m_colorsArr[currTextRun->getFgColor()]); \
                         } \
                         \
                         painter.drawText(currWidth, currHeight, textFragment); \
@@ -1692,8 +1748,8 @@ void OutputControl::paintEvent(QPaintEvent *)
                     { \
                         QString textFragment = currLine.text().mid(fragmentStartIdx + previousLen, len); \
                         int fragmentWidth = fm.width(textFragment); \
-                        painter.fillRect(currWidth, currHeight - ascent, fragmentWidth, lineSpacing, COLORS[COLOR_CHAT_FOREGROUND]); \
-                        painter.setPen(COLORS[COLOR_CHAT_BACKGROUND]); \
+                        painter.fillRect(currWidth, currHeight - ascent, fragmentWidth, lineSpacing, m_colorsArr[COLOR_CHAT_FOREGROUND]); \
+                        painter.setPen(m_colorsArr[COLOR_CHAT_BACKGROUND]); \
                         painter.drawText(currWidth, currHeight, textFragment); \
                         currWidth += fragmentWidth; \
                     }
@@ -1736,9 +1792,9 @@ void OutputControl::paintEvent(QPaintEvent *)
                     QString textFragment = currLine.text().mid(index, len); \
                     int fragmentWidth = fm.width(textFragment); \
                     if(currTextRun->isReversed()) \
-                        painter.setPen(COLORS[COLOR_CHAT_BACKGROUND]); \
+                        painter.setPen(m_colorsArr[COLOR_CHAT_BACKGROUND]); \
                     else \
-                        painter.setPen(COLORS[currTextRun->getFgColor()]); \
+                        painter.setPen(m_colorsArr[currTextRun->getFgColor()]); \
                     painter.drawText(x, y, textFragment); \
                     x += fragmentWidth; \
                 }
@@ -1748,7 +1804,7 @@ void OutputControl::paintEvent(QPaintEvent *)
                 { \
                     QString textFragment = currLine.text().mid(index, len); \
                     int fragmentWidth = fm.width(textFragment); \
-                    painter.setPen(COLORS[COLOR_CHAT_BACKGROUND]); \
+                    painter.setPen(m_colorsArr[COLOR_CHAT_BACKGROUND]); \
                     painter.drawText(x, y, textFragment); \
                     x += fragmentWidth; \
                 }

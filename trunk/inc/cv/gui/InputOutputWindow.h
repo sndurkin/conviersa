@@ -61,11 +61,14 @@ public:
 
     void giveFocus();
 
-    void onInput(Event *evt);
+    // event handlers
+    void onInput(Event *pEvent);
+    void onNoticeMessage(Event *pEvent);
 
-    void onNoticeMessage(Event *evt);
+    void onColorConfigChanged(Event *pEvent);
 
 protected:
+    void setupColors();
     void moveCursorEnd();
     bool eventFilter(QObject *obj, QEvent *event);
     QString getInputText() { return m_pInput->toPlainText(); }

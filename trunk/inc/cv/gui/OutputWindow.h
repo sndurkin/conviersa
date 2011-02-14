@@ -119,8 +119,8 @@ public:
     bool containsNick(const QString &text);
     void focusedInTree();
 
-    virtual void onOutput(Event *evt) = 0;
-    virtual void onDoubleClickLink(Event *evt) = 0;
+    virtual void onOutput(Event *pEvent) = 0;
+    virtual void onDoubleClickLink(Event *pEvent) = 0;
 
 protected:
     // imitates Google Chrome's search, with lines drawn in the scrollbar

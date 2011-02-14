@@ -84,20 +84,24 @@ public:
     int getUserCount() { return m_users.size(); }
 
     // events
-    void onNumericMessage(Event *evt);
-    void onJoinMessage(Event *evt);
-    void onKickMessage(Event *evt);
-    void onModeMessage(Event *evt);
-    void onNickMessage(Event *evt);
-    void onNoticeMessage(Event *evt);
-    void onPartMessage(Event *evt);
-    void onPrivmsgMessage(Event *evt);
-    void onTopicMessage(Event *evt);
+    void onNumericMessage(Event *pEvent);
+    void onJoinMessage(Event *pEvent);
+    void onKickMessage(Event *pEvent);
+    void onModeMessage(Event *pEvent);
+    void onNickMessage(Event *pEvent);
+    void onNoticeMessage(Event *pEvent);
+    void onPartMessage(Event *pEvent);
+    void onPrivmsgMessage(Event *pEvent);
+    void onTopicMessage(Event *pEvent);
 
-    void onOutput(Event *evt);
-    void onDoubleClickLink(Event *evt);
+    void onOutput(Event *pEvent);
+    void onDoubleClickLink(Event *pEvent);
+
+    void onColorConfigChanged(Event *pEvent);
 
 protected:
+    void setupColors();
+
     void enqueueMessage(const QString &msg, OutputMessageType msgType);
     void joinChannel();
     void leaveChannel();

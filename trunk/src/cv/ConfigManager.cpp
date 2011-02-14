@@ -12,6 +12,13 @@
 
 namespace cv {
 
+ConfigManager::ConfigManager(const QString &defaultFilename)
+    : m_commentRegex("^\\s*#"),
+      m_defaultFilename(defaultFilename)
+{
+    g_pEvtManager->createEvent("configChanged", STRING_EVENT);
+}
+
 // this function puts options (and their values) into memory under
 // a specific filename
 //
@@ -224,9 +231,7 @@ bool ConfigManager::writeToFile(const QString &filename)
         return true;
     }
     else
-    {
         qDebug("[CM::writeToFile] Config file %s not found", filename.toLatin1().constData());
-    }
 
     return false;
 }
@@ -242,18 +247,12 @@ QString ConfigManager::getOptionValue(const QString &filename, const QString &op
     {
         QMap<QString, QString>::iterator j = i.value().find(optName);
         if(j != i.value().end())
-        {
             return *j;
-        }
         else
-        {
             qDebug("[CM::getOptionValue] Config option %s (in file %s) does not exist", optName.toLatin1().constData(), filename.toLatin1().constData());
-        }
     }
     else
-    {
         qDebug("[CM::getOptionValue] Config file %s not found", filename.toLatin1().constData());
-    }
 
     return "";
 }
@@ -261,7 +260,7 @@ QString ConfigManager::getOptionValue(const QString &filename, const QString &op
 //-----------------------------------//
 
 // sets the provided option's value to optValue
-bool ConfigManager::setOptionValue(const QString &filename, const QString &optName, const QString &optValue)
+bool ConfigManager::setOptionValue(const QString &filename, const QString &optName, const QString &optValue, bool fireEvent/* = false*/)
 {
     QHash<QString, QMap<QString, QString> >::iterator i = m_files.find(filename);
     if(i != m_files.end())
@@ -270,17 +269,19 @@ bool ConfigManager::setOptionValue(const QString &filename, const QString &optNa
         if(j != i.value().end())
         {
             *j = optValue;
+            if(fireEvent)
+            {
+                ConfigEvent *pEvent = new ConfigEvent(filename, optName, optValue);
+                g_pEvtManager->fireEvent("configChanged", optName, pEvent);
+                delete pEvent;
+            }
             return true;
         }
         else
-        {
             qDebug("[CM::setOptionValue] Config option %s (in file %s) does not exist", optName.toLatin1().constData(), filename.toLatin1().constData());
-        }
     }
     else
-    {
         qDebug("[CM::setOptionValue] Config file %s not found", filename.toLatin1().constData());
-    }
 
     return false;
 }

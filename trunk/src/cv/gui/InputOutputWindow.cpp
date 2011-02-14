@@ -16,6 +16,9 @@
 #include "cv/gui/WindowManager.h"
 #include "cv/gui/DebugWindow.h"
 
+#define COLOR_BACKGROUND tr("input.color.background")
+#define COLOR_FOREGROUND tr("input.color.foreground")
+
 namespace cv { namespace gui {
 
 InputOutputWindow::InputOutputWindow(const QString &title/* = tr("Untitled")*/,
@@ -26,11 +29,15 @@ InputOutputWindow::InputOutputWindow(const QString &title/* = tr("Untitled")*/,
     m_pInput->setLineWrapMode(QPlainTextEdit::NoWrap);
     m_pInput->setMaximumSize(QWIDGETSIZE_MAX, 25);
     m_pInput->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    m_pInput->setFont(m_defaultFont);
     m_pInput->installEventFilter(this);
     setFocusProxy(m_pInput);
     m_pOutput->setFocusProxy(m_pInput);
 
     g_pEvtManager->hookEvent("input", m_pInput, MakeDelegate(this, &InputOutputWindow::onInput));
+    g_pEvtManager->hookEvent("configChanged", COLOR_BACKGROUND, MakeDelegate(this, &InputOutputWindow::onColorConfigChanged));
+    g_pEvtManager->hookEvent("configChanged", COLOR_FOREGROUND, MakeDelegate(this, &InputOutputWindow::onColorConfigChanged));
+    setupColors();
 }
 
 //-----------------------------------//
@@ -38,6 +45,23 @@ InputOutputWindow::InputOutputWindow(const QString &title/* = tr("Untitled")*/,
 InputOutputWindow::~InputOutputWindow()
 {
     g_pEvtManager->unhookEvent("input", m_pInput, MakeDelegate(this, &InputOutputWindow::onInput));
+}
+
+//-----------------------------------//
+
+void InputOutputWindow::setupColors()
+{
+    QString stylesheet("background-color: %1; color: %2");
+    stylesheet = stylesheet.arg(GET_OPT(COLOR_BACKGROUND))
+                           .arg(GET_OPT(COLOR_FOREGROUND));
+    m_pInput->setStyleSheet(stylesheet);
+}
+
+//-----------------------------------//
+
+void InputOutputWindow::onColorConfigChanged(Event *pEvent)
+{
+    setupColors();
 }
 
 //-----------------------------------//
@@ -53,10 +77,10 @@ void InputOutputWindow::giveFocus()
 //-----------------------------------//
 
 // handles the input for the window
-void InputOutputWindow::onInput(Event *evt)
+void InputOutputWindow::onInput(Event *pEvent)
 {
     // todo: change when colors are added
-    InputEvent *inputEvt = DCAST(InputEvent, evt);
+    InputEvent *inputEvt = DCAST(InputEvent, pEvent);
     QString text = inputEvt->getInput();
 
     // TODO: make the '/' changeable??
@@ -78,6 +102,16 @@ void InputOutputWindow::onInput(Event *evt)
 
         return;
     }
+    else if(text.startsWith("/set ", Qt::CaseInsensitive))
+    {
+        text.remove(0, 5);
+
+        // two parameters: <optName> <optValue>
+        QString optName = text.section(' ', 0, 0, QString::SectionSkipEmpty),
+                optValue = text.section(' ', 1, -1);
+        if(optName.length() > 0 && optValue.length() > 0)
+            g_pCfgManager->setOptionValue(optName, optValue, true);
+    }
     else if(text.startsWith("/font ", Qt::CaseInsensitive))
     {
         bool ok;
@@ -88,7 +122,13 @@ void InputOutputWindow::onInput(Event *evt)
     }
     else if(text.startsWith("/timestamp ", Qt::CaseInsensitive))
     {
-        g_pCfgManager->setOptionValue("timestamp.format", text.mid(11));
+        text.remove(0, 11);
+        if(text.compare("on", Qt::CaseInsensitive) == 0)
+            g_pCfgManager->setOptionValue("timestamp", "on");
+        else if(text.compare("off", Qt::CaseInsensitive) == 0)
+            g_pCfgManager->setOptionValue("timestamp", "off");
+        else
+            g_pCfgManager->setOptionValue("timestamp.format", text);
     }
     else if(text.startsWith("/search ", Qt::CaseInsensitive))
     {
@@ -168,9 +208,9 @@ void InputOutputWindow::onInput(Event *evt)
 
 //-----------------------------------//
 
-void InputOutputWindow::onNoticeMessage(Event *evt)
+void InputOutputWindow::onNoticeMessage(Event *pEvent)
 {
-    Message msg = DCAST(MessageEvent, evt)->getMessage();
+    Message msg = DCAST(MessageEvent, pEvent)->getMessage();
     QString source;
     if(!msg.m_prefix.isEmpty())
         source = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
@@ -178,7 +218,7 @@ void InputOutputWindow::onNoticeMessage(Event *evt)
     else
         source = m_pSession->getHost();
 
-    QString textToPrint = g_pCfgManager->getOptionValue("message.notice")
+    QString textToPrint = GET_OPT("message.notice")
                           .arg(source)
                           .arg(msg.m_params[1]);
     printOutput(textToPrint, MESSAGE_IRC_NOTICE);

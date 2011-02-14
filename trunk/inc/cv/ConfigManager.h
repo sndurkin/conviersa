@@ -13,8 +13,31 @@
 #include <QMap>
 #include <QList>
 #include <QRegExp>
+#include "cv/EventManager.h"
+
+#define GET_OPT g_pCfgManager->getOptionValue
 
 namespace cv {
+
+class ConfigEvent : public Event
+{
+    QString m_filename;
+    QString m_optName;
+    QString m_optValue;
+
+public:
+    ConfigEvent(const QString &filename, const QString &optName, const QString &optValue)
+        : m_filename(filename),
+          m_optName(optName),
+          m_optValue(optValue)
+    { }
+
+    QString getFilename() const { return m_filename; }
+    QString getName() const { return m_optName; }
+    QString getValue() const { return m_optValue; }
+};
+
+//-----------------------------------//
 
 struct ConfigOption
 {
@@ -22,8 +45,8 @@ struct ConfigOption
     QString value;
 
     ConfigOption(const QString &n, const QString &v)
-     : name(n),
-       value(v)
+        : name(n),
+          value(v)
     { }
 };
 
@@ -39,15 +62,12 @@ class ConfigManager
     QString m_defaultFilename;
 
 public:
-    ConfigManager(const QString &defaultFilename)
-      : m_commentRegex("^\\s*#"),
-        m_defaultFilename(defaultFilename)
-    { }
+    ConfigManager(const QString &defaultFilename);
 
     bool setupConfigFile(const QString &filename, const QList<ConfigOption> &options);
     bool writeToFile(const QString &filename);
     QString getOptionValue(const QString &filename, const QString &optName);
-    bool setOptionValue(const QString &filename, const QString &optName, const QString &optValue);
+    bool setOptionValue(const QString &filename, const QString &optName, const QString &optValue, bool fireEvent = false);
     void printFile(const QString &filename);
 
     // calls setupConfigFile() with the default filename
@@ -69,9 +89,9 @@ public:
     }
 
     // sets the option's value to optValue in the default file
-    inline bool setOptionValue(const QString &optName, const QString &optValue)
+    inline bool setOptionValue(const QString &optName, const QString &optValue, bool fireEvent = false)
     {
-        return setOptionValue(m_defaultFilename, optName, optValue);
+        return setOptionValue(m_defaultFilename, optName, optValue, fireEvent);
     }
 };
 

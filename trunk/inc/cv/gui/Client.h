@@ -48,6 +48,7 @@ protected:
     void closeEvent(QCloseEvent *event);
 
 private:
+    void setupEvents();
     void setupMenu();
     void setupConfig();
 

@@ -280,7 +280,7 @@ void StatusWindow::handle366Numeric(const Message &msg)
 
 void StatusWindow::onServerConnecting(Event *)
 {
-    QString textToPrint = g_pCfgManager->getOptionValue("message.connecting")
+    QString textToPrint = GET_OPT("message.connecting")
                             .arg(m_pSession->getHost())
                             .arg(QString::number(m_pSession->getPort()));
     printOutput(textToPrint, MESSAGE_INFO);
@@ -317,7 +317,7 @@ void StatusWindow::onServerConnectFailed(Event *pEvt)
             reason = "Unknown connection error: " + error;
     }
 
-    QString textToPrint = g_pCfgManager->getOptionValue("message.connectFailed")
+    QString textToPrint = GET_OPT("message.connectFailed")
                             .arg(reason);
     printOutput(textToPrint, MESSAGE_INFO);
 }
@@ -327,13 +327,14 @@ void StatusWindow::onServerConnectFailed(Event *pEvt)
 void StatusWindow::onServerConnect(Event *)
 {
     m_pSharedServerConnPanel->close();
+    m_pInput->setFocus();
 }
 
 //-----------------------------------//
 
 void StatusWindow::onServerDisconnect(Event *)
 {
-    printOutput(g_pCfgManager->getOptionValue("message.disconnected"), MESSAGE_INFO);
+    printOutput(GET_OPT("message.disconnected"), MESSAGE_INFO);
     setTitle("Server Window");
     setWindowName("Server Window");
     m_pSharedServerConnPanel->open();
@@ -341,9 +342,9 @@ void StatusWindow::onServerDisconnect(Event *)
 
 //-----------------------------------//
 
-void StatusWindow::onNumericMessage(Event *evt)
+void StatusWindow::onNumericMessage(Event *pEvent)
 {
-    Message msg = DCAST(MessageEvent, evt)->getMessage();
+    Message msg = DCAST(MessageEvent, pEvent)->getMessage();
     switch(msg.m_command)
     {
         case 1:
@@ -361,7 +362,7 @@ void StatusWindow::onNumericMessage(Event *evt)
             // msg.m_params[0]: my nick
             // msg.m_params[1]: nick
             // msg.m_params[2]: away message
-            QString textToPrint = g_pCfgManager->getOptionValue("message.301")
+            QString textToPrint = GET_OPT("message.301")
                                   .arg(msg.m_params[1])
                                   .arg(msg.m_params[2]);
             printOutput(textToPrint, MESSAGE_IRC_NUMERIC);
@@ -383,7 +384,7 @@ void StatusWindow::onNumericMessage(Event *evt)
         // RPL_WHOISIDLE
         case 317:
         {
-            QString textToPrint = g_pCfgManager->getOptionValue("message.317")
+            QString textToPrint = GET_OPT("message.317")
                                   .arg(msg.m_params[1])
                                   .arg(getIdleTextFrom317(msg));
             printOutput(textToPrint, MESSAGE_IRC_NUMERIC);
@@ -414,7 +415,7 @@ void StatusWindow::onNumericMessage(Event *evt)
             // msg.m_params[1]: nick
             // msg.m_params[2]: login/auth
             // msg.m_params[3]: "is logged in as"
-            QString textToPrint = g_pCfgManager->getOptionValue("message.330")
+            QString textToPrint = GET_OPT("message.330")
                                   .arg(msg.m_params[1])
                                   .arg(msg.m_params[3])
                                   .arg(msg.m_params[2]);
@@ -440,7 +441,7 @@ void StatusWindow::onNumericMessage(Event *evt)
             // msg.m_params[3]: unix time
             if(!childIrcWindowExists(msg.m_params[1]))
             {
-                QString textToPrint = g_pCfgManager->getOptionValue("message.333.status")
+                QString textToPrint = GET_OPT("message.333.status")
                                       .arg(msg.m_params[1])
                                       .arg(msg.m_params[2])
                                       .arg(getDate(msg.m_params[3]))
@@ -489,18 +490,18 @@ void StatusWindow::onNumericMessage(Event *evt)
 
 //-----------------------------------//
 
-void StatusWindow::onErrorMessage(Event *evt)
+void StatusWindow::onErrorMessage(Event *pEvent)
 {
-    Message msg = DCAST(MessageEvent, evt)->getMessage();
+    Message msg = DCAST(MessageEvent, pEvent)->getMessage();
     printOutput(msg.m_params[0], MESSAGE_IRC_ERROR);
 }
 
 //-----------------------------------//
 
-void StatusWindow::onInviteMessage(Event *evt)
+void StatusWindow::onInviteMessage(Event *pEvent)
 {
-    Message msg = DCAST(MessageEvent, evt)->getMessage();
-    QString textToPrint = g_pCfgManager->getOptionValue("message.invite")
+    Message msg = DCAST(MessageEvent, pEvent)->getMessage();
+    QString textToPrint = GET_OPT("message.invite")
                           .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName))
                           .arg(msg.m_params[1]);
     printOutput(textToPrint, MESSAGE_IRC_INVITE);
@@ -508,9 +509,9 @@ void StatusWindow::onInviteMessage(Event *evt)
 
 //-----------------------------------//
 
-void StatusWindow::onJoinMessage(Event *evt)
+void StatusWindow::onJoinMessage(Event *pEvent)
 {
-    Message msg = DCAST(MessageEvent, evt)->getMessage();
+    Message msg = DCAST(MessageEvent, pEvent)->getMessage();
 
     QString nickJoined = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
     if(m_pSession->isMyNick(nickJoined) && !childIrcWindowExists(msg.m_params[0]))
@@ -518,16 +519,16 @@ void StatusWindow::onJoinMessage(Event *evt)
         // create the channel and post the message to it
         ChannelWindow *pChanWin = new ChannelWindow(m_pSession, m_pSharedServerConnPanel, msg.m_params[0]);
         addChannelWindow(pChanWin);
-        QString textToPrint = g_pCfgManager->getOptionValue("message.join.self").arg(msg.m_params[0]);
+        QString textToPrint = GET_OPT("message.join.self").arg(msg.m_params[0]);
         pChanWin->printOutput(textToPrint, MESSAGE_IRC_JOIN);
     }
 }
 
 //-----------------------------------//
 
-void StatusWindow::onModeMessage(Event *evt)
+void StatusWindow::onModeMessage(Event *pEvent)
 {
-    Message msg = DCAST(MessageEvent, evt)->getMessage();
+    Message msg = DCAST(MessageEvent, pEvent)->getMessage();
     if(!childIrcWindowExists(msg.m_params[0]))  // user mode
     {
         // ignore first parameter
@@ -535,7 +536,7 @@ void StatusWindow::onModeMessage(Event *evt)
         for(int i = 2; i < msg.m_paramsNum; ++i)
             modes += ' ' + msg.m_params[i];
 
-        QString textToPrint = g_pCfgManager->getOptionValue("message.mode")
+        QString textToPrint = GET_OPT("message.mode")
                                 .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName))
                                 .arg(modes);
 
@@ -545,14 +546,14 @@ void StatusWindow::onModeMessage(Event *evt)
 
 //-----------------------------------//
 
-void StatusWindow::onNickMessage(Event *evt)
+void StatusWindow::onNickMessage(Event *pEvent)
 {
-    Message msg = DCAST(MessageEvent, evt)->getMessage();
+    Message msg = DCAST(MessageEvent, pEvent)->getMessage();
 
     QString oldNick = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
     if(m_pSession->isMyNick(oldNick))
     {
-        QString textToPrint = g_pCfgManager->getOptionValue("message.nick")
+        QString textToPrint = GET_OPT("message.nick")
                               .arg(oldNick)
                               .arg(msg.m_params[0]);
         printOutput(textToPrint, MESSAGE_IRC_NICK);
@@ -561,9 +562,9 @@ void StatusWindow::onNickMessage(Event *evt)
 
 //-----------------------------------//
 
-void StatusWindow::onPongMessage(Event *evt)
+void StatusWindow::onPongMessage(Event *pEvent)
 {
-    Message msg = DCAST(MessageEvent, evt)->getMessage();
+    Message msg = DCAST(MessageEvent, pEvent)->getMessage();
 
     // the prefix is used to determine the server that
     // sends the PONG rather than the first parameter,
@@ -572,7 +573,7 @@ void StatusWindow::onPongMessage(Event *evt)
     // example:
     //	PING hi :there
     //	:irc.server.net PONG there :hi
-    QString textToPrint = g_pCfgManager->getOptionValue("message.pong")
+    QString textToPrint = GET_OPT("message.pong")
                           .arg(msg.m_prefix)
                           .arg(msg.m_params[1]);
     printOutput(textToPrint, MESSAGE_IRC_PONG);
@@ -580,9 +581,9 @@ void StatusWindow::onPongMessage(Event *evt)
 
 //-----------------------------------//
 
-void StatusWindow::onPrivmsgMessage(Event *evt)
+void StatusWindow::onPrivmsgMessage(Event *pEvent)
 {
-    Message msg = DCAST(MessageEvent, evt)->getMessage();
+    Message msg = DCAST(MessageEvent, pEvent)->getMessage();
 
     QString fromNick = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
     CtcpRequestType requestType = getCtcpRequestType(msg);
@@ -627,7 +628,7 @@ void StatusWindow::onPrivmsgMessage(Event *evt)
             m_pSession->sendData(textToSend);
         }
 
-        QString textToPrint = g_pCfgManager->getOptionValue("message.ctcp")
+        QString textToPrint = GET_OPT("message.ctcp")
                               .arg(requestTypeStr)
                               .arg(fromNick);
         printOutput(textToPrint, MESSAGE_IRC_CTCP);
@@ -641,23 +642,23 @@ void StatusWindow::onPrivmsgMessage(Event *evt)
         addQueryWindow(pQueryWin, false);
 
         // delegate to newly created query window
-        pQueryWin->onPrivmsgMessage(evt);
+        pQueryWin->onPrivmsgMessage(pEvent);
     }
 }
 
 //-----------------------------------//
 
-void StatusWindow::onQuitMessage(Event *evt)
+void StatusWindow::onQuitMessage(Event *pEvent)
 {
-    Message msg = DCAST(MessageEvent, evt)->getMessage();
+    Message msg = DCAST(MessageEvent, pEvent)->getMessage();
     QString user = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
-    QString textToPrint = g_pCfgManager->getOptionValue("message.quit")
+    QString textToPrint = GET_OPT("message.quit")
                             .arg(user)
                             .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixUserAndHost));
 
     bool hasReason = (msg.m_paramsNum > 0 && !msg.m_params[0].isEmpty());
     if(hasReason)
-        textToPrint += g_pCfgManager->getOptionValue("message.reason")
+        textToPrint += GET_OPT("message.reason")
                         .arg(msg.m_params[0])
                         .arg(QString::fromUtf8("\xF"));
 
@@ -685,10 +686,10 @@ void StatusWindow::onQuitMessage(Event *evt)
 
 //-----------------------------------//
 
-void StatusWindow::onWallopsMessage(Event *evt)
+void StatusWindow::onWallopsMessage(Event *pEvent)
 {
-    Message msg = DCAST(MessageEvent, evt)->getMessage();
-    QString textToPrint = g_pCfgManager->getOptionValue("message.wallops")
+    Message msg = DCAST(MessageEvent, pEvent)->getMessage();
+    QString textToPrint = GET_OPT("message.wallops")
                             .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName))
                             .arg(msg.m_params[0]);
     printOutput(textToPrint, MESSAGE_IRC_WALLOPS);
@@ -696,9 +697,9 @@ void StatusWindow::onWallopsMessage(Event *evt)
 
 //-----------------------------------//
 
-void StatusWindow::onUnknownMessage(Event *evt)
+void StatusWindow::onUnknownMessage(Event *pEvent)
 {
-    Message msg = DCAST(MessageEvent, evt)->getMessage();
+    Message msg = DCAST(MessageEvent, pEvent)->getMessage();
     // print the whole raw line
     //printOutput(data);
     // todo: decide what to do here

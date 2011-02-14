@@ -7,15 +7,19 @@
 ************************************************************************/
 
 #include <new>
-#include <QProxyStyle>
+#include <QWindowsXPStyle>
 #include <QStringBuilder>
+#include "cv/ConfigManager.h"
 #include "cv/gui/WindowManager.h"
 #include "cv/gui/AltWindowContainer.h"
 #include "cv/gui/Window.h"
 
+#define COLOR_BACKGROUND tr("wmanager.color.background")
+#define COLOR_FOREGROUND tr("wmanager.color.foreground")
+
 namespace cv { namespace gui {
 
-class EntireRowSelectionStyle : public QProxyStyle
+class EntireRowSelectionStyle : public QWindowsXPStyle
 {
 public:
     int styleHint(StyleHint hint, const QStyleOption *option = 0,
@@ -23,7 +27,7 @@ public:
     {
         if(hint == QStyle::SH_ItemView_ShowDecorationSelected)
             return int(true);
-        return QProxyStyle::styleHint(hint, option, widget, returnData);
+        return QWindowsXPStyle::styleHint(hint, option, widget, returnData);
     }
 };
 
@@ -36,11 +40,15 @@ WindowManager::WindowManager(QWidget *pParent, WindowContainer *pMainContainer)
     // properties
     setHeaderHidden(true);
     setStyle(new EntireRowSelectionStyle());
+    setFocusPolicy(Qt::NoFocus);
 
-    // context menu stuff
     setupContextMenu();
+    setupColors();
+    g_pEvtManager->hookEvent("configChanged", COLOR_BACKGROUND, MakeDelegate(this, &WindowManager::onBackgroundColorChanged));
+    g_pEvtManager->hookEvent("configChanged", COLOR_FOREGROUND, MakeDelegate(this, &WindowManager::onForegroundColorChanged));
 
     QObject::connect(m_pMainContainer, SIGNAL(subWindowActivated(QMdiSubWindow *)), this, SLOT(onSubWindowActivated(QMdiSubWindow *)));
+    QObject::connect(this, SIGNAL(currentItemChanged(QTreeWidgetItem*,QTreeWidgetItem*)), this, SLOT(onItemChanged(QTreeWidgetItem*,QTreeWidgetItem*)));
 }
 
 //-----------------------------------//
@@ -64,14 +72,45 @@ WindowManager::~WindowManager()
 
     // destroy the main container
     if(m_pMainContainer)
-    {
         delete m_pMainContainer;
-    }
 
     // destroy the alternate containers
     while(!m_altContainers.empty())
-    {
         m_altContainers.front()->close();
+
+    // unhook the event
+    g_pEvtManager->unhookEvent("configChanged", COLOR_BACKGROUND, MakeDelegate(this, &WindowManager::onBackgroundColorChanged));
+    g_pEvtManager->unhookEvent("configChanged", COLOR_FOREGROUND, MakeDelegate(this, &WindowManager::onForegroundColorChanged));
+}
+
+//-----------------------------------//
+
+void WindowManager::setupColors()
+{
+    // background color is done by stylesheet
+    setStyleSheet(QString("background-color: %1").arg(GET_OPT(COLOR_BACKGROUND)));
+}
+
+//-----------------------------------//
+
+void WindowManager::onBackgroundColorChanged(Event *pEvent)
+{
+    ConfigEvent *pCfgEvent = DCAST(ConfigEvent, pEvent);
+    if(QColor::isValidColor(pCfgEvent->getValue()))
+        setStyleSheet(QString("background-color: %1").arg(pCfgEvent->getValue()));
+}
+
+//-----------------------------------//
+
+void WindowManager::onForegroundColorChanged(Event *pEvent)
+{
+    ConfigEvent *pCfgEvent = DCAST(ConfigEvent, pEvent);
+    if(QColor::isValidColor(pCfgEvent->getValue()))
+    {
+        QBrush newBrush(QColor(pCfgEvent->getValue()));
+        for(int i = 0; i < m_winList.size(); ++i)
+            if(!m_winList[i].m_pTreeItem->isSelected())
+                m_winList[i].m_pTreeItem->setForeground(0, newBrush);
     }
 }
 
@@ -357,6 +396,44 @@ void WindowManager::onSubWindowActivated(QMdiSubWindow *pSubWin)
 
 //-----------------------------------//
 
+void WindowManager::onItemChanged(QTreeWidgetItem *pCurrent, QTreeWidgetItem *pPrevious)
+{
+    int index = getIndexFromItem(pCurrent);
+    if(index >= 0)
+    {
+        Window *pWin = m_winList[index].m_pWindow;
+        if(pWin->hasContainer())
+        {
+            // todo: fix for multiple containers
+            pWin->m_pSubWindow->setFocus();
+        }
+        else
+        {
+            pWin->activateWindow();
+        }
+
+        pWin->giveFocus();
+        pWin->focusedInTree();
+    }
+
+    if(pPrevious)
+    {
+        QFont font = pPrevious->font(0);
+        font.setBold(false);
+        pPrevious->setFont(0, font);
+        pPrevious->setForeground(0, QBrush(QColor(GET_OPT(COLOR_FOREGROUND))));
+    }
+
+    if(pCurrent)
+    {
+        QFont font = pCurrent->font(0);
+        font.setBold(true);
+        pCurrent->setFont(0, font);
+    }
+}
+
+//-----------------------------------//
+
 void WindowManager::setupContextMenu()
 {
     m_pContextMenu = new QMenu;
@@ -383,44 +460,6 @@ void WindowManager::setupContextMenu()
 //
 // Overridden event functions
 //
-void WindowManager::mousePressEvent(QMouseEvent *event)
-{
-    if(event->button() == Qt::RightButton)
-    {
-        event->accept();
-        return;
-    }
-    else if(event->button() == Qt::LeftButton)
-    {
-        QTreeWidgetItem *pItem = itemAt(event->pos());
-        if(pItem)
-        {
-            int index = getIndexFromItem(pItem);
-            if(index >= 0)
-            {
-                Window *pWin = m_winList[index].m_pWindow;
-                if(pWin->hasContainer())
-                {
-                    // todo: fix for multiple containers
-                    pWin->m_pSubWindow->setFocus();
-                }
-                else
-                {
-                    pWin->activateWindow();
-                }
-
-                pWin->giveFocus();
-                pWin->focusedInTree();
-            }
-        }
-
-        QTreeWidget::mousePressEvent(event);
-        event->ignore();
-    }
-}
-
-//-----------------------------------//
-
 void WindowManager::contextMenuEvent(QContextMenuEvent *event)
 {
     QTreeWidgetItem *pItem = itemAt(event->pos());

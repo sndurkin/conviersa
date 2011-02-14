@@ -15,6 +15,7 @@
 #include "cv/gui/definitions.h"
 
 class QMdiSubWindow;
+class Event;
 
 namespace cv { namespace gui {
 
@@ -64,11 +65,15 @@ public:
 
 public slots:
     void onSubWindowActivated(QMdiSubWindow *pSubWin);
+    void onItemChanged(QTreeWidgetItem *pCurrent, QTreeWidgetItem *pPrevious);
 
 protected:
+    void setupColors();
     void setupContextMenu();
 
-    void mousePressEvent(QMouseEvent *event);
+    void onBackgroundColorChanged(Event *pEvent);
+    void onForegroundColorChanged(Event *pEvent);
+
     void contextMenuEvent(QContextMenuEvent *event);
 };
 

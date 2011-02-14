@@ -47,24 +47,24 @@ public:
     void addQueryWindow(QueryWindow *pPriv, bool giveFocus);
 
     // events
-    void onServerConnecting(Event *evt);
-    void onServerConnectFailed(Event *evt);
-    void onServerConnect(Event *evt);
-    void onServerDisconnect(Event *evt);
-    void onErrorMessage(Event *evt);
-    void onInviteMessage(Event *evt);
-    void onJoinMessage(Event *evt);
-    void onModeMessage(Event *evt);
-    void onNickMessage(Event *evt);
-    void onPongMessage(Event *evt);
-    void onPrivmsgMessage(Event *evt);
-    void onQuitMessage(Event *evt);
-    void onWallopsMessage(Event *evt);
-    void onNumericMessage(Event *evt);
-    void onUnknownMessage(Event *evt);
+    void onServerConnecting(Event *pEvent);
+    void onServerConnectFailed(Event *pEvent);
+    void onServerConnect(Event *pEvent);
+    void onServerDisconnect(Event *pEvent);
+    void onErrorMessage(Event *pEvent);
+    void onInviteMessage(Event *pEvent);
+    void onJoinMessage(Event *pEvent);
+    void onModeMessage(Event *pEvent);
+    void onNickMessage(Event *pEvent);
+    void onPongMessage(Event *pEvent);
+    void onPrivmsgMessage(Event *pEvent);
+    void onQuitMessage(Event *pEvent);
+    void onWallopsMessage(Event *pEvent);
+    void onNumericMessage(Event *pEvent);
+    void onUnknownMessage(Event *pEvent);
 
-    void onOutput(Event *evt);
-    void onDoubleClickLink(Event *evt);
+    void onOutput(Event *pEvent);
+    void onDoubleClickLink(Event *pEvent);
 
 protected:
     void handleSay(const QString &text);

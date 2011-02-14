@@ -25,7 +25,7 @@ namespace gui {
 
 Client::Client(const QString &title)
 {
-    g_pCfgManager = new ConfigManager("conviersa.ini");
+    setupEvents();
     setupConfig();
 
     setClientSize();
@@ -38,18 +38,13 @@ Client::Client(const QString &title)
 
     m_pDock = new QDockWidget(tr("Window Manager"));
     m_pDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-
+    m_pDock->setFeatures(QDockWidget::DockWidgetMovable);
     loadQSS();
 
     m_pManager = new WindowManager(m_pDock, m_pMainContainer);
     m_pDock->setWidget(m_pManager);
+    m_pDock->setTitleBarWidget(NULL);
     addDockWidget(Qt::LeftDockWidgetArea, m_pDock);
-
-    // TODO: fill in with events
-    g_pEvtManager = new EventManager;
-    g_pEvtManager->createEvent("input");
-    g_pEvtManager->createEvent("output");
-    g_pEvtManager->createEvent("doubleClickedLink");
 
     // create new irc server window on client start
     onNewIrcServerWindow();
@@ -65,7 +60,7 @@ Client::~Client()
 
 //-----------------------------------//
 
-void Client::closeEvent(QCloseEvent *event)
+void Client::closeEvent(QCloseEvent *)
 {
     // save the size of the client
     g_pCfgManager->setOptionValue("client.width", QString::number(width()));
@@ -79,17 +74,32 @@ void Client::closeEvent(QCloseEvent *event)
 
 //-----------------------------------//
 
+void Client::setupEvents()
+{
+    g_pEvtManager = new EventManager;
+    g_pEvtManager->createEvent("input");
+    g_pEvtManager->createEvent("output");
+    g_pEvtManager->createEvent("doubleClickedLink");
+}
+
+//-----------------------------------//
+
 void Client::setupMenu()
 {
     m_pFileMenu = menuBar()->addMenu(tr("&File"));
 
     QAction *pNewIrcWinAct = m_pFileMenu->addAction(tr("&New IRC Server"));
+    QList<QKeySequence> newServerShortcuts;
+    newServerShortcuts.append(QKeySequence("Ctrl+T"));
+    pNewIrcWinAct->setShortcuts(newServerShortcuts);
+
     m_pFileMenu->addSeparator();
+
     QAction *pRefreshQSS = m_pFileMenu->addAction(tr("Refresh QSS"));
-    QList<QKeySequence> list;
-    QKeySequence keysq("Ctrl+T");
-    list.append(keysq);
-    pNewIrcWinAct->setShortcuts(list);
+    QList<QKeySequence> refreshShortcuts;
+    refreshShortcuts.append(QKeySequence("Ctrl+R"));
+    pRefreshQSS->setShortcuts(refreshShortcuts);
+
     QObject::connect(pNewIrcWinAct, SIGNAL(triggered()), this, SLOT(onNewIrcServerWindow()));
     QObject::connect(pRefreshQSS, SIGNAL(triggered()), this, SLOT(loadQSS()));
 
@@ -100,6 +110,8 @@ void Client::setupMenu()
 
 void Client::setupConfig()
 {
+    g_pCfgManager = new ConfigManager("conviersa.ini");
+
     QList<ConfigOption> defOptions;
 
     setupColorConfig(defOptions);
@@ -114,19 +126,58 @@ void Client::setupConfig()
 
 void Client::setupColorConfig(QList<ConfigOption> &defOptions)
 {
-    defOptions.append(ConfigOption("color.say", "#000000"));
-    defOptions.append(ConfigOption("color.action", "#0000CC"));
-    defOptions.append(ConfigOption("color.topic", "#006600"));
-    defOptions.append(ConfigOption("color.join", "#006600"));
-    defOptions.append(ConfigOption("color.part", "#006600"));
-    defOptions.append(ConfigOption("color.quit", "#006600"));
-    defOptions.append(ConfigOption("color.kick", "#000000"));
-    defOptions.append(ConfigOption("color.nick", "#808080"));
-    defOptions.append(ConfigOption("color.invite", "#808080"));
-    defOptions.append(ConfigOption("color.mode", "#808080"));
-    defOptions.append(ConfigOption("color.notice", "#B80000"));
-    defOptions.append(ConfigOption("color.ctcp", "#D80000"));
-    defOptions.append(ConfigOption("color.other", "#D80000"));
+    // WindowManager colors
+    defOptions.append(ConfigOption("wmanager.color.background", "#ffffff"));
+    defOptions.append(ConfigOption("wmanager.color.foreground", "#000000"));
+
+    // input colors
+    defOptions.append(ConfigOption("input.color.background", "#ffffff"));
+    defOptions.append(ConfigOption("input.color.foreground", "#000000"));
+
+    // output colors
+    defOptions.append(ConfigOption("output.color.say", "#000000"));
+    defOptions.append(ConfigOption("output.color.background", "#ffffff"));
+
+    defOptions.append(ConfigOption("output.color.custom1", "#ffffff"));   // white
+    defOptions.append(ConfigOption("output.color.custom2", "#000000"));   // black
+    defOptions.append(ConfigOption("output.color.custom3", "#000080"));   // navy
+    defOptions.append(ConfigOption("output.color.custom4", "#008000"));   // green
+    defOptions.append(ConfigOption("output.color.custom5", "#ff0000"));   // red
+    defOptions.append(ConfigOption("output.color.custom6", "#800000"));   // maroon
+    defOptions.append(ConfigOption("output.color.custom7", "#800080"));   // purple
+    defOptions.append(ConfigOption("output.color.custom8", "#ffa500"));   // orange
+    defOptions.append(ConfigOption("output.color.custom9", "#ffff00"));   // yellow
+    defOptions.append(ConfigOption("output.color.custom10", "#00ff00"));  // lime
+    defOptions.append(ConfigOption("output.color.custom11", "#008080"));  // teal
+    defOptions.append(ConfigOption("output.color.custom12", "#00ffff"));  // cyan
+    defOptions.append(ConfigOption("output.color.custom13", "#0000ff"));  // blue
+    defOptions.append(ConfigOption("output.color.custom14", "#ff00ff"));  // magenta
+    defOptions.append(ConfigOption("output.color.custom15", "#808080"));  // gray
+    defOptions.append(ConfigOption("output.color.custom16", "#c0c0c0"));  // light gray
+
+    defOptions.append(ConfigOption("output.color.say.self", "#000000"));
+    defOptions.append(ConfigOption("output.color.highlight", "#ff0000"));
+    defOptions.append(ConfigOption("output.color.action", "#0000cc"));
+    defOptions.append(ConfigOption("output.color.ctcp", "#d80000"));
+    defOptions.append(ConfigOption("output.color.notice", "#b80000"));
+    defOptions.append(ConfigOption("output.color.nick", "#808080"));
+    defOptions.append(ConfigOption("output.color.info", "#000000"));
+    defOptions.append(ConfigOption("output.color.invite", "#808080"));
+    defOptions.append(ConfigOption("output.color.join", "#006600"));
+    defOptions.append(ConfigOption("output.color.part", "#006600"));
+    defOptions.append(ConfigOption("output.color.kick", "#000000"));
+    defOptions.append(ConfigOption("output.color.mode", "#808080"));
+    defOptions.append(ConfigOption("output.color.quit", "#006600"));
+    defOptions.append(ConfigOption("output.color.topic", "#006600"));
+    defOptions.append(ConfigOption("output.color.wallops", "#b80000"));
+    defOptions.append(ConfigOption("output.color.whois", "#000000"));
+
+    defOptions.append(ConfigOption("output.color.debug", "#8b0000"));
+    defOptions.append(ConfigOption("output.color.error", "#8b0000"));
+
+    // channel userlist colors
+    defOptions.append(ConfigOption("userlist.color.background", "#ffffff"));
+    defOptions.append(ConfigOption("userlist.color.foreground", "#000000"));
 }
 
 //-----------------------------------//
@@ -146,7 +197,8 @@ void Client::setupGeneralConfig(QList<ConfigOption> &defOptions)
     defOptions.append(ConfigOption("client.width", "1000"));
     defOptions.append(ConfigOption("client.height", "500"));
 
-    defOptions.append(ConfigOption("timestamp.format", "[hh:mm:ss]"));
+    defOptions.append(ConfigOption("timestamp",         "off"));
+    defOptions.append(ConfigOption("timestamp.format",  "[hh:mm:ss]"));
 }
 
 //-----------------------------------//
@@ -191,13 +243,13 @@ void Client::setupMessagesConfig(QList<ConfigOption> &defOptions)
 void Client::setClientSize()
 {
     bool ok;
-    int width = g_pCfgManager->getOptionValue("client.width").toInt(&ok);
+    int width = GET_OPT("client.width").toInt(&ok);
     if(!ok)
     {
         width = 1000;
         g_pCfgManager->setOptionValue("client.width", QString::number(width));
     }
-    int height = g_pCfgManager->getOptionValue("client.height").toInt(&ok);
+    int height = GET_OPT("client.height").toInt(&ok);
     if(!ok)
     {
         height = 500;

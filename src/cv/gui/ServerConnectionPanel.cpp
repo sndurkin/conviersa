@@ -156,7 +156,7 @@ void ServerConnectionPanel::createForm()
     m_pNameInput->move(LABEL_START + LABEL_WIDTH + SPACING, rowY);
     m_pNameInput->resize(150, CONTROL_HEIGHT);
     m_pNameInput->setFont(font());
-    m_pNameInput->setText(g_pCfgManager->getOptionValue("server.name"));
+    m_pNameInput->setText(GET_OPT("server.name"));
     QObject::connect(m_pNameInput, SIGNAL(returnPressed()), this, SLOT(onEnter()));
 
     rowY += CONTROL_HEIGHT + 5;
@@ -170,7 +170,7 @@ void ServerConnectionPanel::createForm()
     m_pNickInput->move(LABEL_START + LABEL_WIDTH + SPACING, rowY);
     m_pNickInput->resize(150, CONTROL_HEIGHT);
     m_pNickInput->setFont(font());
-    m_pNickInput->setText(g_pCfgManager->getOptionValue("server.nick"));
+    m_pNickInput->setText(GET_OPT("server.nick"));
     QObject::connect(m_pNickInput, SIGNAL(returnPressed()), this, SLOT(onEnter()));
 
     rowY += CONTROL_HEIGHT + 5;
@@ -184,7 +184,7 @@ void ServerConnectionPanel::createForm()
     m_pAltNickInput->move(LABEL_START + LABEL_WIDTH + SPACING, rowY);
     m_pAltNickInput->resize(150, CONTROL_HEIGHT);
     m_pAltNickInput->setFont(font());
-    m_pAltNickInput->setText(g_pCfgManager->getOptionValue("server.altNick"));
+    m_pAltNickInput->setText(GET_OPT("server.altNick"));
     QObject::connect(m_pAltNickInput, SIGNAL(returnPressed()), this, SLOT(onEnter()));
 
     m_pConnectButton = new QPushButton(this);

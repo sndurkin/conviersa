@@ -1,28 +1,37 @@
 /*
  *  Conviersa Qt Stylesheet
  */
-
+ 
 cv--gui--WindowManager {
   selection-background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                                               stop: 0 #9CBBD9,
                                               stop: 1 #6D8CAA);
   selection-color: #FFFFFF;
+  background-color: #000;
+  margin: 2px;
+  border: 1px solid #999;
+  border-radius: 3px;
 }
 cv--gui--WindowManager::item {
   padding: 5px;
 }
+QDockWidget::title {
+  margin: 3px 2px 0 2px;
+  padding: 3px 0 -3px 8px;
+  background-color: transparent;
+}
 
 cv--gui--OutputControl {
   border-radius: 3px;
-  border: 1px solid #999;
-  background: #fff;
   padding: 2px;
+  border: 1px solid #999;
 }
 
 QPlainTextEdit {
   border-radius: 3px;
   border: 1px solid #999;
-  background: #fff;
+  background: #000;
+  color: #fff;
 }
 
 cv--gui--ServerConnectionPanel {
@@ -41,11 +50,19 @@ cv--gui--ServerConnectionPanel QLineEdit {
 }
 
 QListWidget {
-  border-radius: 3px;
+  border-radius: 3x;
   border: 1px solid #999;
-  background: #fff;
+  outline: 0;
 }
 
 QListWidget::item {
-  padding: 1px;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+}
+QListWidget::item:selected {
+  color: #fff;
+  background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                              stop: 0 #9CBBD9,
+                                              stop: 1 #6D8CAA);
 }

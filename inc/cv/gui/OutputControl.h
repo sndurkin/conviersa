@@ -142,7 +142,9 @@ enum OutputColor {
     COLOR_WHOIS,
 
     COLOR_DEBUG,
-    COLOR_ERROR
+    COLOR_ERROR,
+
+    COLOR_NUM
 };
 
 //-----------------------------------//
@@ -425,6 +427,8 @@ class OutputControl : public QAbstractScrollArea
     int                 m_hoveredLineIdx;
     Link *              m_hoveredLink;
 
+    // color reference array; see OutputColor enum
+    QColor              m_colorsArr[COLOR_NUM];
 
     // variables used instance-wide; they are used as reusable
     // blocks of memory so we don't have to call new/delete within
@@ -435,19 +439,24 @@ class OutputControl : public QAbstractScrollArea
     void *              m_pEvt;
 
 public:
-    static const int    PADDING = 3;
-    static const int    TEXT_START_POS = PADDING;
-    static const int    WRAPPED_TEXT_START_POS = 25;
+    static const int        PADDING = 3;
+    static const int        TEXT_START_POS = PADDING;
+    static const int        WRAPPED_TEXT_START_POS = 25;
 
-    // color reference array; see OutputColor enum
-    static QColor       COLORS[36];
+    // this array holds all the config property keys for each
+    // built-in color
+    static QString          COLOR_TO_CONFIG_MAP[COLOR_NUM];
 
     OutputControl(QWidget *parent = NULL);
+    ~OutputControl();
     void appendMessage(const QString &msg, OutputColor defaultMsgColor);
     void changeFont(const QFont &font);
-    void refreshLinks();
+
+    // event handlers
+    void onConfigChanged(Event *pEvent);
 
 protected:
+    void setupColors();
     void appendLine(OutputLine &line);
     void flushOutputLines();
     void calculateLineWraps(OutputLine &currLine, QLinkedList<int> &splits, int vpWidth, QFont font);

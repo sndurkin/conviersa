@@ -233,7 +233,7 @@ bool Session::isNickPrefix(const QChar &prefix)
 // some information as a result of others (like numerics)
 void Session::processMessage(const Message &msg)
 {
-    Event *evt = new MessageEvent(msg);
+    Event *pEvent = new MessageEvent(msg);
     if(msg.m_isNumeric)
     {
         switch(msg.m_command)
@@ -291,7 +291,7 @@ void Session::processMessage(const Message &msg)
             }
         }
 
-        g_pEvtManager->fireEvent("numericMessage", this, evt);
+        g_pEvtManager->fireEvent("numericMessage", this, pEvent);
     }
     else
     {
@@ -299,32 +299,32 @@ void Session::processMessage(const Message &msg)
         {
             case IRC_COMMAND_ERROR:
             {
-                g_pEvtManager->fireEvent("errorMessage", this, evt);
+                g_pEvtManager->fireEvent("errorMessage", this, pEvent);
                 break;
             }
             case IRC_COMMAND_INVITE:
             {
-                g_pEvtManager->fireEvent("inviteMessage", this, evt);
+                g_pEvtManager->fireEvent("inviteMessage", this, pEvent);
                 break;
             }
             case IRC_COMMAND_JOIN:
             {
-                g_pEvtManager->fireEvent("joinMessage", this, evt);
+                g_pEvtManager->fireEvent("joinMessage", this, pEvent);
                 break;
             }
             case IRC_COMMAND_KICK:
             {
-                g_pEvtManager->fireEvent("kickMessage", this, evt);
+                g_pEvtManager->fireEvent("kickMessage", this, pEvent);
                 break;
             }
             case IRC_COMMAND_MODE:
             {
-                g_pEvtManager->fireEvent("modeMessage", this, evt);
+                g_pEvtManager->fireEvent("modeMessage", this, pEvent);
                 break;
             }
             case IRC_COMMAND_NICK:
             {
-                g_pEvtManager->fireEvent("nickMessage", this, evt);
+                g_pEvtManager->fireEvent("nickMessage", this, pEvent);
 
                 // update the user's nickname if he's the one changing it
                 QString oldNick = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
@@ -336,12 +336,12 @@ void Session::processMessage(const Message &msg)
             }
             case IRC_COMMAND_NOTICE:
             {
-                g_pEvtManager->fireEvent("noticeMessage", this, evt);
+                g_pEvtManager->fireEvent("noticeMessage", this, pEvent);
                 break;
             }
             case IRC_COMMAND_PART:
             {
-                g_pEvtManager->fireEvent("partMessage", this, evt);
+                g_pEvtManager->fireEvent("partMessage", this, pEvent);
                 break;
             }
             case IRC_COMMAND_PING:
@@ -351,37 +351,37 @@ void Session::processMessage(const Message &msg)
             }
             case IRC_COMMAND_PONG:
             {
-                g_pEvtManager->fireEvent("pongMessage", this, evt);
+                g_pEvtManager->fireEvent("pongMessage", this, pEvent);
                 break;
             }
             case IRC_COMMAND_PRIVMSG:
             {
-                g_pEvtManager->fireEvent("privmsgMessage", this, evt);
+                g_pEvtManager->fireEvent("privmsgMessage", this, pEvent);
                 break;
             }
             case IRC_COMMAND_QUIT:
             {
-                g_pEvtManager->fireEvent("quitMessage", this, evt);
+                g_pEvtManager->fireEvent("quitMessage", this, pEvent);
                 break;
             }
             case IRC_COMMAND_TOPIC:
             {
-                g_pEvtManager->fireEvent("topicMessage", this, evt);
+                g_pEvtManager->fireEvent("topicMessage", this, pEvent);
                 break;
             }
             case IRC_COMMAND_WALLOPS:
             {
-                g_pEvtManager->fireEvent("wallopsMessage", this, evt);
+                g_pEvtManager->fireEvent("wallopsMessage", this, pEvent);
                 break;
             }
             default:
             {
-                g_pEvtManager->fireEvent("unknownMessage", this, evt);
+                g_pEvtManager->fireEvent("unknownMessage", this, pEvent);
             }
         }
     }
 
-    delete evt;
+    delete pEvent;
 }
 
 //-----------------------------------//
@@ -439,9 +439,9 @@ void Session::onReceiveData(const QString &data)
         QString msgData = m_prevData.left(numChars);
         m_prevData.remove(0, numChars);
 
-        Event *evt = new DataEvent(msgData);
-        g_pEvtManager->fireEvent("receivedData", this, evt);
-        delete evt;
+        Event *pEvent = new DataEvent(msgData);
+        g_pEvtManager->fireEvent("receivedData", this, pEvent);
+        delete pEvent;
 
         Message msg = parseData(msgData);
         processMessage(msg);

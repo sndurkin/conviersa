@@ -35,13 +35,13 @@ public:
     bool isTargetNick(const QString &nick) { return (m_targetNick.compare(nick, Qt::CaseSensitive) == 0); }
 
     // events
-    void onNumericMessage(Event *evt);
-    void onNickMessage(Event *evt);
-    void onNoticeMessage(Event *evt);
-    void onPrivmsgMessage(Event *evt);
+    void onNumericMessage(Event *pEvent);
+    void onNickMessage(Event *pEvent);
+    void onNoticeMessage(Event *pEvent);
+    void onPrivmsgMessage(Event *pEvent);
 
-    void onOutput(Event *evt);
-    void onDoubleClickLink(Event *evt);
+    void onOutput(Event *pEvent);
+    void onDoubleClickLink(Event *pEvent);
 
 protected:
     void handleSay(const QString &text);

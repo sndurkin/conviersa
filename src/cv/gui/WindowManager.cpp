@@ -7,7 +7,6 @@
 ************************************************************************/
 
 #include <new>
-#include <QWindowsXPStyle>
 #include <QStringBuilder>
 #include "cv/ConfigManager.h"
 #include "cv/gui/WindowManager.h"
@@ -17,9 +16,17 @@
 #define COLOR_BACKGROUND tr("wmanager.color.background")
 #define COLOR_FOREGROUND tr("wmanager.color.foreground")
 
+#ifdef Q_WS_WIN
+#include <QWindowsXPStyle>
+#define STYLE_CLASS QWindowsXPStyle
+#else
+#include <QProxyStyle>
+#define STYLE_CLASS QProxyStyle
+#endif
+
 namespace cv { namespace gui {
 
-class EntireRowSelectionStyle : public QWindowsXPStyle
+class EntireRowSelectionStyle : public STYLE_CLASS
 {
 public:
     int styleHint(StyleHint hint, const QStyleOption *option = 0,
@@ -27,7 +34,7 @@ public:
     {
         if(hint == QStyle::SH_ItemView_ShowDecorationSelected)
             return int(true);
-        return QWindowsXPStyle::styleHint(hint, option, widget, returnData);
+        return STYLE_CLASS::styleHint(hint, option, widget, returnData);
     }
 };
 

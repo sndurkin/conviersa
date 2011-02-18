@@ -628,7 +628,7 @@ void ChannelWindow::joinChannel()
     m_inChannel = true;
     while(!m_messageQueue.isEmpty())
     {
-        QueuedOutputMessage &qom = m_messageQueue.dequeue();
+        QueuedOutputMessage qom = m_messageQueue.dequeue();
         printOutput(qom.message, qom.messageType);
     }
 }

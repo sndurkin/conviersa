@@ -10,6 +10,7 @@
 
 #include <QHash>
 #include <QList>
+#include <stdint.h>
 #include "cv/FastDelegate.h"
 
 #define DCAST(eventType, var) dynamic_cast<eventType *>(var)
@@ -237,7 +238,7 @@ protected:
     template<class T>
     EventInfo *getEventInfo(QHash<T, EventInfo> *pEventsHash, const T &evtTypeId)
     {
-        QHash<T, EventInfo>::iterator eventsIter = pEventsHash->find(evtTypeId);
+        typename QHash<T, EventInfo>::iterator eventsIter = pEventsHash->find(evtTypeId);
         if(eventsIter == pEventsHash->end())
             return NULL;
 

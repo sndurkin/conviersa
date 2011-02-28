@@ -1,42 +1,59 @@
-ToDo: things to be implemented are basically separated based on the class or part of the project they belong in
+--- TODO ---
 
-Handle multi-line copy-pasting
+Settings/Config
+- add settings for fonts for input, output, and channel userlist
+- add a SettingsWindow which allows the user to customize settings using a GUI
 
-IWindow
-	- make sure there aren't any functions in IWindow that will cause a crash if m_pManager is NULL
+Output Control
+- add links for hyperlinks and channels, and add double-click functionality for them
+- add a right-click menu for each link type
+  -> nicks
+  -> channels
+  -> hyperlinks
+- add a WHOIS panel that pops up from the bottom of the OutputControl
+- need some way to change the colors from threads outside the OutputControl.. since they are solely read from within the paintEvent function, they should be modified within the event loop
+  -> QCoreApplication::postEvent()
+  -> QTimer::singleShot()
+  -> QMetaObject::invokeMethod() (with Qt::QueuedConnection)
+  -> QObject::connect() (with Qt::QueuedConnection)
+  -> http://stackoverflow.com/questions/3937152/looking-for-postmessage-functionality-in-qt
+- test appending new lines to OutputControl
+  -> if it's at the bottom line, control should scroll to next line when it's appended
+  -> when the mouse is down, it should not scroll, even if at the bottom
+- link events to add:
+  -> clicked
+  -> right-clicked
+  -> middle-clicked
+  -> hovered (tooltips)
 
-IIrcWindow
-	- get rid of the top empty line when an IIrcWindow is first printed to (or the bottom empty line when there’s a scrollbar)
-		- this may have already been completed, i can't remember
-	- add an option for automatically scrolling to the end of the document if it isn't already (and it's past some given time of inactivity)
-		- or, at the very least, a notification that it isn't scrolled all the way to the bottom
-	- multi-line support for the input control (m_pInput)
-	- when text starts displaying in the output box, it starts at the bottom, not the top
-	- CREATE CUSTOM OUTPUT CONTROL
-		- specific features for this will be outlined later
-	- add support for encodings, a little research will be needed for this
+Input Control
+- need a way to add colors and other control codes to the text
+- smart nick completion
 
-IrcStatusWindow
-	- finish CTCP support
-	- add the rest of the control codes functionality
-	- make sure support for channel modes is completely finished
-	- decide how to display NOTICEs and WALLOPS and fully implement that
-	- add support for URL clicking
-		- need to make it intelligent (in other words, it doesn't include trailing parentheses or periods or etc in addresses)
-	- redo nickname comparisons
-		- use insensitive comparison and make sure {}| and []\ are covered based on casemapping etc.
+Misc GUI
+- add a ChannelOptionsPanel which provides things like modes, topic, bans list, etc for an op to modify
+- enhance the ServerConnectionPanel to save servers recently connected to
+  -> find a way to save 5 or so servers in the config file
 
-IrcChanListWindow
-	- fix the bug with the QheaderView (resets the sizes when we re-add the view)
-	- fix the painting for highlighting a channel; under vista it looks crappy and inconsistent
-		- this will probably involve creating a custom view control for the channel list that is (hopefully) faster
-	- running <10000 on freenode is extremely slow (also eats the crap out of memory)
-		- maybe do some research, could make a custom view control that is lightweight and fast
-	- maybe add a “Join Channel” button?
 
-IrcDebugWindow
-	- will be quite useful for development, i think i might work on this very soon
-	- currently using a preprocessor define inside IrcStatusWindow called DEBUG_MESSAGES
+Misc
+- better implementation of IRC protocol (numerics)
 
-POSSIBLE FEATURE (can be added to wiki later)
-	- switching focus between windows with ctrl+tab (and possibly with a window dialog similar to Windows' alt+tab dialog)
+Styles
+- add selection color for a user in the channel's user list
+- fix issue with rounded borders on OutputControl (and scrollbar)
+- decide what to do about the background colors
+- fix issue with window manager selection style in Win7
+
+
+
+--- BUGS TO FIX ---
+
+- when selecting text in the OutputControl and a new message arrives, it moves the screen which causing a disruption in the selection
+- there's a weird bug when clicking on the OutputControl when it brings the entire client back to focus (highlights whatever was already highlighted previously)
+- for Erroneous Nickname, don't let styles of nick carry into the rest of the msg
+- bug when minimizing the client's main window, the title becomes "Conviersa" instead of "Conviersa - [currently open window]"
+- add a "Connect cancelled" message to the output?
+- when receiving a PM, the new QueryWindow is in focus, but not selected in the tree
+  -> i don't like this entire process of tree selections at all... the fact that there's two functions, giveFocus() and focusedInTree(), doesn't
+     make much sense, it should be cleaner

@@ -93,11 +93,11 @@ public:
     void onPartMessage(Event *pEvent);
     void onPrivmsgMessage(Event *pEvent);
     void onTopicMessage(Event *pEvent);
-
     void onOutput(Event *pEvent);
     void onDoubleClickLink(Event *pEvent);
-
     void onColorConfigChanged(Event *pEvent);
+
+    static void setupColorConfig(QMap<QString, ConfigOption> &defOptions);
 
 protected:
     void setupColors();

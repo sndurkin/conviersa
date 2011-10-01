@@ -19,59 +19,75 @@
 
 namespace cv {
 
-class ConfigEvent : public Event
-{
-    QString m_filename;
-    QString m_optName;
-    QString m_optValue;
-
-public:
-    ConfigEvent(const QString &filename, const QString &optName, const QString &optValue)
-        : m_filename(filename),
-          m_optName(optName),
-          m_optValue(optValue)
-    { }
-
-    QString getFilename() const { return m_filename; }
-    QString getName() const { return m_optName; }
-    QString getValue() const { return m_optValue; }
+enum ConfigType {
+    CONFIG_TYPE_INTEGER,
+    CONFIG_TYPE_STRING,
+    CONFIG_TYPE_BOOLEAN,
+    CONFIG_TYPE_COLOR
 };
 
 //-----------------------------------//
 
+// this class stores both the value and the type of
+// a ConfigOption; it doesn't store the name because
+// they are stored in a map by name
 struct ConfigOption
 {
-    QString name;
     QString value;
+    ConfigType type;
 
-    ConfigOption(const QString &n, const QString &v)
-        : name(n),
-          value(v)
+    ConfigOption(const QString &v, ConfigType t = CONFIG_TYPE_STRING)
+        : value(v),
+          type(t)
     { }
+};
+
+//-----------------------------------//
+
+class ConfigEvent : public Event
+{
+    QString     m_filename;
+    QString     m_name;
+    QString     m_value;
+    ConfigType  m_type;
+
+public:
+    ConfigEvent(const QString &filename, const QString &name, const QString &value, ConfigType type)
+        : m_filename(filename),
+          m_name(name),
+          m_value(value),
+          m_type(type)
+    { }
+
+    QString getFilename() const { return m_filename; }
+    QString getName() const { return m_name; }
+    QString getValue() const { return m_value; }
+    ConfigType getType() const { return m_type; }
 };
 
 //-----------------------------------//
 
 class ConfigManager
 {
-    QHash<QString, QMap<QString, QString> > m_files;
+    QHash<QString, QMap<QString, ConfigOption> > m_files;
+    QString m_defaultFilename;
 
     // comments start the line with '#'
     QRegExp m_commentRegex;
-
-    QString m_defaultFilename;
+    QRegExp m_newlineRegex;
 
 public:
     ConfigManager(const QString &defaultFilename);
 
-    bool setupConfigFile(const QString &filename, const QList<ConfigOption> &options);
+    bool setupConfigFile(const QString &filename, QMap<QString, ConfigOption> &options);
     bool writeToFile(const QString &filename);
     QString getOptionValue(const QString &filename, const QString &optName);
     bool setOptionValue(const QString &filename, const QString &optName, const QString &optValue, bool fireEvent = false);
+    bool isValueValid(const QString &value, ConfigType type);
     void printFile(const QString &filename);
 
     // calls setupConfigFile() with the default filename
-    bool setupDefaultConfigFile(const QList<ConfigOption> &options)
+    bool setupDefaultConfigFile(QMap<QString, ConfigOption> &options)
     {
         return setupConfigFile(m_defaultFilename, options);
     }

@@ -42,11 +42,14 @@ private:
     // offset values available (how far to set the edges of the
     // panel, in pixels)
     //
-    // if both alignments are specified, then any width for the
-    // panel is ignored
+    // if both offsets are specified, then any width (or height, depending
+    // on the secondary alignment) for the panel is ignored
     Qt::Alignment           m_secondaryAlignment;
     int                     m_firstOffset,
                             m_secondOffset;
+
+    int                     m_dropShadowWidth;
+    Qt::Alignment           m_dropShadowSides;
 
     // the duration of the animations, in msec
     int                     m_duration;
@@ -60,7 +63,7 @@ private:
     // multiple widgets (to conserve memory)
     //
     // the panel is shared and can only be inside one widget at a time,
-    // but an open buttons is inside each widget; m_pcurrOpenButton
+    // but an open button is placed inside each widget; m_pcurrOpenButton
     // points to the button that's currently sharing the same parent
     // as the OverlayPanel
     //
@@ -98,6 +101,7 @@ public slots:
 
 protected:
     void setDuration(int duration);
+    void setDropShadowConfig(int dropShadowWidth, Qt::Alignment dropShadowSides = (Qt::AlignBottom | Qt::AlignRight));
     void setButtonConfig(Qt::AlignmentFlag btnAlignment, int btnOffset);
     void setAlignment(Qt::AlignmentFlag alignment);
     void setSecondaryAlignment(Qt::Alignment alignment, int firstOffset, int secondOffset);

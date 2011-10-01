@@ -15,6 +15,7 @@
 #include <QDockWidget>
 
 class QTreeWidgetItem;
+class QTimer;
 
 namespace cv {
 
@@ -40,27 +41,35 @@ private:
     QMenu *             m_pFileMenu;
     QDockWidget *       m_pDock;
 
+    // this timer is used to find the last resize event
+    // in a set of resize events that occur in quick succession
+    // (like when dragging the frame to resize the window),
+    // so that we can find the updated client size
+    QTimer *            m_pResizeTimer;
+
 public:
     Client(const QString &title);
     ~Client();
 
 protected:
-    void closeEvent(QCloseEvent *event);
+    void closeEvent(QCloseEvent *);
+    void resizeEvent(QResizeEvent *pEvent);
 
 private:
     void setupEvents();
     void setupMenu();
     void setupConfig();
 
-    void setupColorConfig(QList<ConfigOption> &defOptions);
-    void setupServerConfig(QList<ConfigOption> &defOptions);
-    void setupGeneralConfig(QList<ConfigOption> &defOptions);
-    void setupMessagesConfig(QList<ConfigOption> &defOptions);
+    void setupColorConfig(QMap<QString, ConfigOption> &defOptions);
+    void setupServerConfig(QMap<QString, ConfigOption> &defOptions);
+    void setupGeneralConfig(QMap<QString, ConfigOption> &defOptions);
+    void setupMessagesConfig(QMap<QString, ConfigOption> &defOptions);
 
     void setClientSize();
 
 public slots:
     void onNewIrcServerWindow();
+    void updateSizeConfig();
     void loadQSS();
 };
 

@@ -7,6 +7,7 @@
 ************************************************************************/
 
 #include <QFile>
+#include <QTimer>
 #include "cv/ConfigManager.h"
 #include "cv/gui/Client.h"
 #include "cv/gui/WindowManager.h"
@@ -27,6 +28,11 @@ Client::Client(const QString &title)
 {
     setupEvents();
     setupConfig();
+
+    // initialize the resize timer
+    m_pResizeTimer = new QTimer(this);
+    m_pResizeTimer->setSingleShot(true);
+    connect(m_pResizeTimer, SIGNAL(timeout()), this, SLOT(updateSizeConfig()));
 
     setClientSize();
     setWindowTitle(title);
@@ -62,14 +68,22 @@ Client::~Client()
 
 void Client::closeEvent(QCloseEvent *)
 {
-    // save the size of the client
-    g_pCfgManager->setOptionValue("client.width", QString::number(width()));
-    g_pCfgManager->setOptionValue("client.height", QString::number(height()));
+    disconnect(this, SLOT(updateSizeConfig()));
+
+    // write all the config to the file
+    hide();
     g_pCfgManager->writeToDefaultFile();
 
     delete m_pManager;
     delete m_pDock;
     deleteLater();
+}
+
+//-----------------------------------//
+
+void Client::resizeEvent(QResizeEvent *)
+{
+    m_pResizeTimer->start(150);
 }
 
 //-----------------------------------//
@@ -112,7 +126,7 @@ void Client::setupConfig()
 {
     g_pCfgManager = new ConfigManager("conviersa.ini");
 
-    QList<ConfigOption> defOptions;
+    QMap<QString, ConfigOption> defOptions;
 
     setupColorConfig(defOptions);
     setupServerConfig(defOptions);
@@ -124,118 +138,71 @@ void Client::setupConfig()
 
 //-----------------------------------//
 
-void Client::setupColorConfig(QList<ConfigOption> &defOptions)
+void Client::setupColorConfig(QMap<QString, ConfigOption> &defOptions)
 {
-    // WindowManager colors
-    defOptions.append(ConfigOption("wmanager.color.background", "#ffffff"));
-    defOptions.append(ConfigOption("wmanager.color.foreground", "#000000"));
-
-    // input colors
-    defOptions.append(ConfigOption("input.color.background", "#ffffff"));
-    defOptions.append(ConfigOption("input.color.foreground", "#000000"));
-
-    // output colors
-    defOptions.append(ConfigOption("output.color.say", "#000000"));
-    defOptions.append(ConfigOption("output.color.background", "#ffffff"));
-
-    defOptions.append(ConfigOption("output.color.custom1", "#ffffff"));   // white
-    defOptions.append(ConfigOption("output.color.custom2", "#000000"));   // black
-    defOptions.append(ConfigOption("output.color.custom3", "#000080"));   // navy
-    defOptions.append(ConfigOption("output.color.custom4", "#008000"));   // green
-    defOptions.append(ConfigOption("output.color.custom5", "#ff0000"));   // red
-    defOptions.append(ConfigOption("output.color.custom6", "#800000"));   // maroon
-    defOptions.append(ConfigOption("output.color.custom7", "#800080"));   // purple
-    defOptions.append(ConfigOption("output.color.custom8", "#ffa500"));   // orange
-    defOptions.append(ConfigOption("output.color.custom9", "#ffff00"));   // yellow
-    defOptions.append(ConfigOption("output.color.custom10", "#00ff00"));  // lime
-    defOptions.append(ConfigOption("output.color.custom11", "#008080"));  // teal
-    defOptions.append(ConfigOption("output.color.custom12", "#00ffff"));  // cyan
-    defOptions.append(ConfigOption("output.color.custom13", "#0000ff"));  // blue
-    defOptions.append(ConfigOption("output.color.custom14", "#ff00ff"));  // magenta
-    defOptions.append(ConfigOption("output.color.custom15", "#808080"));  // gray
-    defOptions.append(ConfigOption("output.color.custom16", "#c0c0c0"));  // light gray
-
-    defOptions.append(ConfigOption("output.color.say.self", "#000000"));
-    defOptions.append(ConfigOption("output.color.highlight", "#ff0000"));
-    defOptions.append(ConfigOption("output.color.action", "#0000cc"));
-    defOptions.append(ConfigOption("output.color.ctcp", "#d80000"));
-    defOptions.append(ConfigOption("output.color.notice", "#b80000"));
-    defOptions.append(ConfigOption("output.color.nick", "#808080"));
-    defOptions.append(ConfigOption("output.color.info", "#000000"));
-    defOptions.append(ConfigOption("output.color.invite", "#808080"));
-    defOptions.append(ConfigOption("output.color.join", "#006600"));
-    defOptions.append(ConfigOption("output.color.part", "#006600"));
-    defOptions.append(ConfigOption("output.color.kick", "#000000"));
-    defOptions.append(ConfigOption("output.color.mode", "#808080"));
-    defOptions.append(ConfigOption("output.color.quit", "#006600"));
-    defOptions.append(ConfigOption("output.color.topic", "#006600"));
-    defOptions.append(ConfigOption("output.color.wallops", "#b80000"));
-    defOptions.append(ConfigOption("output.color.whois", "#000000"));
-
-    defOptions.append(ConfigOption("output.color.debug", "#8b0000"));
-    defOptions.append(ConfigOption("output.color.error", "#8b0000"));
-
-    // channel userlist colors
-    defOptions.append(ConfigOption("userlist.color.background", "#ffffff"));
-    defOptions.append(ConfigOption("userlist.color.foreground", "#000000"));
+    WindowManager::setupColorConfig(defOptions);
+    InputOutputWindow::setupColorConfig(defOptions);
+    OutputControl::setupColorConfig(defOptions);
+    ChannelWindow::setupColorConfig(defOptions);
 }
 
 //-----------------------------------//
 
-void Client::setupServerConfig(QList<ConfigOption> &defOptions)
+void Client::setupServerConfig(QMap<QString, ConfigOption> &defOptions)
 {
     // no default options
-    defOptions.append(ConfigOption("server.name", ""));
-    defOptions.append(ConfigOption("server.nick", ""));
-    defOptions.append(ConfigOption("server.altNick", ""));
+    defOptions.insert("server.name", ConfigOption(""));
+    defOptions.insert("server.nick", ConfigOption(""));
+    defOptions.insert("server.altNick", ConfigOption(""));
 }
 
 //-----------------------------------//
 
-void Client::setupGeneralConfig(QList<ConfigOption> &defOptions)
+void Client::setupGeneralConfig(QMap<QString, ConfigOption> &defOptions)
 {
-    defOptions.append(ConfigOption("client.width", "1000"));
-    defOptions.append(ConfigOption("client.height", "500"));
+    defOptions.insert("client.width", ConfigOption("1000", CONFIG_TYPE_INTEGER));
+    defOptions.insert("client.height", ConfigOption("500", CONFIG_TYPE_INTEGER));
+    defOptions.insert("client.maximized", ConfigOption("0", CONFIG_TYPE_BOOLEAN));
 
-    defOptions.append(ConfigOption("timestamp",         "off"));
-    defOptions.append(ConfigOption("timestamp.format",  "[hh:mm:ss]"));
+    defOptions.insert("timestamp",         ConfigOption("0", CONFIG_TYPE_BOOLEAN));
+    defOptions.insert("timestamp.format",  ConfigOption("[hh:mm:ss]"));
 }
 
 //-----------------------------------//
 
-void Client::setupMessagesConfig(QList<ConfigOption> &defOptions)
+void Client::setupMessagesConfig(QMap<QString, ConfigOption> &defOptions)
 {
     // regular messages
-    defOptions.append(ConfigOption("message.action",        "* %1 %2"));
-    defOptions.append(ConfigOption("message.ctcp",          "[CTCP %1 (from %2)]"));
-    defOptions.append(ConfigOption("message.connecting",    "* Connecting to %1 (%2)"));
-    defOptions.append(ConfigOption("message.connectFailed", "* Failed to connect to server (%1)"));
-    defOptions.append(ConfigOption("message.disconnected",  "* Disconnected"));
-    defOptions.append(ConfigOption("message.invite",        "* %1 has invited you to %2"));
-    defOptions.append(ConfigOption("message.join",          "* %1 (%2) has joined %3"));
-    defOptions.append(ConfigOption("message.join.self",     "* You have joined %1"));
-    defOptions.append(ConfigOption("message.kick",          "* %1 was kicked by %2"));
-    defOptions.append(ConfigOption("message.kick.self",     "* You were kicked by %1"));
-    defOptions.append(ConfigOption("message.rejoin",        "* You have rejoined %1"));
-    defOptions.append(ConfigOption("message.mode",          "* %1 has set mode: %2"));
-    defOptions.append(ConfigOption("message.nick",          "* %1 is now known as %2"));
-    defOptions.append(ConfigOption("message.notice",        "-%1- %2"));
-    defOptions.append(ConfigOption("message.part",          "* %1 (%2) has left %3"));
-    defOptions.append(ConfigOption("message.part.self",     "* You have left %1"));
-    defOptions.append(ConfigOption("message.pong",          "* PONG from %1: %2"));
-    defOptions.append(ConfigOption("message.quit",          "* %1 (%2) has quit"));
-    defOptions.append(ConfigOption("message.reason",        " (%1%2)"));
-    defOptions.append(ConfigOption("message.say",           "<%1> %2"));
-    defOptions.append(ConfigOption("message.topic",         "* %1 changes topic to: %2"));
-    defOptions.append(ConfigOption("message.wallops",       "* WALLOPS from %1: %2"));
+    defOptions.insert("message.action",        ConfigOption("* %1 %2"));
+    defOptions.insert("message.ctcp",          ConfigOption("[CTCP %1 (from %2)]"));
+    defOptions.insert("message.connecting",    ConfigOption("* Connecting to %1 (%2)"));
+    defOptions.insert("message.connectFailed", ConfigOption("* Failed to connect to server (%1)"));
+    defOptions.insert("message.disconnected",  ConfigOption("* Disconnected"));
+    defOptions.insert("message.invite",        ConfigOption("* %1 has invited you to %2"));
+    defOptions.insert("message.join",          ConfigOption("* %1 (%2) has joined %3"));
+    defOptions.insert("message.join.self",     ConfigOption("* You have joined %1"));
+    defOptions.insert("message.kick",          ConfigOption("* %1 was kicked by %2"));
+    defOptions.insert("message.kick.self",     ConfigOption("* You were kicked by %1"));
+    defOptions.insert("message.rejoin",        ConfigOption("* You have rejoined %1"));
+    defOptions.insert("message.mode",          ConfigOption("* %1 has set mode: %2"));
+    defOptions.insert("message.nick",          ConfigOption("* %1 is now known as %2"));
+    defOptions.insert("message.notice",        ConfigOption("-%1- %2"));
+    defOptions.insert("message.part",          ConfigOption("* %1 (%2) has left %3"));
+    defOptions.insert("message.part.self",     ConfigOption("* You have left %1"));
+    defOptions.insert("message.pong",          ConfigOption("* PONG from %1: %2"));
+    defOptions.insert("message.quit",          ConfigOption("* %1 (%2) has quit"));
+    defOptions.insert("message.reason",        ConfigOption(" (%1%2)"));
+    defOptions.insert("message.say",           ConfigOption("<%1> %2"));
+    defOptions.insert("message.topic",         ConfigOption("* %1 changes topic to: %2"));
+    defOptions.insert("message.wallops",       ConfigOption("* WALLOPS from %1: %2"));
 
     // numeric messages
-    defOptions.append(ConfigOption("message.301",           "%1 is away: %2"));
-    defOptions.append(ConfigOption("message.317",           "%1 has been idle %2"));
-    defOptions.append(ConfigOption("message.330",           "%1 %2: %3"));
-    defOptions.append(ConfigOption("message.332",           "* Topic is: %1"));
-    defOptions.append(ConfigOption("message.333.status",    "%1 topic set by %2 on %3 %4"));
-    defOptions.append(ConfigOption("message.333.channel",   "* Topic set by %1 on %2 %3"));
+    defOptions.insert("message.301",           ConfigOption("%1 is away: %2"));
+    defOptions.insert("message.317",           ConfigOption("%1 has been idle %2"));
+    defOptions.insert("message.330",           ConfigOption("%1 %2: %3"));
+    defOptions.insert("message.332",           ConfigOption("* Topic is: %1"));
+    defOptions.insert("message.333.status",    ConfigOption("%1 topic set by %2 on %3 %4"));
+    defOptions.insert("message.333.channel",   ConfigOption("* Topic set by %1 on %2 %3"));
 }
 
 //-----------------------------------//
@@ -244,18 +211,11 @@ void Client::setClientSize()
 {
     bool ok;
     int width = GET_OPT("client.width").toInt(&ok);
-    if(!ok)
-    {
-        width = 1000;
-        g_pCfgManager->setOptionValue("client.width", QString::number(width));
-    }
     int height = GET_OPT("client.height").toInt(&ok);
-    if(!ok)
-    {
-        height = 500;
-        g_pCfgManager->setOptionValue("client.height", QString::number(height));
-    }
     resize(width, height);
+
+    if(GET_OPT("client.maximized").compare("1") == 0)
+        showMaximized();
 }
 
 //-----------------------------------//
@@ -266,6 +226,26 @@ void Client::onNewIrcServerWindow()
     StatusWindow *pWin = new StatusWindow();
     m_pManager->addWindow(pWin);
     pWin->showMaximized();
+}
+
+//-----------------------------------//
+
+// this function is called when the resize timer times out
+// (when it's time to update the config options holding client size)
+void Client::updateSizeConfig()
+{
+    // we only want to overwrite the client size if it's
+    // in the normal window state (not maximized)
+    QString maximizedStr;
+    if(!isMaximized())
+    {
+        g_pCfgManager->setOptionValue("client.width", QString::number(width()));
+        g_pCfgManager->setOptionValue("client.height", QString::number(height()));
+        maximizedStr = "0";
+    }
+    else
+        maximizedStr = "1";
+    g_pCfgManager->setOptionValue("client.maximized", maximizedStr);
 }
 
 //-----------------------------------//

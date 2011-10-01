@@ -6,7 +6,6 @@
 *
 ************************************************************************/
 
-#include <QWebView>
 #include <QAction>
 #include <QListWidget>
 #include <QSplitter>
@@ -100,6 +99,14 @@ ChannelWindow::~ChannelWindow()
     g_pEvtManager->unhookEvent("configChanged", COLOR_FOREGROUND, MakeDelegate(this, &ChannelWindow::onColorConfigChanged));
 
     m_pSharedServerConnPanel.reset();
+}
+
+//-----------------------------------//
+
+void ChannelWindow::setupColorConfig(QMap<QString, ConfigOption> &defOptions)
+{
+    defOptions.insert(COLOR_BACKGROUND, ConfigOption("#ffffff", CONFIG_TYPE_COLOR));
+    defOptions.insert(COLOR_FOREGROUND, ConfigOption("#000000", CONFIG_TYPE_COLOR));
 }
 
 //-----------------------------------//

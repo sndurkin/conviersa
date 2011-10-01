@@ -22,9 +22,10 @@ QDockWidget::title {
 }
 
 cv--gui--OutputControl {
-  border-radius: 3px;
-  padding: 2px;
+  /*border-radius: 3px;*/
   border: 1px solid #999;
+  padding: 2px;
+  background-color: white;
 }
 
 QPlainTextEdit {
@@ -41,7 +42,7 @@ cv--gui--ServerConnectionPanel {
   border-style: solid;
   border-top-width: 0px;
   background-color: palette(window);
-  border-color: palette(mid);
+  border-color: #777;
 }
 
 cv--gui--ServerConnectionPanel QLineEdit {

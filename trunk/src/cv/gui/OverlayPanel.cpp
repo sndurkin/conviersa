@@ -29,6 +29,8 @@ OverlayPanel::OverlayPanel(QWidget *parent)
 
       m_duration(100),
 
+      m_dropShadowWidth(0),
+
       m_pCurrOpenButton(NULL),
       m_buttonAlignment(Qt::AlignLeft),
       m_buttonOffset(0),
@@ -51,6 +53,17 @@ void OverlayPanel::setDuration(int duration)
 {
     if(!m_isInitialized)
         m_duration = duration;
+}
+
+//-----------------------------------//
+
+void OverlayPanel::setDropShadowConfig(int dropShadowWidth, Qt::Alignment dropShadowSides/* = (Qt::AlignBottom | Qt::AlignRight)*/)
+{
+    if(!m_isInitialized)
+    {
+        m_dropShadowWidth = dropShadowWidth;
+        m_dropShadowSides = dropShadowSides;
+    }
 }
 
 //-----------------------------------//
@@ -381,9 +394,9 @@ void OverlayPanel::realignPanel(QPushButton *pOpenButton/* = NULL*/)
     else // aligned to the left or right
     {
         if(m_state == OPEN)
-            panelX = (m_alignment == Qt::AlignTop) ? 0 : (pOpenButton->parentWidget()->width() - width());
+            panelX = (m_alignment == Qt::AlignLeft) ? 0 : (pOpenButton->parentWidget()->width() - width());
         else
-            panelX = (m_alignment == Qt::AlignTop) ? -width() : pOpenButton->parentWidget()->width();
+            panelX = (m_alignment == Qt::AlignLeft) ? -width() : pOpenButton->parentWidget()->width();
 
         if(m_secondaryAlignment & Qt::AlignTop)
         {
@@ -498,8 +511,177 @@ void OverlayPanel::getCurrButtonHiddenPosition(int &x, int &y)
 
 void OverlayPanel::paintEvent(QPaintEvent *)
 {
+    const int   SHADOW_RADIUS = 20,
+                HALF_SHADOW_RADIUS = SHADOW_RADIUS / 2,
+                INITIAL_OPACITY = 150,
+                OPACITY_DIFF = INITIAL_OPACITY / m_dropShadowWidth,
+                TL_ARC_START = 180 * 16,
+                TL_ARC_RANGE = -90 * 16,
+                TR_ARC_START = 90 * 16,
+                TR_ARC_RANGE = -90 * 16,
+                BL_ARC_START = 180 * 16,
+                BL_ARC_RANGE = 90 * 16,
+                BR_ARC_START = 0,
+                BR_ARC_RANGE = -90 * 16;
+
+    bool topAligned = m_alignment == Qt::AlignTop,
+         leftAligned = m_alignment == Qt::AlignLeft,
+         rightAligned = m_alignment == Qt::AlignRight,
+         bottomAligned = m_alignment == Qt::AlignBottom;
+
+    bool shadowOnTop = m_dropShadowSides & Qt::AlignTop,
+         shadowOnLeft = m_dropShadowSides & Qt::AlignLeft,
+         shadowOnRight = m_dropShadowSides & Qt::AlignRight,
+         shadowOnBottom = m_dropShadowSides & Qt::AlignBottom;
+
+    // draw drop shadow first (if there is one)
+    if(m_dropShadowWidth > 0)
+    {
+        QPainter painter(this);
+        QPen pen(QColor(90, 90, 90, INITIAL_OPACITY));
+        pen.setWidth(1);
+        painter.setPen(pen);
+        painter.setRenderHint(QPainter::Antialiasing);
+
+        // initialize the variables which will be used to draw the lines
+        int tbLeftX = -m_dropShadowWidth;
+        if(!leftAligned)
+        {
+            tbLeftX = HALF_SHADOW_RADIUS;
+            if(!shadowOnLeft)
+                tbLeftX += m_dropShadowWidth;
+        }
+
+        int tbRightX = width();
+        if(rightAligned)
+        {
+            tbRightX += m_dropShadowWidth;
+        }
+        else
+        {
+            tbRightX -= HALF_SHADOW_RADIUS;
+            if(!shadowOnRight)
+                tbRightX -= m_dropShadowWidth;
+        }
+
+        int lrTopY = -m_dropShadowWidth;
+        if(!topAligned)
+        {
+            lrTopY = HALF_SHADOW_RADIUS;
+            if(!shadowOnTop)
+                lrTopY += m_dropShadowWidth;
+        }
+
+        int lrBottomY = height();
+        if(bottomAligned)
+        {
+            lrBottomY += m_dropShadowWidth;
+        }
+        else
+        {
+            lrBottomY -= HALF_SHADOW_RADIUS;
+            if(!shadowOnBottom)
+                lrBottomY -= m_dropShadowWidth;
+        }
+
+        for(int i = m_dropShadowWidth; i > 0; --i)
+        {
+            QColor newColor = painter.pen().color();
+            newColor.setAlpha(newColor.alpha() - OPACITY_DIFF);
+            QPen newPen(newColor);
+            painter.setPen(newPen);
+
+            // these variables are dependent on the loop iteration,
+            // but are built off the 4 variables defined above
+            int rightEdge = width() - i,
+                bottomEdge = height() - i,
+                tbLineLeftX = tbLeftX + i,
+                tbLineRightX = tbRightX - i,
+                tbArcLeftX = tbLineLeftX - HALF_SHADOW_RADIUS,
+                tbArcRightX = tbLineRightX - HALF_SHADOW_RADIUS,
+                lrLineTopY = lrTopY + i,
+                lrLineBottomY = lrBottomY - i,
+                lrArcTopY = lrLineTopY - HALF_SHADOW_RADIUS,
+                lrArcBottomY = lrLineBottomY - HALF_SHADOW_RADIUS;
+
+            // draw top line
+            if(shadowOnTop)
+            {
+                painter.drawLine(tbLineLeftX + 0, i, tbLineRightX - 0, i);
+                painter.drawLine(tbLineLeftX + 1, i, tbLineRightX - 1, i);
+                painter.drawLine(tbLineLeftX + 2, i, tbLineRightX - 2, i);
+            }
+
+            // draw top-left arc
+            if((shadowOnLeft || shadowOnTop) && !leftAligned && !topAligned)
+            {
+                painter.drawArc(tbArcLeftX,     lrArcTopY,     SHADOW_RADIUS, SHADOW_RADIUS, TL_ARC_START, TL_ARC_RANGE);
+                painter.drawArc(tbArcLeftX,     lrArcTopY + 1, SHADOW_RADIUS, SHADOW_RADIUS, TL_ARC_START, TL_ARC_RANGE);
+                painter.drawArc(tbArcLeftX + 1, lrArcTopY,     SHADOW_RADIUS, SHADOW_RADIUS, TL_ARC_START, TL_ARC_RANGE);
+            }
+
+            // draw left line
+            if(shadowOnLeft)
+            {
+                painter.drawLine(i, lrLineTopY + 0, i, lrLineBottomY - 0);
+                painter.drawLine(i, lrLineTopY + 1, i, lrLineBottomY - 1);
+                painter.drawLine(i, lrLineTopY + 2, i, lrLineBottomY - 2);
+            }
+
+            // draw top-right arc
+            if((shadowOnTop || shadowOnRight) && !topAligned && !rightAligned)
+            {
+                painter.drawArc(tbArcRightX,     lrArcTopY,     SHADOW_RADIUS, SHADOW_RADIUS, TR_ARC_START, TR_ARC_RANGE);
+                painter.drawArc(tbArcRightX,     lrArcTopY + 1, SHADOW_RADIUS, SHADOW_RADIUS, TR_ARC_START, TR_ARC_RANGE);
+                painter.drawArc(tbArcRightX - 1, lrArcTopY,     SHADOW_RADIUS, SHADOW_RADIUS, TR_ARC_START, TR_ARC_RANGE);
+            }
+
+            // draw right line
+            if(shadowOnRight)
+            {
+                painter.drawLine(rightEdge, lrLineTopY + 0, rightEdge, lrLineBottomY - 0);
+                painter.drawLine(rightEdge, lrLineTopY + 1, rightEdge, lrLineBottomY - 1);
+                painter.drawLine(rightEdge, lrLineTopY + 2, rightEdge, lrLineBottomY - 2);
+            }
+
+            // draw bottom-left arc
+            if((shadowOnLeft || shadowOnBottom) && !leftAligned && !bottomAligned)
+            {
+                painter.drawArc(tbArcLeftX,     lrArcBottomY,     SHADOW_RADIUS, SHADOW_RADIUS, BL_ARC_START, BL_ARC_RANGE);
+                painter.drawArc(tbArcLeftX,     lrArcBottomY - 1, SHADOW_RADIUS, SHADOW_RADIUS, BL_ARC_START, BL_ARC_RANGE);
+                painter.drawArc(tbArcLeftX + 1, lrArcBottomY,     SHADOW_RADIUS, SHADOW_RADIUS, BL_ARC_START, BL_ARC_RANGE);
+            }
+
+            // draw bottom line
+            if(shadowOnBottom)
+            {
+                painter.drawLine(tbLineLeftX + 0, bottomEdge, tbLineRightX - 0, bottomEdge);
+                painter.drawLine(tbLineLeftX + 1, bottomEdge, tbLineRightX - 1, bottomEdge);
+                painter.drawLine(tbLineLeftX + 2, bottomEdge, tbLineRightX - 2, bottomEdge);
+            }
+
+            // draw bottom-right arc
+            if((shadowOnRight || shadowOnBottom) && !rightAligned && !bottomAligned)
+            {
+                painter.drawArc(tbArcRightX,     lrArcBottomY,     SHADOW_RADIUS, SHADOW_RADIUS, BR_ARC_START, BR_ARC_RANGE);
+                painter.drawArc(tbArcRightX,     lrArcBottomY - 1, SHADOW_RADIUS, SHADOW_RADIUS, BR_ARC_START, BR_ARC_RANGE);
+                painter.drawArc(tbArcRightX - 1, lrArcBottomY,     SHADOW_RADIUS, SHADOW_RADIUS, BR_ARC_START, BR_ARC_RANGE);
+            }
+        }
+    }
+
+    // now draw the widget; this code is needed to correctly
+    // draw it with the stylesheet rules applied
     QStyleOption opt;
     opt.init(this);
+    if(m_dropShadowWidth > 0)
+    {
+        opt.rect.adjust(
+            shadowOnLeft ? m_dropShadowWidth : 0,
+            shadowOnTop ? m_dropShadowWidth : 0,
+            shadowOnRight ? -m_dropShadowWidth : 0,
+            shadowOnBottom ? -m_dropShadowWidth : 0);
+    }
     QPainter p(this);
     style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
 }

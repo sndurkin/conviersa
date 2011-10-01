@@ -3,23 +3,17 @@
 Settings/Config
 - add settings for fonts for input, output, and channel userlist
 - add a SettingsWindow which allows the user to customize settings using a GUI
+  -> need a search box which searches the titles and descriptions of each setting in the window
 
 Output Control
+- add alternative mode for selecting text where it doesn't immediately copy the text and it stays select after releasing the mouse
+- need an option for turning text wrapping off, for DebugWindow (will just use a horizontal scrollbar)
+- add a WHOIS panel that pops up from the bottom of the OutputControl
 - add links for hyperlinks and channels, and add double-click functionality for them
-- add a right-click menu for each link type
+- add a right-click menu for each link type:
   -> nicks
   -> channels
   -> hyperlinks
-- add a WHOIS panel that pops up from the bottom of the OutputControl
-- need some way to change the colors from threads outside the OutputControl.. since they are solely read from within the paintEvent function, they should be modified within the event loop
-  -> QCoreApplication::postEvent()
-  -> QTimer::singleShot()
-  -> QMetaObject::invokeMethod() (with Qt::QueuedConnection)
-  -> QObject::connect() (with Qt::QueuedConnection)
-  -> http://stackoverflow.com/questions/3937152/looking-for-postmessage-functionality-in-qt
-- test appending new lines to OutputControl
-  -> if it's at the bottom line, control should scroll to next line when it's appended
-  -> when the mouse is down, it should not scroll, even if at the bottom
 - link events to add:
   -> clicked
   -> right-clicked
@@ -27,7 +21,18 @@ Output Control
   -> hovered (tooltips)
 
 Input Control
-- need a way to add colors and other control codes to the text
+- need a way to input control codes (ctrl+b for bold, ctrl+u for underline, ctrl+r for reverse, ctrl+k for color)
+  -> need to have a better display for control codes than a rectangular box
+- maybe the input box can grow dynamically depending on how many lines are currently being displayed
+  -> and at some point it gets a scrollbar
+  -> shift+enter or ctrl+enter would add a newline
+- options for new display:
+  1) behaves like a rich text editor, where you can change the style (bold, underline, reverse) and
+     color and it is reflected as you use it (the only difficulty with this option is handling text selection)
+  2) the text in the input box doesn't change style or color, and instead of black rectangular boxes to
+     represent styles, they will be displayed by a box with a single letter inside of it (namely 'B' for bold,
+     'U' for underline, etc)
+- eventually need to add a toolbar so a user can access these features through the UI
 - smart nick completion
 
 Misc GUI
@@ -35,15 +40,12 @@ Misc GUI
 - enhance the ServerConnectionPanel to save servers recently connected to
   -> find a way to save 5 or so servers in the config file
 
-
 Misc
 - better implementation of IRC protocol (numerics)
 
 Styles
-- add selection color for a user in the channel's user list
-- fix issue with rounded borders on OutputControl (and scrollbar)
-- decide what to do about the background colors
-- fix issue with window manager selection style in Win7
+- fix bug in Qt with scrollbar on OutputControl when borders are set
+- look into bug in Qt with rounded borders on QListWidget
 
 
 
@@ -53,6 +55,7 @@ Styles
 - there's a weird bug when clicking on the OutputControl when it brings the entire client back to focus (highlights whatever was already highlighted previously)
 - for Erroneous Nickname, don't let styles of nick carry into the rest of the msg
 - bug when minimizing the client's main window, the title becomes "Conviersa" instead of "Conviersa - [currently open window]"
+- bug when highlighting text which has a lot of consecutive spaces in it - something that needs further investigation
 - add a "Connect cancelled" message to the output?
 - when receiving a PM, the new QueryWindow is in focus, but not selected in the tree
   -> i don't like this entire process of tree selections at all... the fact that there's two functions, giveFocus() and focusedInTree(), doesn't

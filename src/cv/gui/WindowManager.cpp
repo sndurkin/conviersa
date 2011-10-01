@@ -13,8 +13,8 @@
 #include "cv/gui/AltWindowContainer.h"
 #include "cv/gui/Window.h"
 
-#define COLOR_BACKGROUND tr("wmanager.color.background")
-#define COLOR_FOREGROUND tr("wmanager.color.foreground")
+#define COLOR_BACKGROUND QObject::tr("wmanager.color.background")
+#define COLOR_FOREGROUND QObject::tr("wmanager.color.foreground")
 
 #ifdef Q_WS_WIN
 #include <QWindowsXPStyle>
@@ -92,6 +92,14 @@ WindowManager::~WindowManager()
 
 //-----------------------------------//
 
+void WindowManager::setupColorConfig(QMap<QString, ConfigOption> &defOptions)
+{
+    defOptions.insert(COLOR_BACKGROUND, ConfigOption("#ffffff", CONFIG_TYPE_COLOR));
+    defOptions.insert(COLOR_FOREGROUND, ConfigOption("#000000", CONFIG_TYPE_COLOR));
+}
+
+//-----------------------------------//
+
 void WindowManager::setupColors()
 {
     // background color is done by stylesheet
@@ -103,8 +111,7 @@ void WindowManager::setupColors()
 void WindowManager::onBackgroundColorChanged(Event *pEvent)
 {
     ConfigEvent *pCfgEvent = DCAST(ConfigEvent, pEvent);
-    if(QColor::isValidColor(pCfgEvent->getValue()))
-        setStyleSheet(QString("background-color: %1").arg(pCfgEvent->getValue()));
+    setStyleSheet(QString("background-color: %1").arg(pCfgEvent->getValue()));
 }
 
 //-----------------------------------//
@@ -112,13 +119,10 @@ void WindowManager::onBackgroundColorChanged(Event *pEvent)
 void WindowManager::onForegroundColorChanged(Event *pEvent)
 {
     ConfigEvent *pCfgEvent = DCAST(ConfigEvent, pEvent);
-    if(QColor::isValidColor(pCfgEvent->getValue()))
-    {
-        QBrush newBrush(QColor(pCfgEvent->getValue()));
-        for(int i = 0; i < m_winList.size(); ++i)
-            if(!m_winList[i].m_pTreeItem->isSelected())
-                m_winList[i].m_pTreeItem->setForeground(0, newBrush);
-    }
+    QBrush newBrush(QColor(pCfgEvent->getValue()));
+    for(int i = 0; i < m_winList.size(); ++i)
+        if(!m_winList[i].m_pTreeItem->isSelected())
+            m_winList[i].m_pTreeItem->setForeground(0, newBrush);
 }
 
 //-----------------------------------//

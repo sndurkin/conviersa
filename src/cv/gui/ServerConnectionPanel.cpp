@@ -27,7 +27,8 @@ ServerConnectionPanel::ServerConnectionPanel(QWidget *parent)
     setDuration(150);
     setAlignment(Qt::AlignTop);
     setSecondaryAlignment(Qt::AlignRight, 100, -1);
-    setButtonConfig(Qt::AlignRight, 15);
+    setButtonConfig(Qt::AlignTop, 15);
+    setDropShadowConfig(5, Qt::AlignRight | Qt::AlignBottom);
     setInitialState(OPEN);
     resize(360, 215);
     initialize();

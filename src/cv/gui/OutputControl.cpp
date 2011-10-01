@@ -15,6 +15,9 @@
 #include <QMouseEvent>
 #include <QDateTime>
 #include <QDebug>
+#include <QStyle>
+#include <QStyleOption>
+#include <QWindowsVistaStyle>
 #include "cv/ConfigManager.h"
 #include "cv/gui/OutputControl.h"
 
@@ -117,6 +120,51 @@ QSize OutputControl::sizeHint() const
 
 //-----------------------------------//
 
+void OutputControl::setupColorConfig(QMap<QString, ConfigOption> &defOptions)
+{
+    defOptions.insert(COLOR_TO_CONFIG_MAP[COLOR_CHAT_FOREGROUND], ConfigOption("#000000", CONFIG_TYPE_COLOR));
+    defOptions.insert(COLOR_TO_CONFIG_MAP[COLOR_CHAT_BACKGROUND], ConfigOption("#ffffff", CONFIG_TYPE_COLOR));
+
+    defOptions.insert(COLOR_TO_CONFIG_MAP[COLOR_CUSTOM_1], ConfigOption("#ffffff", CONFIG_TYPE_COLOR));    // white
+    defOptions.insert(COLOR_TO_CONFIG_MAP[COLOR_CUSTOM_2], ConfigOption("#000000", CONFIG_TYPE_COLOR));    // black
+    defOptions.insert(COLOR_TO_CONFIG_MAP[COLOR_CUSTOM_3], ConfigOption("#000080", CONFIG_TYPE_COLOR));    // navy
+    defOptions.insert(COLOR_TO_CONFIG_MAP[COLOR_CUSTOM_4], ConfigOption("#008000", CONFIG_TYPE_COLOR));    // green
+    defOptions.insert(COLOR_TO_CONFIG_MAP[COLOR_CUSTOM_5], ConfigOption("#ff0000", CONFIG_TYPE_COLOR));    // red
+    defOptions.insert(COLOR_TO_CONFIG_MAP[COLOR_CUSTOM_6], ConfigOption("#800000", CONFIG_TYPE_COLOR));    // maroon
+    defOptions.insert(COLOR_TO_CONFIG_MAP[COLOR_CUSTOM_7], ConfigOption("#800080", CONFIG_TYPE_COLOR));    // purple
+    defOptions.insert(COLOR_TO_CONFIG_MAP[COLOR_CUSTOM_8], ConfigOption("#ffa500", CONFIG_TYPE_COLOR));    // orange
+    defOptions.insert(COLOR_TO_CONFIG_MAP[COLOR_CUSTOM_9], ConfigOption("#ffff00", CONFIG_TYPE_COLOR));    // yellow
+    defOptions.insert(COLOR_TO_CONFIG_MAP[COLOR_CUSTOM_10], ConfigOption("#00ff00", CONFIG_TYPE_COLOR));   // lime
+    defOptions.insert(COLOR_TO_CONFIG_MAP[COLOR_CUSTOM_11], ConfigOption("#008080", CONFIG_TYPE_COLOR));   // teal
+    defOptions.insert(COLOR_TO_CONFIG_MAP[COLOR_CUSTOM_12], ConfigOption("#00ffff", CONFIG_TYPE_COLOR));   // cyan
+    defOptions.insert(COLOR_TO_CONFIG_MAP[COLOR_CUSTOM_13], ConfigOption("#0000ff", CONFIG_TYPE_COLOR));   // blue
+    defOptions.insert(COLOR_TO_CONFIG_MAP[COLOR_CUSTOM_14], ConfigOption("#ff00ff", CONFIG_TYPE_COLOR));   // magenta
+    defOptions.insert(COLOR_TO_CONFIG_MAP[COLOR_CUSTOM_15], ConfigOption("#808080", CONFIG_TYPE_COLOR));   // gray
+    defOptions.insert(COLOR_TO_CONFIG_MAP[COLOR_CUSTOM_16], ConfigOption("#c0c0c0", CONFIG_TYPE_COLOR));   // light gray
+
+    defOptions.insert(COLOR_TO_CONFIG_MAP[COLOR_CHAT_SELF], ConfigOption("#000000", CONFIG_TYPE_COLOR));
+    defOptions.insert(COLOR_TO_CONFIG_MAP[COLOR_HIGHLIGHT], ConfigOption("#ff0000", CONFIG_TYPE_COLOR));
+    defOptions.insert(COLOR_TO_CONFIG_MAP[COLOR_ACTION], ConfigOption("#0000cc", CONFIG_TYPE_COLOR));
+    defOptions.insert(COLOR_TO_CONFIG_MAP[COLOR_CTCP], ConfigOption("#d80000", CONFIG_TYPE_COLOR));
+    defOptions.insert(COLOR_TO_CONFIG_MAP[COLOR_NOTICE], ConfigOption("#b80000", CONFIG_TYPE_COLOR));
+    defOptions.insert(COLOR_TO_CONFIG_MAP[COLOR_NICK], ConfigOption("#808080", CONFIG_TYPE_COLOR));
+    defOptions.insert(COLOR_TO_CONFIG_MAP[COLOR_INFO], ConfigOption("#000000", CONFIG_TYPE_COLOR));
+    defOptions.insert(COLOR_TO_CONFIG_MAP[COLOR_INVITE], ConfigOption("#808080", CONFIG_TYPE_COLOR));
+    defOptions.insert(COLOR_TO_CONFIG_MAP[COLOR_JOIN], ConfigOption("#006600", CONFIG_TYPE_COLOR));
+    defOptions.insert(COLOR_TO_CONFIG_MAP[COLOR_PART], ConfigOption("#006600", CONFIG_TYPE_COLOR));
+    defOptions.insert(COLOR_TO_CONFIG_MAP[COLOR_KICK], ConfigOption("#000000", CONFIG_TYPE_COLOR));
+    defOptions.insert(COLOR_TO_CONFIG_MAP[COLOR_MODE], ConfigOption("#808080", CONFIG_TYPE_COLOR));
+    defOptions.insert(COLOR_TO_CONFIG_MAP[COLOR_QUIT], ConfigOption("#006600", CONFIG_TYPE_COLOR));
+    defOptions.insert(COLOR_TO_CONFIG_MAP[COLOR_TOPIC], ConfigOption("#006600", CONFIG_TYPE_COLOR));
+    defOptions.insert(COLOR_TO_CONFIG_MAP[COLOR_WALLOPS], ConfigOption("#b80000", CONFIG_TYPE_COLOR));
+    defOptions.insert(COLOR_TO_CONFIG_MAP[COLOR_WHOIS], ConfigOption("#000000", CONFIG_TYPE_COLOR));
+
+    defOptions.insert(COLOR_TO_CONFIG_MAP[COLOR_DEBUG], ConfigOption("#8b0000", CONFIG_TYPE_COLOR));
+    defOptions.insert(COLOR_TO_CONFIG_MAP[COLOR_ERROR], ConfigOption("#8b0000", CONFIG_TYPE_COLOR));
+}
+
+//-----------------------------------//
+
 void OutputControl::setupColors()
 {
     // TODO: possible optimization would be to create a color manager
@@ -127,7 +175,6 @@ void OutputControl::setupColors()
     // the background color is changed a little differently; it uses CSS
     setStyleSheet(QString("cv--gui--OutputControl { background-color: %1 }").arg(GET_OPT(COLOR_TO_CONFIG_MAP[COLOR_CHAT_BACKGROUND])));
 }
-
 
 //-----------------------------------//
 
@@ -140,10 +187,6 @@ void OutputControl::onConfigChanged(Event *pEvent)
     {
         if(optName.compare(COLOR_TO_CONFIG_MAP[i], Qt::CaseInsensitive) == 0)
         {
-            // if it's not a valid color, don't set it
-            if(!QColor::isValidColor(pCfgEvent->getValue()))
-                return;
-
             // if it's the background color, we also need to set it in the QSS
             if(i == COLOR_CHAT_BACKGROUND)
                 setStyleSheet(QString("cv--gui--OutputControl { background-color: %1 }").arg(pCfgEvent->getValue()));
@@ -166,7 +209,7 @@ void OutputControl::appendMessage(const QString &msg, OutputColor defaultMsgColo
     line.setFirstTextRun(currTextRun);
 
     QString msgToDisplay;
-    if(GET_OPT("timestamp").compare("on", Qt::CaseInsensitive) == 0)
+    if(GET_OPT("timestamp").compare("1", Qt::CaseInsensitive) == 0)
     {
         msgToDisplay = QString("%1 ").arg(QDateTime::currentDateTime().toString(GET_OPT("timestamp.format")));
         line.setAlternateSelectionIdx(msgToDisplay.length());

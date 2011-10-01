@@ -8,12 +8,14 @@
 
 #include <QFile>
 #include <QTemporaryFile>
+#include <QColor>
 #include "cv/ConfigManager.h"
 
 namespace cv {
 
 ConfigManager::ConfigManager(const QString &defaultFilename)
     : m_commentRegex("^\\s*#"),
+      m_newlineRegex("[\r\n]*"),
       m_defaultFilename(defaultFilename)
 {
     g_pEvtManager->createEvent("configChanged", STRING_EVENT);
@@ -30,7 +32,7 @@ ConfigManager::ConfigManager(const QString &defaultFilename)
 //
 // if the file does not exist, it also creates a new file with
 // the given array of default ConfigOptions
-bool ConfigManager::setupConfigFile(const QString &filename, const QList<ConfigOption> &defOptions)
+bool ConfigManager::setupConfigFile(const QString &filename, QMap<QString, ConfigOption> &options)
 {
     QFile file(filename);
     if(file.exists() && !file.open(QIODevice::ReadOnly | QIODevice::Text))
@@ -39,17 +41,8 @@ bool ConfigManager::setupConfigFile(const QString &filename, const QList<ConfigO
         return false;
     }
 
-    // put all the default options into a QMap
-    QMap<QString, QString>  options;
-    for(int i = 0; i < defOptions.size(); ++i)
-    {
-        options.insert(defOptions[i].name, defOptions[i].value);
-    }
-
     if(file.exists())
     {
-        QRegExp newlineRegex("[\r\n]*");
-
         // for each line in the file, find the corresponding option;
         // if the option exists in memory, overwrite it with
         // the value in the file
@@ -70,17 +63,25 @@ bool ConfigManager::setupConfigFile(const QString &filename, const QList<ConfigO
 
             QString optName = line.section('=', 0, 0);
             QString optValue = line.section('=', 1);
-            optValue.remove(newlineRegex);
+            optValue.remove(m_newlineRegex);
 
             // find the option with key optName
-            QMap<QString, QString>::iterator i = options.find(optName);
+            QMap<QString, ConfigOption>::iterator i = options.find(optName);
             if(i != options.end())
             {
-                // if the value in the file is different from the default,
-                // change the value
-                if(i->compare(optValue) != 0)
+                // if the value in the file is different from the default
+                if(i->value.compare(optValue) != 0)
                 {
-                    *i = optValue;
+                    // and the value in the file is valid
+                    if(isValueValid(optValue, i->type))
+                    {
+                        // then change the value
+                        i->value = optValue;
+                    }
+                    else
+                        qDebug("[CM::setupConfigFile] Value %s is not valid for config option %s",
+                               optValue.toLatin1().constData(),
+                               optName.toLatin1().constData());
                 }
             }
         }
@@ -93,12 +94,13 @@ bool ConfigManager::setupConfigFile(const QString &filename, const QList<ConfigO
             return false;
         }
 
-        for(int i = 0; i < defOptions.size(); ++i)
+        // write all the default options to the file
+        for(QMap<QString, ConfigOption>::iterator i = options.begin(); i != options.end(); ++i)
         {
             QByteArray str;
-            str.append(defOptions[i].name);
+            str.append(i.key());
             str.append('=');
-            str.append(defOptions[i].value);
+            str.append(i->value);
             str.append('\n');
             file.write(str);
         }
@@ -124,7 +126,7 @@ bool ConfigManager::setupConfigFile(const QString &filename, const QList<ConfigO
 //      options that are put into memory using SetupConfigFile()
 bool ConfigManager::writeToFile(const QString &filename)
 {
-    QHash<QString, QMap<QString, QString> >::iterator i = m_files.find(filename);
+    QHash<QString, QMap<QString, ConfigOption> >::iterator i = m_files.find(filename);
 
     if(i != m_files.end())
     {
@@ -180,14 +182,14 @@ bool ConfigManager::writeToFile(const QString &filename)
                 else    // otherwise, we check the data in memory
                 {
                     QString optName = line.section('=', 0, 0);
-                    QMap<QString, QString>::iterator j = i.value().find(optName);
+                    QMap<QString, ConfigOption>::iterator j = i.value().find(optName);
                     if(j != i.value().end())
                     {
                         // write to newFile
                         QByteArray str;
                         str.append(optName);
                         str.append('=');
-                        str.append(j.value());
+                        str.append(j->value);
                         str.append('\n');
                         newFile.write(str);
 
@@ -207,8 +209,8 @@ bool ConfigManager::writeToFile(const QString &filename)
         // write any data in memory that wasn't already in the file
         // (in other words, any data that isn't found in the
         // alreadyWritten hash table)
-        QMap<QString, QString>::iterator j = i.value().begin();
-        while(j != i.value().end())
+        QMap<QString, ConfigOption>::iterator j = i.value().begin();
+        for(; j != i.value().end(); ++j)
         {
             if(!alreadyWritten.contains(j.key()))
             {
@@ -216,12 +218,10 @@ bool ConfigManager::writeToFile(const QString &filename)
                 QByteArray str;
                 str.append(j.key());
                 str.append('=');
-                str.append(j.value());
+                str.append(j->value);
                 str.append('\n');
                 newFile.write(str);
             }
-
-            ++j;
         }
 
         // copy the file
@@ -242,14 +242,16 @@ bool ConfigManager::writeToFile(const QString &filename)
 // returns an empty string upon error
 QString ConfigManager::getOptionValue(const QString &filename, const QString &optName)
 {
-    QHash<QString, QMap<QString, QString> >::iterator i = m_files.find(filename);
+    QHash<QString, QMap<QString, ConfigOption> >::iterator i = m_files.find(filename);
     if(i != m_files.end())
     {
-        QMap<QString, QString>::iterator j = i.value().find(optName);
+        QMap<QString, ConfigOption>::iterator j = i.value().find(optName);
         if(j != i.value().end())
-            return *j;
+            return j->value;
         else
-            qDebug("[CM::getOptionValue] Config option %s (in file %s) does not exist", optName.toLatin1().constData(), filename.toLatin1().constData());
+            qDebug("[CM::getOptionValue] Config option %s (in file %s) does not exist",
+                   optName.toLatin1().constData(),
+                   filename.toLatin1().constData());
     }
     else
         qDebug("[CM::getOptionValue] Config file %s not found", filename.toLatin1().constData());
@@ -260,25 +262,40 @@ QString ConfigManager::getOptionValue(const QString &filename, const QString &op
 //-----------------------------------//
 
 // sets the provided option's value to optValue
-bool ConfigManager::setOptionValue(const QString &filename, const QString &optName, const QString &optValue, bool fireEvent/* = false*/)
+bool ConfigManager::setOptionValue(
+        const QString &filename,
+        const QString &optName,
+        const QString &optValue,
+        bool fireEvent/* = false*/)
 {
-    QHash<QString, QMap<QString, QString> >::iterator i = m_files.find(filename);
+    QHash<QString, QMap<QString, ConfigOption> >::iterator i = m_files.find(filename);
     if(i != m_files.end())
     {
-        QMap<QString, QString>::iterator j = i.value().find(optName);
+        QMap<QString, ConfigOption>::iterator j = i.value().find(optName);
         if(j != i.value().end())
         {
-            *j = optValue;
-            if(fireEvent)
+            // if the new value is valid
+            if(isValueValid(optValue, j->type))
             {
-                ConfigEvent *pEvent = new ConfigEvent(filename, optName, optValue);
-                g_pEvtManager->fireEvent("configChanged", optName, pEvent);
-                delete pEvent;
+                // then set the new value and fire the "configChanged" event
+                j->value = optValue;
+                if(fireEvent)
+                {
+                    ConfigEvent *pEvent = new ConfigEvent(filename, optName, j->value, j->type);
+                    g_pEvtManager->fireEvent("configChanged", optName, pEvent);
+                    delete pEvent;
+                }
+                return true;
             }
-            return true;
+            else
+                qDebug("[CM::setOptionValue] Value %s is not valid for config option %s",
+                       optValue.toLatin1().constData(),
+                       optName.toLatin1().constData());
         }
         else
-            qDebug("[CM::setOptionValue] Config option %s (in file %s) does not exist", optName.toLatin1().constData(), filename.toLatin1().constData());
+            qDebug("[CM::setOptionValue] Config option %s (in file %s) does not exist",
+                   optName.toLatin1().constData(),
+                   filename.toLatin1().constData());
     }
     else
         qDebug("[CM::setOptionValue] Config file %s not found", filename.toLatin1().constData());
@@ -288,17 +305,42 @@ bool ConfigManager::setOptionValue(const QString &filename, const QString &optNa
 
 //-----------------------------------//
 
+// returns true if the [value] can be converted to the given [type],
+// returns false otherwise
+bool ConfigManager::isValueValid(const QString &value, ConfigType type)
+{
+    bool ok;
+    switch(type)
+    {
+        case CONFIG_TYPE_INTEGER:
+        {
+            value.toInt(&ok);
+            return ok;
+        }
+        case CONFIG_TYPE_BOOLEAN:
+        {
+            int val = value.toInt(&ok);
+            return (val == 0 || val == 1);
+        }
+        case CONFIG_TYPE_COLOR:
+            return QColor::isValidColor(value);
+    }
+
+    return true;
+}
+
+//-----------------------------------//
+
 // test function to produce contents of file
 void ConfigManager::printFile(const QString &filename)
 {
-    QHash<QString, QMap<QString, QString> >::iterator i = m_files.find(filename);
+    QHash<QString, QMap<QString, ConfigOption> >::iterator i = m_files.find(filename);
     if(i != m_files.end())
     {
-        QMap<QString, QString>::iterator j = i.value().begin();
-        while(j != i.value().end())
+        QMap<QString, ConfigOption>::iterator j = i.value().begin();
+        for(; j != i.value().end(); ++j)
         {
-            printf("%s = %s\n", j.key().toAscii().data() , j.value().toAscii().data());
-            ++j;
+            printf("%s = %s\n", j.key().toAscii().data(), j->value.toAscii().data());
         }
     }
 }

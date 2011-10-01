@@ -17,7 +17,11 @@
 class QMdiSubWindow;
 class Event;
 
-namespace cv { namespace gui {
+namespace cv {
+
+struct ConfigOption;
+
+namespace gui {
 
 class WindowContainer;
 class Window;
@@ -62,6 +66,8 @@ public:
     bool isWindowFocused(Window *pWin) { return (getWindowFromItem(currentItem()) == pWin); }
 
     QSize sizeHint() const { return QSize(175, 200); }
+
+    static void setupColorConfig(QMap<QString, ConfigOption> &defOptions);
 
 public slots:
     void onSubWindowActivated(QMdiSubWindow *pSubWin);

@@ -67,6 +67,8 @@ public:
 
     void onColorConfigChanged(Event *pEvent);
 
+    static void setupColorConfig(QMap<QString, ConfigOption> &defOptions);
+
 protected:
     void setupColors();
     void moveCursorEnd();

@@ -16,8 +16,8 @@
 #include "cv/gui/WindowManager.h"
 #include "cv/gui/DebugWindow.h"
 
-#define COLOR_BACKGROUND tr("input.color.background")
-#define COLOR_FOREGROUND tr("input.color.foreground")
+#define COLOR_BACKGROUND QObject::tr("input.color.background")
+#define COLOR_FOREGROUND QObject::tr("input.color.foreground")
 
 namespace cv { namespace gui {
 
@@ -45,6 +45,16 @@ InputOutputWindow::InputOutputWindow(const QString &title/* = tr("Untitled")*/,
 InputOutputWindow::~InputOutputWindow()
 {
     g_pEvtManager->unhookEvent("input", m_pInput, MakeDelegate(this, &InputOutputWindow::onInput));
+    g_pEvtManager->unhookEvent("configChanged", COLOR_BACKGROUND, MakeDelegate(this, &InputOutputWindow::onColorConfigChanged));
+    g_pEvtManager->unhookEvent("configChanged", COLOR_FOREGROUND, MakeDelegate(this, &InputOutputWindow::onColorConfigChanged));
+}
+
+//-----------------------------------//
+
+void InputOutputWindow::setupColorConfig(QMap<QString, ConfigOption> &defOptions)
+{
+    defOptions.insert(COLOR_BACKGROUND, ConfigOption("#ffffff", CONFIG_TYPE_COLOR));
+    defOptions.insert(COLOR_FOREGROUND, ConfigOption("#000000", CONFIG_TYPE_COLOR));
 }
 
 //-----------------------------------//
@@ -59,7 +69,7 @@ void InputOutputWindow::setupColors()
 
 //-----------------------------------//
 
-void InputOutputWindow::onColorConfigChanged(Event *pEvent)
+void InputOutputWindow::onColorConfigChanged(Event *)
 {
     setupColors();
 }
@@ -124,9 +134,9 @@ void InputOutputWindow::onInput(Event *pEvent)
     {
         text.remove(0, 11);
         if(text.compare("on", Qt::CaseInsensitive) == 0)
-            g_pCfgManager->setOptionValue("timestamp", "on");
+            g_pCfgManager->setOptionValue("timestamp", "1");
         else if(text.compare("off", Qt::CaseInsensitive) == 0)
-            g_pCfgManager->setOptionValue("timestamp", "off");
+            g_pCfgManager->setOptionValue("timestamp", "0");
         else
             g_pCfgManager->setOptionValue("timestamp.format", text);
     }

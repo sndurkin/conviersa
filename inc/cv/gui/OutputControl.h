@@ -26,7 +26,11 @@
 class QTimer;
 class QMouseEvent;
 
-namespace cv { namespace gui {
+namespace cv {
+
+struct ConfigOption;
+
+namespace gui {
 
 struct LinkInfo {
     int startIdx;
@@ -454,6 +458,8 @@ public:
 
     // event handlers
     void onConfigChanged(Event *pEvent);
+
+    static void setupColorConfig(QMap<QString, ConfigOption> &defOptions);
 
 protected:
     void setupColors();

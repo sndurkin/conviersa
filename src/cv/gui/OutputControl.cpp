@@ -170,10 +170,10 @@ void OutputControl::setupColors()
     // TODO: possible optimization would be to create a color manager
     //       which shares QColor instances within the array
     for(int i = 0; i < COLOR_NUM; ++i)
-        m_colorsArr[i] = QColor(GET_OPT(COLOR_TO_CONFIG_MAP[i]));
+        m_colorsArr[i] = GET_COLOR(COLOR_TO_CONFIG_MAP[i]);
 
     // the background color is changed a little differently; it uses CSS
-    setStyleSheet(QString("cv--gui--OutputControl { background-color: %1 }").arg(GET_OPT(COLOR_TO_CONFIG_MAP[COLOR_CHAT_BACKGROUND])));
+    setStyleSheet(QString("cv--gui--OutputControl { background-color: %1 }").arg(GET_STRING(COLOR_TO_CONFIG_MAP[COLOR_CHAT_BACKGROUND])));
 }
 
 //-----------------------------------//
@@ -189,9 +189,9 @@ void OutputControl::onConfigChanged(Event *pEvent)
         {
             // if it's the background color, we also need to set it in the QSS
             if(i == COLOR_CHAT_BACKGROUND)
-                setStyleSheet(QString("cv--gui--OutputControl { background-color: %1 }").arg(pCfgEvent->getValue()));
+                setStyleSheet(QString("cv--gui--OutputControl { background-color: %1 }").arg(pCfgEvent->getString()));
 
-            m_colorsArr[i] = QColor(pCfgEvent->getValue());
+            m_colorsArr[i] = QColor(pCfgEvent->getColor());
             viewport()->update();
             break;
         }
@@ -209,9 +209,9 @@ void OutputControl::appendMessage(const QString &msg, OutputColor defaultMsgColo
     line.setFirstTextRun(currTextRun);
 
     QString msgToDisplay;
-    if(GET_OPT("timestamp").compare("1", Qt::CaseInsensitive) == 0)
+    if(GET_BOOL("timestamp"))
     {
-        msgToDisplay = QString("%1 ").arg(QDateTime::currentDateTime().toString(GET_OPT("timestamp.format")));
+        msgToDisplay = QString("%1 ").arg(QDateTime::currentDateTime().toString(GET_STRING("timestamp.format")));
         line.setAlternateSelectionIdx(msgToDisplay.length());
         msgToDisplay += msg;
     }

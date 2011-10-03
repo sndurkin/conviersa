@@ -103,7 +103,7 @@ void WindowManager::setupColorConfig(QMap<QString, ConfigOption> &defOptions)
 void WindowManager::setupColors()
 {
     // background color is done by stylesheet
-    setStyleSheet(QString("background-color: %1").arg(GET_OPT(COLOR_BACKGROUND)));
+    setStyleSheet(QString("background-color: %1").arg(GET_STRING(COLOR_BACKGROUND)));
 }
 
 //-----------------------------------//
@@ -111,7 +111,7 @@ void WindowManager::setupColors()
 void WindowManager::onBackgroundColorChanged(Event *pEvent)
 {
     ConfigEvent *pCfgEvent = DCAST(ConfigEvent, pEvent);
-    setStyleSheet(QString("background-color: %1").arg(pCfgEvent->getValue()));
+    setStyleSheet(QString("background-color: %1").arg(pCfgEvent->getString()));
 }
 
 //-----------------------------------//
@@ -119,7 +119,7 @@ void WindowManager::onBackgroundColorChanged(Event *pEvent)
 void WindowManager::onForegroundColorChanged(Event *pEvent)
 {
     ConfigEvent *pCfgEvent = DCAST(ConfigEvent, pEvent);
-    QBrush newBrush(QColor(pCfgEvent->getValue()));
+    QBrush newBrush(pCfgEvent->getColor());
     for(int i = 0; i < m_winList.size(); ++i)
         if(!m_winList[i].m_pTreeItem->isSelected())
             m_winList[i].m_pTreeItem->setForeground(0, newBrush);
@@ -432,7 +432,7 @@ void WindowManager::onItemChanged(QTreeWidgetItem *pCurrent, QTreeWidgetItem *pP
         QFont font = pPrevious->font(0);
         font.setBold(false);
         pPrevious->setFont(0, font);
-        pPrevious->setForeground(0, QBrush(QColor(GET_OPT(COLOR_FOREGROUND))));
+        pPrevious->setForeground(0, QBrush(GET_COLOR(COLOR_FOREGROUND)));
     }
 
     if(pCurrent)

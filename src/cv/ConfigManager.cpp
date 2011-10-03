@@ -8,8 +8,11 @@
 
 #include <QFile>
 #include <QTemporaryFile>
+#include <QVariant>
 #include <QColor>
+#include <QDebug>
 #include "cv/ConfigManager.h"
+#include "json.h"
 
 namespace cv {
 
@@ -43,46 +46,20 @@ bool ConfigManager::setupConfigFile(const QString &filename, QMap<QString, Confi
 
     if(file.exists())
     {
-        // for each line in the file, find the corresponding option;
-        // if the option exists in memory, overwrite it with
-        // the value in the file
-        while(!file.atEnd())
+        // read in the entire file, parse the JSON
+        QString jsonStr = file.readAll();
+        bool success;
+        QVariantMap cfgMap = QtJson::Json::parse(jsonStr, success).toMap();
+        if(success)
         {
-            QString line = file.readLine();
-
-            // comments are ignored
-            if(line.contains(m_commentRegex))
-                continue;
-
-            // if the line doesn't contain at least
-            // one '=' or if the '=' is at the beginning
-            // of the line, then it isn't of the right format
-            // and will be skipped
-            if(!line.contains('=', Qt::CaseInsensitive) || line[0] == '=')
-                continue;
-
-            QString optName = line.section('=', 0, 0);
-            QString optValue = line.section('=', 1);
-            optValue.remove(m_newlineRegex);
-
-            // find the option with key optName
-            QMap<QString, ConfigOption>::iterator i = options.find(optName);
-            if(i != options.end())
+            // for each default option
+            for(QMap<QString, ConfigOption>::iterator i = options.begin(); i != options.end(); ++i)
             {
-                // if the value in the file is different from the default
-                if(i->value.compare(optValue) != 0)
-                {
-                    // and the value in the file is valid
-                    if(isValueValid(optValue, i->type))
-                    {
-                        // then change the value
-                        i->value = optValue;
-                    }
-                    else
-                        qDebug("[CM::setupConfigFile] Value %s is not valid for config option %s",
-                               optValue.toLatin1().constData(),
-                               optName.toLatin1().constData());
-                }
+                // find the option with the same key in the cfg from the file;
+                // if it exists AND its value is valid, replace it
+                QVariantMap::iterator option = cfgMap.find(i.key());
+                if(option != cfgMap.end() && isValueValid(option.value(), i->type))
+                    options.insert(i.key(), option.value());
             }
         }
     }
@@ -95,15 +72,11 @@ bool ConfigManager::setupConfigFile(const QString &filename, QMap<QString, Confi
         }
 
         // write all the default options to the file
+        QVariantMap cfgMap;
         for(QMap<QString, ConfigOption>::iterator i = options.begin(); i != options.end(); ++i)
-        {
-            QByteArray str;
-            str.append(i.key());
-            str.append('=');
-            str.append(i->value);
-            str.append('\n');
-            file.write(str);
-        }
+            cfgMap.insert(i.key(), i->value);
+
+        file.write(QtJson::Json::serialize(cfgMap));
     }
 
     file.close();
@@ -131,107 +104,23 @@ bool ConfigManager::writeToFile(const QString &filename)
     if(i != m_files.end())
     {
         QFile file(filename);
-        if(file.exists() && !file.open(QIODevice::ReadOnly | QIODevice::Text))
-        {
-            qDebug("[CM::writeToFile] File %s could not be opened for read", filename.toLatin1().constData());
-            return false;
-        }
-
-        // little hack i use to get a temporary filename
-        // for creating with QFile so i can open it with
-        // QIODevice::Text and not deal with the cross-platform
-        // ugliness of newline characters
-        QString tempFilename;
-        {
-            QTemporaryFile newTempFile;
-            if(!newTempFile.open())
-            {
-                qDebug("[CM::writeToFile] Temporary file could not be opened", filename.toLatin1().constData());
-                return false;
-            }
-            tempFilename = newTempFile.fileName();
-            newTempFile.close();
-        }
-
-        QFile newFile(tempFilename);
-        if(!newFile.open(QIODevice::WriteOnly | QIODevice::Text))
+        if(file.exists() && !file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate))
         {
             qDebug("[CM::writeToFile] File %s could not be opened for write", filename.toLatin1().constData());
             return false;
         }
 
-        QHash<QString, int>  alreadyWritten;
+        // write all the current options in memory to the file
+        QMap<QString, ConfigOption> options = i.value();
+        QVariantMap cfgMap;
+        for(QMap<QString, ConfigOption>::iterator j = options.begin(); j != options.end(); ++j)
+            cfgMap.insert(j.key(), j->value);
 
-        if(file.exists())
-        {
-            while(!file.atEnd())
-            {
-                QString line = file.readLine();
-
-                // automatically write everything that isn't
-                // of the correct format
-                if(line.contains(m_commentRegex))
-                {
-                    newFile.write(line.toAscii());
-                }
-                else if(!line.contains('=', Qt::CaseInsensitive) || line[0] == '=')
-                {
-                    // also makes it a comment, to show it was ignored
-                    newFile.write("#" + line.toAscii());
-                }
-                else    // otherwise, we check the data in memory
-                {
-                    QString optName = line.section('=', 0, 0);
-                    QMap<QString, ConfigOption>::iterator j = i.value().find(optName);
-                    if(j != i.value().end())
-                    {
-                        // write to newFile
-                        QByteArray str;
-                        str.append(optName);
-                        str.append('=');
-                        str.append(j->value);
-                        str.append('\n');
-                        newFile.write(str);
-
-                        // add it to the hash of already written strings
-                        alreadyWritten.insert(optName, 0);
-                    }
-                    else    // if there's some problem, write the same line
-                    {
-                        newFile.write(line.toAscii());
-                    }
-                }
-            }
-
-            file.remove();
-        }
-
-        // write any data in memory that wasn't already in the file
-        // (in other words, any data that isn't found in the
-        // alreadyWritten hash table)
-        QMap<QString, ConfigOption>::iterator j = i.value().begin();
-        for(; j != i.value().end(); ++j)
-        {
-            if(!alreadyWritten.contains(j.key()))
-            {
-                // write to newFile
-                QByteArray str;
-                str.append(j.key());
-                str.append('=');
-                str.append(j->value);
-                str.append('\n');
-                newFile.write(str);
-            }
-        }
-
-        // copy the file
-        newFile.copy(filename);
-        newFile.remove();
-
+        file.write(QtJson::Json::serialize(cfgMap));
         return true;
     }
     else
-        qDebug("[CM::writeToFile] Config file %s not found", filename.toLatin1().constData());
+        qDebug("[CM::writeToFile] Config file %s not found in memory", filename.toLatin1().constData());
 
     return false;
 }
@@ -240,7 +129,7 @@ bool ConfigManager::writeToFile(const QString &filename)
 
 // returns the value of the provided option inside the provided file,
 // returns an empty string upon error
-QString ConfigManager::getOptionValue(const QString &filename, const QString &optName)
+QVariant ConfigManager::getOptionValue(const QString &filename, const QString &optName)
 {
     QHash<QString, QMap<QString, ConfigOption> >::iterator i = m_files.find(filename);
     if(i != m_files.end())
@@ -265,8 +154,8 @@ QString ConfigManager::getOptionValue(const QString &filename, const QString &op
 bool ConfigManager::setOptionValue(
         const QString &filename,
         const QString &optName,
-        const QString &optValue,
-        bool fireEvent/* = false*/)
+        const QVariant &optValue,
+        bool fireEvent)
 {
     QHash<QString, QMap<QString, ConfigOption> >::iterator i = m_files.find(filename);
     if(i != m_files.end())
@@ -288,8 +177,7 @@ bool ConfigManager::setOptionValue(
                 return true;
             }
             else
-                qDebug("[CM::setOptionValue] Value %s is not valid for config option %s",
-                       optValue.toLatin1().constData(),
+                qDebug("[CM::setOptionValue] Value is not valid for config option %s",
                        optName.toLatin1().constData());
         }
         else
@@ -307,7 +195,7 @@ bool ConfigManager::setOptionValue(
 
 // returns true if the [value] can be converted to the given [type],
 // returns false otherwise
-bool ConfigManager::isValueValid(const QString &value, ConfigType type)
+bool ConfigManager::isValueValid(const QVariant &value, ConfigType type)
 {
     bool ok;
     switch(type)
@@ -317,32 +205,15 @@ bool ConfigManager::isValueValid(const QString &value, ConfigType type)
             value.toInt(&ok);
             return ok;
         }
-        case CONFIG_TYPE_BOOLEAN:
-        {
-            int val = value.toInt(&ok);
-            return (val == 0 || val == 1);
-        }
         case CONFIG_TYPE_COLOR:
-            return QColor::isValidColor(value);
+            return value.value<QColor>().isValid();
+        case CONFIG_TYPE_LIST:
+            return value.canConvert(QVariant::List);
+        case CONFIG_TYPE_MAP:
+            return value.canConvert(QVariant::Map);
     }
 
     return true;
-}
-
-//-----------------------------------//
-
-// test function to produce contents of file
-void ConfigManager::printFile(const QString &filename)
-{
-    QHash<QString, QMap<QString, ConfigOption> >::iterator i = m_files.find(filename);
-    if(i != m_files.end())
-    {
-        QMap<QString, ConfigOption>::iterator j = i.value().begin();
-        for(; j != i.value().end(); ++j)
-        {
-            printf("%s = %s\n", j.key().toAscii().data(), j->value.toAscii().data());
-        }
-    }
 }
 
 } // end namespace

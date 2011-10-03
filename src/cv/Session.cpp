@@ -402,7 +402,9 @@ void Session::onConnect()
     sendData(QString("USER %1 tolmoon \"%2\" :%3").arg(m_nick).arg(m_host).arg(m_name));
 
     // todo: find out what to do with Event *
-    g_pEvtManager->fireEvent("connected", this, NULL);
+    ConnectionEvent *pEvt = new ConnectionEvent(m_host, m_port);
+    g_pEvtManager->fireEvent("connected", this, pEvt);
+    delete pEvt;
 }
 
 //-----------------------------------//

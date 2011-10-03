@@ -150,21 +150,19 @@ void Client::setupColorConfig(QMap<QString, ConfigOption> &defOptions)
 
 void Client::setupServerConfig(QMap<QString, ConfigOption> &defOptions)
 {
-    // no default options
-    defOptions.insert("server.name", ConfigOption(""));
-    defOptions.insert("server.nick", ConfigOption(""));
-    defOptions.insert("server.altNick", ConfigOption(""));
+    ServerConnectionPanel::setupServerConfig(defOptions);
+    StatusWindow::setupServerConfig(defOptions);
 }
 
 //-----------------------------------//
 
 void Client::setupGeneralConfig(QMap<QString, ConfigOption> &defOptions)
 {
-    defOptions.insert("client.width", ConfigOption("1000", CONFIG_TYPE_INTEGER));
-    defOptions.insert("client.height", ConfigOption("500", CONFIG_TYPE_INTEGER));
-    defOptions.insert("client.maximized", ConfigOption("0", CONFIG_TYPE_BOOLEAN));
+    defOptions.insert("client.width", ConfigOption(1000, CONFIG_TYPE_INTEGER));
+    defOptions.insert("client.height", ConfigOption(500, CONFIG_TYPE_INTEGER));
+    defOptions.insert("client.maximized", ConfigOption(false, CONFIG_TYPE_BOOLEAN));
 
-    defOptions.insert("timestamp",         ConfigOption("0", CONFIG_TYPE_BOOLEAN));
+    defOptions.insert("timestamp",         ConfigOption(false, CONFIG_TYPE_BOOLEAN));
     defOptions.insert("timestamp.format",  ConfigOption("[hh:mm:ss]"));
 }
 
@@ -209,12 +207,11 @@ void Client::setupMessagesConfig(QMap<QString, ConfigOption> &defOptions)
 
 void Client::setClientSize()
 {
-    bool ok;
-    int width = GET_OPT("client.width").toInt(&ok);
-    int height = GET_OPT("client.height").toInt(&ok);
+    int width = GET_INT("client.width");
+    int height = GET_INT("client.height");
     resize(width, height);
 
-    if(GET_OPT("client.maximized").compare("1") == 0)
+    if(GET_STRING("client.maximized").compare("1") == 0)
         showMaximized();
 }
 
@@ -236,16 +233,16 @@ void Client::updateSizeConfig()
 {
     // we only want to overwrite the client size if it's
     // in the normal window state (not maximized)
-    QString maximizedStr;
+    bool maximized;
     if(!isMaximized())
     {
-        g_pCfgManager->setOptionValue("client.width", QString::number(width()));
-        g_pCfgManager->setOptionValue("client.height", QString::number(height()));
-        maximizedStr = "0";
+        g_pCfgManager->setOptionValue("client.width", width(), false);
+        g_pCfgManager->setOptionValue("client.height", height(), false);
+        maximized = false;
     }
     else
-        maximizedStr = "1";
-    g_pCfgManager->setOptionValue("client.maximized", maximizedStr);
+        maximized = true;
+    g_pCfgManager->setOptionValue("client.maximized", maximized, false);
 }
 
 //-----------------------------------//

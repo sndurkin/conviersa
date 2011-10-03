@@ -62,8 +62,8 @@ void InputOutputWindow::setupColorConfig(QMap<QString, ConfigOption> &defOptions
 void InputOutputWindow::setupColors()
 {
     QString stylesheet("background-color: %1; color: %2");
-    stylesheet = stylesheet.arg(GET_OPT(COLOR_BACKGROUND))
-                           .arg(GET_OPT(COLOR_FOREGROUND));
+    stylesheet = stylesheet.arg(GET_STRING(COLOR_BACKGROUND))
+                           .arg(GET_STRING(COLOR_FOREGROUND));
     m_pInput->setStyleSheet(stylesheet);
 }
 
@@ -134,11 +134,11 @@ void InputOutputWindow::onInput(Event *pEvent)
     {
         text.remove(0, 11);
         if(text.compare("on", Qt::CaseInsensitive) == 0)
-            g_pCfgManager->setOptionValue("timestamp", "1");
+            g_pCfgManager->setOptionValue("timestamp", true, false);
         else if(text.compare("off", Qt::CaseInsensitive) == 0)
-            g_pCfgManager->setOptionValue("timestamp", "0");
+            g_pCfgManager->setOptionValue("timestamp", false, false);
         else
-            g_pCfgManager->setOptionValue("timestamp.format", text);
+            g_pCfgManager->setOptionValue("timestamp.format", text, false);
     }
     else if(text.startsWith("/search ", Qt::CaseInsensitive))
     {
@@ -228,7 +228,7 @@ void InputOutputWindow::onNoticeMessage(Event *pEvent)
     else
         source = m_pSession->getHost();
 
-    QString textToPrint = GET_OPT("message.notice")
+    QString textToPrint = GET_STRING("message.notice")
                           .arg(source)
                           .arg(msg.m_params[1]);
     printOutput(textToPrint, MESSAGE_IRC_NOTICE);

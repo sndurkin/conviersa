@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "cv/ConfigManager.h"
 #include "cv/gui/OverlayPanel.h"
 
 class QLabel;
@@ -41,6 +42,8 @@ public:
     ServerConnectionPanel(QWidget *parent);
 
     void validateAndConnect();
+
+    static void setupServerConfig(QMap<QString, ConfigOption> &defOptions);
 
 signals:
     void connect(QString server, int port, QString name, QString nick, QString altNick);

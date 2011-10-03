@@ -114,8 +114,8 @@ void ChannelWindow::setupColorConfig(QMap<QString, ConfigOption> &defOptions)
 void ChannelWindow::setupColors()
 {
     QString stylesheet("QListWidget { background-color: %1 } QListWidget::item { color: %2 }");
-    stylesheet = stylesheet.arg(GET_OPT(COLOR_BACKGROUND))
-                           .arg(GET_OPT(COLOR_FOREGROUND));
+    stylesheet = stylesheet.arg(GET_STRING(COLOR_BACKGROUND))
+                           .arg(GET_STRING(COLOR_FOREGROUND));
     m_pUserList->setStyleSheet(stylesheet);
 }
 
@@ -243,7 +243,7 @@ void ChannelWindow::onNumericMessage(Event *pEvent)
                                          .arg(stripCodes(msg.m_params[2]));
                 setTitle(titleWithTopic);
 
-                QString textToPrint = GET_OPT("message.332")
+                QString textToPrint = GET_STRING("message.332")
                                         .arg(msg.m_params[2]);
 
                 if(m_inChannel)
@@ -262,7 +262,7 @@ void ChannelWindow::onNumericMessage(Event *pEvent)
             // msg.m_params[3]: unix time
             if(isChannelName(msg.m_params[1]))
             {
-                QString textToPrint = GET_OPT("message.333.channel")
+                QString textToPrint = GET_STRING("message.333.channel")
                                       .arg(msg.m_params[2])
                                       .arg(getDate(msg.m_params[3]))
                                       .arg(getTime(msg.m_params[3]));
@@ -315,14 +315,14 @@ void ChannelWindow::onJoinMessage(Event *pEvent)
         QString nickJoined = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
         if(m_pSession->isMyNick(nickJoined))
         {
-            textToPrint = GET_OPT("message.rejoin")
+            textToPrint = GET_STRING("message.rejoin")
                             .arg(msg.m_params[0]);
             m_pManager->setCurrentItem(m_pManager->getItemFromWindow(this));
             giveFocus();
         }
         else
         {
-            textToPrint = GET_OPT("message.join")
+            textToPrint = GET_STRING("message.join")
                           .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName))
                           .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixUserAndHost))
                           .arg(msg.m_params[0]);
@@ -344,20 +344,20 @@ void ChannelWindow::onKickMessage(Event *pEvent)
         if(m_pSession->isMyNick(msg.m_params[1]))
         {
             leaveChannel();
-            textToPrint = GET_OPT("message.kick.self")
+            textToPrint = GET_STRING("message.kick.self")
                             .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName));
         }
         else
         {
             removeUser(msg.m_params[1]);
-            textToPrint = GET_OPT("message.kick")
+            textToPrint = GET_STRING("message.kick")
                             .arg(msg.m_params[1])
                             .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName));
         }
 
         bool hasReason = (msg.m_paramsNum > 2 && !msg.m_params[2].isEmpty());
         if(hasReason)
-            textToPrint += GET_OPT("message.reason")
+            textToPrint += GET_STRING("message.reason")
                             .arg(msg.m_params[2])
                             .arg(QString::fromUtf8("\xF"));
 
@@ -377,7 +377,7 @@ void ChannelWindow::onModeMessage(Event *pEvent)
         for(int i = 2; i < msg.m_paramsNum; ++i)
             modeParams += ' ' + msg.m_params[i];
 
-        QString textToPrint = GET_OPT("message.mode")
+        QString textToPrint = GET_STRING("message.mode")
                                 .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName))
                                 .arg(modeParams);
 
@@ -440,7 +440,7 @@ void ChannelWindow::onNickMessage(Event *pEvent)
     if(hasUser(oldNick))
     {
         changeUserNick(oldNick, msg.m_params[0]);
-        QString textToPrint = GET_OPT("message.nick")
+        QString textToPrint = GET_STRING("message.nick")
                               .arg(oldNick)
                               .arg(msg.m_params[0]);
         printOutput(textToPrint, MESSAGE_IRC_NICK);
@@ -470,14 +470,14 @@ void ChannelWindow::onPartMessage(Event *pEvent)
         if(m_pSession->isMyNick(parseMsgPrefix(msg.m_prefix, MsgPrefixName)))
         {
             leaveChannel();
-            textToPrint = GET_OPT("message.part.self")
+            textToPrint = GET_STRING("message.part.self")
                             .arg(msg.m_params[0]);
 
         }
         else
         {
             removeUser(parseMsgPrefix(msg.m_prefix, MsgPrefixName));
-            textToPrint = GET_OPT("message.part")
+            textToPrint = GET_STRING("message.part")
                           .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName))
                           .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixUserAndHost))
                           .arg(msg.m_params[0]);
@@ -486,7 +486,7 @@ void ChannelWindow::onPartMessage(Event *pEvent)
         // if there's a part message
         bool hasReason = (msg.m_paramsNum > 1 && !msg.m_params[1].isEmpty());
         if(hasReason)
-            textToPrint += GET_OPT("message.reason")
+            textToPrint += GET_STRING("message.reason")
                             .arg(msg.m_params[1])
                             .arg(QString::fromUtf8("\xF"));
 
@@ -522,7 +522,7 @@ void ChannelWindow::onPrivmsgMessage(Event *pEvent)
                 msgType = MESSAGE_IRC_ACTION;
                 QString msgText = action.mid(8, action.size()-9);
                 shouldHighlight = containsNick(msgText);
-                textToPrint = GET_OPT("message.action")
+                textToPrint = GET_STRING("message.action")
                                 .arg(fromNick)
                                 .arg(msgText);
             }
@@ -531,7 +531,7 @@ void ChannelWindow::onPrivmsgMessage(Event *pEvent)
         {
             msgType = MESSAGE_IRC_SAY;
             shouldHighlight = containsNick(msg.m_params[1]);
-            textToPrint = GET_OPT("message.say")
+            textToPrint = GET_STRING("message.say")
                             .arg(fromNick)
                             .arg(msg.m_params[1]);
         }
@@ -555,7 +555,7 @@ void ChannelWindow::onTopicMessage(Event *pEvent)
     Message msg = DCAST(MessageEvent, pEvent)->getMessage();
     if(isChannelName(msg.m_params[0]))
     {
-        QString textToPrint = GET_OPT("message.topic")
+        QString textToPrint = GET_STRING("message.topic")
                                 .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName))
                                 .arg(msg.m_params[1]);
         printOutput(textToPrint, MESSAGE_IRC_TOPIC);
@@ -658,7 +658,7 @@ void ChannelWindow::leaveChannel()
 // handles the printing/sending of the PRIVMSG message
 void ChannelWindow::handleSay(const QString &text)
 {
-    QString textToPrint = GET_OPT("message.say")
+    QString textToPrint = GET_STRING("message.say")
                           .arg(m_pSession->getNick())
                           .arg(text);
     printOutput(textToPrint, MESSAGE_IRC_SAY_SELF);
@@ -670,7 +670,7 @@ void ChannelWindow::handleSay(const QString &text)
 // handles the printing/sending of the PRIVMSG ACTION message
 void ChannelWindow::handleAction(const QString &text)
 {
-    QString textToPrint = GET_OPT("message.action")
+    QString textToPrint = GET_STRING("message.action")
                           .arg(m_pSession->getNick())
                           .arg(text);
     printOutput(textToPrint, MESSAGE_IRC_ACTION_SELF);

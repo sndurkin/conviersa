@@ -101,7 +101,7 @@ void QueryWindow::onNickMessage(Event *pEvent)
     // if we get a NICK message, which will only be if we're in
     // a channel with the person (or if the nick being changed is ours)
     QString oldNick = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
-    QString textToPrint = GET_OPT("message.nick")
+    QString textToPrint = GET_STRING("message.nick")
                           .arg(oldNick)
                           .arg(msg.m_params[0]);
     if(m_pSession->isMyNick(oldNick))
@@ -160,7 +160,7 @@ void QueryWindow::onPrivmsgMessage(Event *pEvent)
                     msgType = MESSAGE_IRC_ACTION;
                     QString msgText = action.mid(8, action.size()-9);
                     shouldHighlight = containsNick(msgText);
-                    textToPrint = GET_OPT("message.action")
+                    textToPrint = GET_STRING("message.action")
                                   .arg(fromNick)
                                   .arg(msgText);
                 }
@@ -169,7 +169,7 @@ void QueryWindow::onPrivmsgMessage(Event *pEvent)
             {
                 msgType = MESSAGE_IRC_SAY;
                 shouldHighlight = containsNick(msg.m_params[1]);
-                textToPrint = GET_OPT("message.say")
+                textToPrint = GET_STRING("message.say")
                               .arg(fromNick)
                               .arg(msg.m_params[1]);
             }
@@ -215,7 +215,7 @@ void QueryWindow::onDoubleClickLink(Event *pEvent)
 // handles the printing/sending of the PRIVMSG message
 void QueryWindow::handleSay(const QString &text)
 {
-    QString textToPrint = GET_OPT("message.say")
+    QString textToPrint = GET_STRING("message.say")
                             .arg(m_pSession->getNick())
                             .arg(text);
     printOutput(textToPrint, MESSAGE_IRC_SAY_SELF);
@@ -227,7 +227,7 @@ void QueryWindow::handleSay(const QString &text)
 // handles the printing/sending of the PRIVMSG ACTION message
 void QueryWindow::handleAction(const QString &text)
 {
-    QString textToPrint = GET_OPT("message.action")
+    QString textToPrint = GET_STRING("message.action")
                             .arg(m_pSession->getNick())
                             .arg(text);
     printOutput(textToPrint, MESSAGE_IRC_ACTION_SELF);

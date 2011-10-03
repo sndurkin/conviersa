@@ -42,6 +42,7 @@ Misc GUI
 
 Misc
 - better implementation of IRC protocol (numerics)
+- add a log file for errors, instead of outputting everything using qDebug()
 
 Styles
 - fix bug in Qt with scrollbar on OutputControl when borders are set

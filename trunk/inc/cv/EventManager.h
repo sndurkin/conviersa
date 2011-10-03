@@ -11,7 +11,7 @@
 #include <QHash>
 #include <QList>
 #include <stdint.h>
-#include "cv/FastDelegate.h"
+#include "FastDelegate.h"
 
 #define DCAST(eventType, var) dynamic_cast<eventType *>(var)
 

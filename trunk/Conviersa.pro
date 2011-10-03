@@ -9,13 +9,13 @@ OTHER_FILES += todo.txt \
     doc/License.txt \
     bin/conviersa.qss \
     doc/coding-style.txt
-HEADERS += inc/cv/qext.h \
+HEADERS += inc/FastDelegate.h \
+    inc/cv/qext.h \
     inc/cv/Connection.h \
     inc/cv/ChannelUser.h \
     inc/cv/Session.h \
     inc/cv/Parser.h \
     inc/cv/ConfigManager.h \
-    inc/cv/FastDelegate.h \
     inc/cv/gui/definitions.h \
     inc/cv/gui/Client.h \
     inc/cv/gui/Window.h \
@@ -36,8 +36,10 @@ HEADERS += inc/cv/qext.h \
     inc/cv/gui/OutputControl.h \
     inc/cv/gui/OverlayPanel.h \
     inc/cv/gui/ServerConnectionPanel.h \
-    inc/cv/gui/DebugWindow.h
-SOURCES += src/cv/main.cpp \
+    inc/cv/gui/DebugWindow.h \
+    inc/json.h
+SOURCES += \
+    src/cv/main.cpp \
     src/cv/qext.cpp \
     src/cv/Connection.cpp \
     src/cv/ChannelUser.cpp \
@@ -63,4 +65,11 @@ SOURCES += src/cv/main.cpp \
     src/cv/gui/OutputControl.cpp \
     src/cv/gui/OverlayPanel.cpp \
     src/cv/gui/ServerConnectionPanel.cpp \
-    src/cv/gui/DebugWindow.cpp
+    src/cv/gui/DebugWindow.cpp \
+    src/json.cpp
+
+
+
+
+
+

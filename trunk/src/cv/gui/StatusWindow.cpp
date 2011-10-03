@@ -280,7 +280,7 @@ void StatusWindow::handle366Numeric(const Message &msg)
 
 void StatusWindow::onServerConnecting(Event *)
 {
-    QString textToPrint = GET_OPT("message.connecting")
+    QString textToPrint = GET_STRING("message.connecting")
                             .arg(m_pSession->getHost())
                             .arg(QString::number(m_pSession->getPort()));
     printOutput(textToPrint, MESSAGE_INFO);
@@ -317,24 +317,47 @@ void StatusWindow::onServerConnectFailed(Event *pEvt)
             reason = "Unknown connection error: " + error;
     }
 
-    QString textToPrint = GET_OPT("message.connectFailed")
+    QString textToPrint = GET_STRING("message.connectFailed")
                             .arg(reason);
     printOutput(textToPrint, MESSAGE_INFO);
 }
 
 //-----------------------------------//
 
-void StatusWindow::onServerConnect(Event *)
+void StatusWindow::onServerConnect(Event *pEvent)
 {
     m_pSharedServerConnPanel->close();
     m_pInput->setFocus();
+
+    ConnectionEvent *pConnEvent = DCAST(ConnectionEvent, pEvent);
+    QString host = pConnEvent->getHost();
+
+    // get the recent servers list
+    QVariantList serverList = g_pCfgManager->getOptionValue("recent.servers").toList();
+    for(int i = 0; i < serverList.size(); ++i)
+    {
+        // if the server is already in the list, remove it
+        if(serverList[i].toString().compare(host, Qt::CaseInsensitive) == 0)
+        {
+            serverList.removeAt(i);
+            break;
+        }
+    }
+
+    // prepend the server
+    serverList.prepend(host);
+    if(serverList.size() > 10)
+        serverList.removeLast();
+
+    // update the recent servers list
+    g_pCfgManager->setOptionValue("recent.servers", serverList, false);
 }
 
 //-----------------------------------//
 
 void StatusWindow::onServerDisconnect(Event *)
 {
-    printOutput(GET_OPT("message.disconnected"), MESSAGE_INFO);
+    printOutput(GET_STRING("message.disconnected"), MESSAGE_INFO);
     setTitle("Server Window");
     setWindowName("Server Window");
     m_pSharedServerConnPanel->open();
@@ -362,7 +385,7 @@ void StatusWindow::onNumericMessage(Event *pEvent)
             // msg.m_params[0]: my nick
             // msg.m_params[1]: nick
             // msg.m_params[2]: away message
-            QString textToPrint = GET_OPT("message.301")
+            QString textToPrint = GET_STRING("message.301")
                                   .arg(msg.m_params[1])
                                   .arg(msg.m_params[2]);
             printOutput(textToPrint, MESSAGE_IRC_NUMERIC);
@@ -384,7 +407,7 @@ void StatusWindow::onNumericMessage(Event *pEvent)
         // RPL_WHOISIDLE
         case 317:
         {
-            QString textToPrint = GET_OPT("message.317")
+            QString textToPrint = GET_STRING("message.317")
                                   .arg(msg.m_params[1])
                                   .arg(getIdleTextFrom317(msg));
             printOutput(textToPrint, MESSAGE_IRC_NUMERIC);
@@ -415,7 +438,7 @@ void StatusWindow::onNumericMessage(Event *pEvent)
             // msg.m_params[1]: nick
             // msg.m_params[2]: login/auth
             // msg.m_params[3]: "is logged in as"
-            QString textToPrint = GET_OPT("message.330")
+            QString textToPrint = GET_STRING("message.330")
                                   .arg(msg.m_params[1])
                                   .arg(msg.m_params[3])
                                   .arg(msg.m_params[2]);
@@ -441,7 +464,7 @@ void StatusWindow::onNumericMessage(Event *pEvent)
             // msg.m_params[3]: unix time
             if(!childIrcWindowExists(msg.m_params[1]))
             {
-                QString textToPrint = GET_OPT("message.333.status")
+                QString textToPrint = GET_STRING("message.333.status")
                                       .arg(msg.m_params[1])
                                       .arg(msg.m_params[2])
                                       .arg(getDate(msg.m_params[3]))
@@ -501,7 +524,7 @@ void StatusWindow::onErrorMessage(Event *pEvent)
 void StatusWindow::onInviteMessage(Event *pEvent)
 {
     Message msg = DCAST(MessageEvent, pEvent)->getMessage();
-    QString textToPrint = GET_OPT("message.invite")
+    QString textToPrint = GET_STRING("message.invite")
                           .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName))
                           .arg(msg.m_params[1]);
     printOutput(textToPrint, MESSAGE_IRC_INVITE);
@@ -519,7 +542,7 @@ void StatusWindow::onJoinMessage(Event *pEvent)
         // create the channel and post the message to it
         ChannelWindow *pChanWin = new ChannelWindow(m_pSession, m_pSharedServerConnPanel, msg.m_params[0]);
         addChannelWindow(pChanWin);
-        QString textToPrint = GET_OPT("message.join.self").arg(msg.m_params[0]);
+        QString textToPrint = GET_STRING("message.join.self").arg(msg.m_params[0]);
         pChanWin->printOutput(textToPrint, MESSAGE_IRC_JOIN);
     }
 }
@@ -536,7 +559,7 @@ void StatusWindow::onModeMessage(Event *pEvent)
         for(int i = 2; i < msg.m_paramsNum; ++i)
             modes += ' ' + msg.m_params[i];
 
-        QString textToPrint = GET_OPT("message.mode")
+        QString textToPrint = GET_STRING("message.mode")
                                 .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName))
                                 .arg(modes);
 
@@ -553,7 +576,7 @@ void StatusWindow::onNickMessage(Event *pEvent)
     QString oldNick = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
     if(m_pSession->isMyNick(oldNick))
     {
-        QString textToPrint = GET_OPT("message.nick")
+        QString textToPrint = GET_STRING("message.nick")
                               .arg(oldNick)
                               .arg(msg.m_params[0]);
         printOutput(textToPrint, MESSAGE_IRC_NICK);
@@ -573,7 +596,7 @@ void StatusWindow::onPongMessage(Event *pEvent)
     // example:
     //	PING hi :there
     //	:irc.server.net PONG there :hi
-    QString textToPrint = GET_OPT("message.pong")
+    QString textToPrint = GET_STRING("message.pong")
                           .arg(msg.m_prefix)
                           .arg(msg.m_params[1]);
     printOutput(textToPrint, MESSAGE_IRC_PONG);
@@ -628,7 +651,7 @@ void StatusWindow::onPrivmsgMessage(Event *pEvent)
             m_pSession->sendData(textToSend);
         }
 
-        QString textToPrint = GET_OPT("message.ctcp")
+        QString textToPrint = GET_STRING("message.ctcp")
                               .arg(requestTypeStr)
                               .arg(fromNick);
         printOutput(textToPrint, MESSAGE_IRC_CTCP);
@@ -652,13 +675,13 @@ void StatusWindow::onQuitMessage(Event *pEvent)
 {
     Message msg = DCAST(MessageEvent, pEvent)->getMessage();
     QString user = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
-    QString textToPrint = GET_OPT("message.quit")
+    QString textToPrint = GET_STRING("message.quit")
                             .arg(user)
                             .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixUserAndHost));
 
     bool hasReason = (msg.m_paramsNum > 0 && !msg.m_params[0].isEmpty());
     if(hasReason)
-        textToPrint += GET_OPT("message.reason")
+        textToPrint += GET_STRING("message.reason")
                         .arg(msg.m_params[0])
                         .arg(QString::fromUtf8("\xF"));
 
@@ -689,7 +712,7 @@ void StatusWindow::onQuitMessage(Event *pEvent)
 void StatusWindow::onWallopsMessage(Event *pEvent)
 {
     Message msg = DCAST(MessageEvent, pEvent)->getMessage();
-    QString textToPrint = GET_OPT("message.wallops")
+    QString textToPrint = GET_STRING("message.wallops")
                             .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName))
                             .arg(msg.m_params[0]);
     printOutput(textToPrint, MESSAGE_IRC_WALLOPS);
@@ -709,5 +732,13 @@ void StatusWindow::onUnknownMessage(Event *pEvent)
 
 void StatusWindow::onOutput(Event *) { }
 void StatusWindow::onDoubleClickLink(Event *) { }
+
+//-----------------------------------//
+
+void StatusWindow::setupServerConfig(QMap<QString, ConfigOption> &defOptions)
+{
+    QVariantList serverList;
+    defOptions.insert("recent.servers", ConfigOption(serverList, CONFIG_TYPE_LIST));
+}
 
 } } // end namespaces

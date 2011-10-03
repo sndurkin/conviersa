@@ -66,6 +66,8 @@ public:
     void onOutput(Event *pEvent);
     void onDoubleClickLink(Event *pEvent);
 
+    static void setupServerConfig(QMap<QString, ConfigOption> &defOptions);
+
 protected:
     void handleSay(const QString &text);
     void handleAction(const QString &text);

@@ -1,10 +1,10 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
+//
+//
+// AltWindowContainer is implemented a little differently than a
+// WindowContainer; it has a parent QWidget (which sits on the desktop
+// at all times) and it uses an event filter to maintain its parent.
 
 #pragma once
 
@@ -20,12 +20,6 @@ namespace cv { namespace gui {
 
 class WindowManager;
 
-// AltWindowContainer is implemented a little differently than a
-// WindowContainer, although it is derived from it so we can use
-// one type in the WindowManager and Window's functions
-//
-// it has a parent QWidget (which sits on the desktop at all times)
-// and it uses an event filter to maintain its parent
 class AltWindowContainer : public WindowContainer
 {
     QMainWindow *   m_pParent;
@@ -43,4 +37,4 @@ protected:
     void closeEvent(QCloseEvent *event);
 };
 
-} } // end namespaces
+} } // End namespaces

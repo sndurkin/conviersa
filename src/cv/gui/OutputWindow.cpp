@@ -1,10 +1,5 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
 
 #include <QApplication>
 #include <QTextCursor>
@@ -36,11 +31,11 @@ QString OutputWindow::s_invalidNickSuffix = ")($|[^A-Za-z0-9])";
 OutputWindow::OutputWindow(const QString &title/* = tr("Untitled")*/,
                            const QSize &size/* = QSize(500, 300)*/)
     : Window(title, size),
-      // TODO: remove hardcode
+      // TODO (seand): Remove hardcoded font
       m_defaultFont("Consolas", 10),
       m_outputAlertLevel(0)
 {
-    // TODO: Choose an appropriate system default font...
+    // TODO (seand): Choose an appropriate system default font...
     setFont(m_defaultFont);
 
     m_pCodec = QTextCodec::codecForLocale();
@@ -201,8 +196,7 @@ void OutputWindow::printDebug(const QString &text)
 
 //-----------------------------------//
 
-// returns true if the user's nick is within
-// the provided text, false otherwise
+// Returns true if the user's nick is within the provided text, false otherwise.
 bool OutputWindow::containsNick(const QString &text)
 {
     QRegExp regex(OutputWindow::s_invalidNickPrefix
@@ -214,14 +208,14 @@ bool OutputWindow::containsNick(const QString &text)
 
 //-----------------------------------//
 /*
-// imitates Google Chrome's search, with lines drawn in the scrollbar
-// and keywords highlighted in the document
+// Imitates Google Chrome's search, with lines drawn in the scrollbar
+// and keywords highlighted in the document.
 void OutputWindow::search(const QString &textToFind)
 {
-    // reset the search lines
+    // Reset the search lines.
     m_pScrollBar->clearLines();
 
-    // create the list of ExtraSelection items to set
+    // Create the list of ExtraSelection items to set.
     QList<QTextEdit::ExtraSelection> list;
 
     QTextCursor cursor(m_pOutput->document());
@@ -245,21 +239,20 @@ void OutputWindow::search(const QString &textToFind)
 
         while(currBlock.isValid() && currBlock.blockNumber() != cursor.blockNumber())
         {
-            // keep track of the current block's height in the document
+            // Keep track of the current block's height in the document.
             currHeight += m_pOutput->document()->documentLayout()->blockBoundingRect(currBlock).size().height();
 
             currBlock = currBlock.next();
         }
 
-        // add in the height of the QTextLine (where the cursor
-        // is located) within the QTextBlock
+        // Add in the height of the QTextLine (where the cursor is located) within the QTextBlock.
         int relativePos = cursor.position() - cursor.block().position();
         QTextLine line = cursor.block().layout()->lineForTextPosition(relativePos);
         if(line.isValid())
         {
-            // add a search line to the scrollbar
+            // Add a search line to the scrollbar.
             //
-            // todo: add line.height() ?
+            // TODO (seand): Add line.height()?
             m_pScrollBar->addLine((currHeight + line.y()) / totalHeight);
         }
     }
@@ -276,5 +269,5 @@ void OutputWindow::focusedInTree()
     pItem->setForeground(0, QBrush(QColor("black"), Qt::SolidPattern));
 }
 
-} } // end namespaces
+} } // End namespaces
 

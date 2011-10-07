@@ -1,10 +1,11 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
+//
+//
+// CLineEdit is a custom QLineEdit class with some additional features:
+//  - Custom grayed text is displayed when the control is empty and not in focus
+//  - When there is text in the control and the user clicks inside to bring focus,
+//    it selects all text
 
 #pragma once
 
@@ -12,13 +13,6 @@
 
 namespace cv { namespace gui {
 
-// defines a custom line edit class that is basically a QLineEdit
-// with some additional features:
-//  - custom text is displayed in the lineedit when it does
-//  not have focus (and there is no text inside it)
-//  - when there is text in the search bar but there is no
-//  focus, and the user clicks inside it, it highlights all
-//  the text
 class CLineEdit : public QLineEdit
 {
     QString     m_textToPrint;
@@ -32,7 +26,7 @@ public:
     QString getPrintedText() { return m_textToPrint; }
 
 protected:
-    // returns the ideal size for the line edit
+    // Returns the ideal size for the line edit.
     QSize sizeHint() const;
 
     void mousePressEvent(QMouseEvent *event);
@@ -44,4 +38,4 @@ protected:
     void paintEvent(QPaintEvent *event);
 };
 
-} } // end namespaces
+} } // End namespaces

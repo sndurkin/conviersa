@@ -1,10 +1,9 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
+//
+//
+// ChannelUser holds information about a user within an IRC channel,
+// and is used by ChannelWindow.
 
 #pragma once
 
@@ -18,13 +17,13 @@ class ChannelUser
 {
     Session *   m_pSession;
 
-    // msg prefix: nick!user@host
+    // Message prefix: nick!user@host
     QString     m_nickname;
     QString     m_prefixes;
     QString     m_user;
     QString     m_host;
 
-    // priority of the nickname for tab-completion
+    // Priority of the nickname for tab-completion.
     int         m_priority;
 
 public:
@@ -33,7 +32,7 @@ public:
     void addPrefix(const QChar &prefix);
     void removePrefix(const QChar &prefix);
 
-    // sets and gets only the nickname, without any prefixes
+    // These functions only manipulate the nickname, without any prefixes.
     void setNickname(const QString &nick) { m_nickname = nick; }
     QString getNickname() { return m_nickname; }
 
@@ -44,4 +43,4 @@ public:
     int getPriority() { return m_priority; }
 };
 
-} // end namespace
+} // End namespace

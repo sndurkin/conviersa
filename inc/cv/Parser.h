@@ -1,10 +1,10 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
+//
+//
+// This file holds a collection of utility functions used for parsing
+// messages adhering to the IRC protocol. They are mostly used by
+// Session and StatusWindow.
 
 #pragma once
 
@@ -17,7 +17,7 @@ namespace cv {
 
 enum CtcpRequestType
 {
-    RequestTypeInvalid, // not CTCP request format
+    RequestTypeInvalid, // Not valid CTCP request format.
 
     RequestTypeAction,
     RequestTypeVersion,
@@ -41,7 +41,7 @@ enum ChanModeType
 
 //-----------------------------------//
 
-// used to specify a channel mode
+// Used to specify a channel mode.
 struct ChannelMode
 {
     bool    m_sign;
@@ -51,7 +51,7 @@ struct ChannelMode
 
 //-----------------------------------//
 
-// used for parsing the message prefix
+// Used for parsing the message prefix.
 enum MsgPrefixPart
 {
     MsgPrefixName,
@@ -62,12 +62,12 @@ enum MsgPrefixPart
 
 //-----------------------------------//
 
-// lists all the possible non-numeric irc commands
+// Lists all the possible non-numeric IRC commands.
 enum
 {
     IRC_COMMAND_UNKNOWN,
 
-    // alphabetical order
+    // Alphabetical order
     IRC_COMMAND_ERROR,
     IRC_COMMAND_INVITE,
     IRC_COMMAND_JOIN,
@@ -99,7 +99,7 @@ struct Message
 
 Message parseData(const QString &data);
 
-// message-specific parsing
+// Message-specific parsing
 QString getNetworkNameFrom001(const Message &msg);
 QString getIdleTextFrom317(const Message &msg);
 
@@ -115,4 +115,4 @@ QString getDate(QString strUnixTime);
 QString getTime(QString strUnixTime);
 bool isChannel(const QString &str);
 
-} // end namespace
+} // End namespace

@@ -1,10 +1,10 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
+//
+//
+// SearchBar is a derivation of CLineEdit that provides the capability
+// to display a progress bar within the control itself, similar to the
+// address bar control in Apple's Safari.
 
 #pragma once
 
@@ -23,7 +23,7 @@ class SearchBar : public CLineEdit
 
     QBrush *    m_pBrush;
 
-    // value is between 0.0 and 1.0
+    // Value can be anywhere between 0.0 and 1.0.
     double      m_searchProgress;
 
 public:
@@ -36,4 +36,4 @@ protected:
     void paintEvent(QPaintEvent *event);
 };
 
-} } // end namespaces
+} } // End namespaces

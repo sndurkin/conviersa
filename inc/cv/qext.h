@@ -1,10 +1,5 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
 
 #pragma once
 
@@ -14,4 +9,4 @@ namespace cv {
 
 QString escapeEx(const QString &text);
 
-} // end namespace
+} // End namespace

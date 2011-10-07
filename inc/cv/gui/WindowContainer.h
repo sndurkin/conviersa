@@ -1,10 +1,9 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
+//
+//
+// WindowContainer is simply a container which can hold multiple Windows
+// using MDI.
 
 #pragma once
 
@@ -15,8 +14,6 @@ namespace cv { namespace gui {
 
 class Window;
 
-// custom QMdiArea that i'm using as a container
-// to hold Windows
 class WindowContainer : public QMdiArea
 {
 protected:
@@ -29,4 +26,4 @@ public:
     int size() const { return m_windows.size(); }
 };
 
-} } // end namespaces
+} } // End namespaces

@@ -1,10 +1,5 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
 
 #include <QVBoxLayout>
 #include <QTreeView>
@@ -78,14 +73,14 @@ void ChannelListWindow::giveFocus()
 
 //-----------------------------------//
 
-// perform anything that needs to be done before
-// channels are added
+// Performs anything that needs to be done before
+// channels are added.
 void ChannelListWindow::beginPopulatingList()
 {
     m_populatingList = true;
     m_pFilteringGroup->setEnabled(false);
 
-    // download group
+    // Disable controls in the download group.
     m_pCustomParameters->setEnabled(false);
     m_pTopicDisplay->setEnabled(false);
     m_pDownloadListButton->setEnabled(false);
@@ -93,14 +88,14 @@ void ChannelListWindow::beginPopulatingList()
 
     m_pSaveButton->setEnabled(false);
 
-    // reset for saving to the text file
+    // Reset for saving to the text file.
     m_numVisible = 0;
     m_savedTopicDisplay = (m_pTopicDisplay->checkState() == Qt::Checked);
 }
 
 //-----------------------------------//
 
-// add a channel to the QTreeWidget
+// Adds a channel to the QTreeWidget.
 void ChannelListWindow::addChannel(const QString &channel, const QString &numUsers, const QString &topic)
 {
     if(m_populatingList)
@@ -161,14 +156,14 @@ void ChannelListWindow::addChannel(const QString &channel, const QString &numUse
 
 //-----------------------------------//
 
-// perform anything that needs to be done when all
-// channels have been added
+// Performs anything that needs to be done when all
+// channels have been added.
 void ChannelListWindow::endPopulatingList()
 {
     m_populatingList = false;
     m_pFilteringGroup->setEnabled(true);
 
-    // download group
+    // Re-enable controls in the download group.
     m_pCustomParameters->setEnabled(true);
     m_pTopicDisplay->setEnabled(true);
     m_pDownloadListButton->setEnabled(true);
@@ -177,14 +172,12 @@ void ChannelListWindow::endPopulatingList()
     m_pSaveButton->setEnabled(true);
 
     if(m_pView)
-    {
         m_pView->resizeColumnToContents(2);
-    }
 }
 
 //-----------------------------------//
 
-// clear the list of all channels
+// Clears the list of all channels.
 void ChannelListWindow::clearList()
 {
     m_pModel->clear();
@@ -201,11 +194,10 @@ void ChannelListWindow::clearList()
 
 //-----------------------------------//
 
-// sets up all the controls that i'll be using to interact
-// with the channel list
+// Sets up all the controls that will be used to interact
+// with the channel list.
 void ChannelListWindow::setupControls()
 {
-    // controls layout
     m_pControlsSection = new QWidget(this);
     m_pControlsSection->setMinimumSize(0, 155);
     m_pControlsSection->setFocusPolicy(Qt::StrongFocus);
@@ -292,7 +284,7 @@ void ChannelListWindow::setupControls()
 
 //-----------------------------------//
 
-// handles a connection fired from the Connection object
+// Handles a connection fired from the Connection object.
 void ChannelListWindow::handleConnect()
 {
     clearList();
@@ -301,7 +293,7 @@ void ChannelListWindow::handleConnect()
 
 //-----------------------------------//
 
-// handles a disconnection fired from the Connection object
+// Handles a disconnection fired from the Connection object.
 void ChannelListWindow::handleDisconnect()
 {
     m_pDownloadingGroup->setEnabled(false);
@@ -315,12 +307,12 @@ void ChannelListWindow::handleDisconnect()
 
 //-----------------------------------//
 
-// requests a new list of channels from the server
+// Requests a new list of channels from the server.
 void ChannelListWindow::downloadList()
 {
+    // If we're currently in a search, cancel it.
     if(m_pStopFilterButton->isEnabled())
     {
-        // we're trying to search, so stop that
         m_pSearchTimer->stop();
         m_pSearchBar->clearProgress();
         m_pStopFilterButton->setEnabled(false);
@@ -336,7 +328,7 @@ void ChannelListWindow::downloadList()
 
 //-----------------------------------//
 
-// requests to stop the download of the channels from the server
+// Requests to stop the download of the channels list from the server.
 void ChannelListWindow::stopDownload()
 {
     m_pSession->sendData("LIST STOP");
@@ -344,11 +336,11 @@ void ChannelListWindow::stopDownload()
 
 //-----------------------------------//
 
-// joins the channel which is found with the given index
+// Joins the channel which is found with the given index.
 void ChannelListWindow::joinChannel(const QModelIndex &index)
 {
-    // todo: be able to disconnect when the connection is lost;
-    // this isn't enough
+    // TODO (seand): Be able to disconnect when the connection is lost;
+    // this isn't sufficient.
     if(index.isValid())
     {
         m_pSession->sendData(QString("JOIN :%1").arg(index.sibling(index.row(), 0).data().toString()));
@@ -357,25 +349,25 @@ void ChannelListWindow::joinChannel(const QModelIndex &index)
 
 //-----------------------------------//
 
-// searches for the given string within the list of channels
+// Searches for the given string within the list of channels.
 void ChannelListWindow::startFilter()
 {
-    // takes care of the case where the user enters a new query mid-search
+    // Cover the case where the user enters a new query mid-search.
     if(m_pSearchTimer->isActive())
     {
         m_pSearchTimer->stop();
         m_pSearchBar->clearProgress();
     }
 
-    // reset the string variables
+    // Reset the string variables.
     m_searchStr = "";
     m_searchRegex = QRegExp();
 
-    // set the min/max variables
+    // Set the min/max variables.
     m_savedMinUsers = m_pMinUsers->value();
     m_savedMaxUsers = m_pMaxUsers->value();
 
-    // if there are no constraints, just display all the channels
+    // If there are no constraints, display all the channels.
     if((m_pSearchBar->text().isEmpty()
             || (m_pCheckChanNames->checkState() == Qt::Unchecked
             && m_pCheckChanTopics->checkState() == Qt::Unchecked))
@@ -392,7 +384,7 @@ void ChannelListWindow::startFilter()
         return;
     }
 
-    // enable/disable controls
+    // Enable & disable controls.
     m_pStopFilterButton->setEnabled(true);
     m_pApplyFilterButton->setEnabled(false);
     m_pSearchBar->setEnabled(false);
@@ -407,34 +399,28 @@ void ChannelListWindow::startFilter()
         m_pDownloadingGroup->setEnabled(false);
     m_pSaveButton->setEnabled(false);
 
-    // hide all the channels first
+    // Hide all the channels.
     for(int i = 0; i < m_pModel->rowCount(); ++i)
-    {
         m_pView->setRowHidden(i, QModelIndex(), true);
-    }
 
-    // set the search string/regex
+    // Set the search string & regex.
     if(m_pUseRegExp->checkState() == Qt::Checked)
-    {
         m_searchRegex = QRegExp(m_pSearchBar->text(), Qt::CaseInsensitive);
-    }
     else
-    {
         m_searchStr = m_pSearchBar->text();
-    }
 
-    // initialize other variables
+    // Initialize other variables.
     m_currChannel = 0;
     m_numVisible = 0;
 
-    // start the timer
+    // Start the timer.
     m_pSearchTimer->setInterval(0);
     m_pSearchTimer->start();
 }
 
 //-----------------------------------//
 
-// performs one iteration of a search from the search bar
+// Performs one iteration of a search from the search bar.
 void ChannelListWindow::performSearchIteration()
 {
     int i;
@@ -442,9 +428,9 @@ void ChannelListWindow::performSearchIteration()
     {
         m_pChannelsLabel->setText(QString("%1 / %2 Channels").arg(m_numVisible).arg(m_pModel->rowCount()));
 
-        // make sure number of users is within the range of the min and max
-        // users first; if it isn't then we continue so the result
-        // isn't included in the display
+        // Make sure the number of users is within the range of the min and max
+        // users first; if it isn't, we continue so the result isn't included
+        // in the display.
         int numUsers = m_pModel->item(i, 1)->text().toInt();
         if(m_savedMinUsers > 0)
         {
@@ -458,7 +444,7 @@ void ChannelListWindow::performSearchIteration()
                 continue;
         }
 
-        // then check the actual name or topic for a string match
+        // Then check the actual name or topic for a string match.
         if(!m_pSearchBar->text().isEmpty())
         {
             bool containsStr = false;
@@ -476,8 +462,8 @@ void ChannelListWindow::performSearchIteration()
                 }
             }
 
-            // if containsStr is true, then it was already found in the name,
-            // so this short-circuits and fails
+            // If [containsStr] is true, then it was already found in the name,
+            // so this short-circuits and fails.
             if(!containsStr && m_pCheckChanTopics->isChecked())
             {
                 QTextDocument doc;
@@ -505,15 +491,11 @@ void ChannelListWindow::performSearchIteration()
 
     m_pSearchBar->updateProgress((double) m_currChannel / m_pModel->rowCount());
 
-    // stop the timer if we've completed the search
+    // Stop the timer if we've completed the search.
     if(i == m_pModel->rowCount())
-    {
         stopFilter();
-    }
     else
-    {
         m_currChannel = i;
-    }
 
     m_pChannelsLabel->setText(QString("%1 / %2 Channels").arg(m_numVisible).arg(m_pModel->rowCount()));
 }
@@ -525,7 +507,7 @@ void ChannelListWindow::stopFilter()
     m_pSearchTimer->stop();
     m_pSearchBar->clearProgress();
 
-    // enable/disable controls
+    // Enable & disable controls.
     m_pStopFilterButton->setEnabled(false);
     m_pApplyFilterButton->setEnabled(true);
     m_pSearchBar->setEnabled(true);
@@ -543,13 +525,13 @@ void ChannelListWindow::stopFilter()
 
 //-----------------------------------//
 
-// saves the entire list to a file
+// Saves the entire list to a file.
 void ChannelListWindow::saveList()
 {
     if(m_pModel->rowCount() == 0)
         return;
 
-    // initialize the file name to be the server name with the current date
+    // Initialize the file name to be the server name with the current date.
     QString fileName = QString("/chanlist-%1-%2.txt")
                     .arg(m_pManager->getParentWindow(this)->getWindowName())
                     .arg(QDate::currentDate().toString("MM-dd-yyyy"));
@@ -574,7 +556,7 @@ void ChannelListWindow::saveList()
         return;
     }
 
-    // first write the filter information
+    // Write the filter information.
     QTextStream out(&file);
 
     if(!m_searchStr.isEmpty())
@@ -598,9 +580,9 @@ void ChannelListWindow::saveList()
 
     out << "[Filter] " << m_numVisible << " shown / " << m_pModel->rowCount() << " total channels\n\n";
 
-    // write every visible channel to the file
+    // Write every visible channel to the file.
     //
-    // we branch at the beginning to save time, even though it means repetitive code
+    // Branch at the beginning to save time, even though it means some repetitive code.
     if(m_savedTopicDisplay)
     {
         QTextDocument doc;
@@ -631,4 +613,4 @@ void ChannelListWindow::saveList()
     out.flush();
 }
 
-} } // end namespaces
+} } // End namespaces

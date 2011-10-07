@@ -1,10 +1,5 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2010 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
 
 #include <QApplication>
 #include <QClipboard>
@@ -98,7 +93,7 @@ OutputControl::OutputControl(QWidget *parent/*= NULL*/)
     verticalScrollBar()->setSingleStep(1);
     QObject::connect(verticalScrollBar(), SIGNAL(valueChanged(int)), this, SLOT(updateScrollbarValue(int)));
 
-    // set pointers for the blocks of memory
+    // Set pointers for the blocks of memory.
     m_pFM = m_fmBlock;
     m_pEvt = m_evtBlock;
 
@@ -167,12 +162,12 @@ void OutputControl::setupColorConfig(QMap<QString, ConfigOption> &defOptions)
 
 void OutputControl::setupColors()
 {
-    // TODO: possible optimization would be to create a color manager
-    //       which shares QColor instances within the array
+    // TODO (seand): Possible optimization would be to create a color manager
+    //       which shares QColor instances within the array.
     for(int i = 0; i < COLOR_NUM; ++i)
         m_colorsArr[i] = GET_COLOR(COLOR_TO_CONFIG_MAP[i]);
 
-    // the background color is changed a little differently; it uses CSS
+    // The background color is changed using QSS.
     setStyleSheet(QString("cv--gui--OutputControl { background-color: %1 }").arg(GET_STRING(COLOR_TO_CONFIG_MAP[COLOR_CHAT_BACKGROUND])));
 }
 
@@ -187,7 +182,7 @@ void OutputControl::onConfigChanged(Event *pEvent)
     {
         if(optName.compare(COLOR_TO_CONFIG_MAP[i], Qt::CaseInsensitive) == 0)
         {
-            // if it's the background color, we also need to set it in the QSS
+            // If it's the background color, we also need to set it in the QSS.
             if(i == COLOR_CHAT_BACKGROUND)
                 setStyleSheet(QString("cv--gui--OutputControl { background-color: %1 }").arg(pCfgEvent->getString()));
 
@@ -221,12 +216,12 @@ void OutputControl::appendMessage(const QString &msg, OutputColor defaultMsgColo
         line.setAlternateSelectionIdx(0);
     }
 
-    // iterate through msg, determining the various TextRuns
+    // Iterate through [msg], determining the various TextRuns.
     for(int i = 0, msgLen = msgToDisplay.length(); i < msgLen; ++i)
     {
         switch(msgToDisplay[i].toLatin1())
         {
-            case 2:     // bold
+            case 2:     // Bold text style.
             {
                 TextRun *nextTextRun = new TextRun(*currTextRun);
                 nextTextRun->flipBold();
@@ -234,7 +229,7 @@ void OutputControl::appendMessage(const QString &msg, OutputColor defaultMsgColo
                 currTextRun = nextTextRun;
                 break;
             }
-            case 15:    // causes formatting to return to normal
+            case 15:    // Causes all text styles and colors to return to normal.
             {
                 TextRun *nextTextRun = new TextRun(*currTextRun);
                 nextTextRun->reset();
@@ -243,7 +238,7 @@ void OutputControl::appendMessage(const QString &msg, OutputColor defaultMsgColo
                 currTextRun = nextTextRun;
                 break;
             }
-            case 22:    // reverse
+            case 22:    // Reversed text style (background color becomes foreground and vice versa).
             {
                 TextRun *nextTextRun = new TextRun(*currTextRun);
                 nextTextRun->flipReverse();
@@ -251,7 +246,7 @@ void OutputControl::appendMessage(const QString &msg, OutputColor defaultMsgColo
                 currTextRun = nextTextRun;
                 break;
             }
-            case 31:    // underline
+            case 31:    // Underline text style.
             {
                 TextRun *nextTextRun = new TextRun(*currTextRun);
                 nextTextRun->flipUnderline();
@@ -259,25 +254,24 @@ void OutputControl::appendMessage(const QString &msg, OutputColor defaultMsgColo
                 currTextRun = nextTextRun;
                 break;
             }
-            case 3:     // color
+            case 3:     // Color style.
             {
-                // if the reverse control code is spotted before
-                // this, then colors are ignored
+                // If the reverse control code is spotted before
+                // this, then colors are ignored.
                 if(currTextRun->isReversed())
                     break;
 
                 TextRun *nextTextRun = new TextRun(*currTextRun);
 
-                // follows mIRC's method for coloring, where the
+                // Follows mIRC's method for coloring, where the
                 // foreground color comes first (up to two digits),
                 // and the optional background color comes last (up
-                // to two digits) and they are separated by a single comma
+                // to two digits) and they are separated by a single comma.
                 //
-                // ex: '\3'[05[,02]]
+                // Example: '\3'[05[,02]]
                 //
-                // min length of color specification is 0
-                // max length of color specification is 5
-                // (four numbers and one comma)
+                // Min length of color specification is 0, and max length
+                // of color specification is 5 (4 numbers, 1 comma).
                 QString firstNum, secondNum;
 
                 ++i;
@@ -309,14 +303,14 @@ void OutputControl::appendMessage(const QString &msg, OutputColor defaultMsgColo
                 if(i < msgLen)
                     --i;
 
-                // get the foreground color
+                // Get the foreground color.
                 if(!firstNum.isEmpty())
                     nextTextRun->setFgColor(firstNum.toInt()+2);
-                // otherwise, the color is being terminated
+                // Otherwise, the color is being terminated.
                 else
                     nextTextRun->resetColors(defaultMsgColor);
 
-                // get the background color
+                // Get the background color.
                 if(!secondNum.isEmpty())
                     nextTextRun->setBgColor(secondNum.toInt()+2);
 
@@ -332,7 +326,7 @@ void OutputControl::appendMessage(const QString &msg, OutputColor defaultMsgColo
         } // switch
     } // for
 
-    // iterate through to split into appropriate word chunks
+    // Iterate through to split into appropriate word chunks.
     WordChunk *currChunk = new WordChunk();
     line.setFirstWordChunk(currChunk);
     currTextRun = line.firstTextRun();
@@ -344,7 +338,7 @@ void OutputControl::appendMessage(const QString &msg, OutputColor defaultMsgColo
     QString &text = line.text();
     for(int i = 0, textLen = text.length(); i < textLen; ++i)
     {
-        // update the current text run
+        // Update the current text run.
         for(; currTextRun != NULL; currTextRun = currTextRun->nextTextRun())
         {
             if(currTextRunIdx + currTextRun->getLength() > i)
@@ -353,7 +347,7 @@ void OutputControl::appendMessage(const QString &msg, OutputColor defaultMsgColo
                 currTextRunIdx += currTextRun->getLength();
         }
 
-        // update the QFontMetrics object if necessary
+        // Update the QFontMetrics object if necessary.
         if(font.bold() != currTextRun->isBold())
         {
             font.setBold(currTextRun->isBold());
@@ -408,16 +402,15 @@ void OutputControl::appendMessage(const QString &msg, OutputColor defaultMsgColo
         }
     }
 
-    // set the width of the last chunk in the line
+    // Set the width of the last chunk in the line.
     currChunk->setWidth(currWidth);
 
-    // fire onOutput event for callbacks to use for adding links
-    // to the text
+    // Fire the "output" event for callbacks to use for adding links
+    // to the text.
     OutputEvent *pEvent = new(m_pEvt) OutputEvent(line.text());
     g_pEvtManager->fireEvent("output", this, pEvent);
 
-    // iterate through the OutputEvent to add the links given the
-    // LinkInfo
+    // Iterate through the OutputEvent to add the links given the LinkInfo.
     QList<LinkInfo>::const_iterator iter;
     font = this->font();
     fm->~QFontMetrics();
@@ -431,7 +424,7 @@ void OutputControl::appendMessage(const QString &msg, OutputColor defaultMsgColo
         LinkInfo linkInfo = *iter;
         for(int i = linkInfo.startIdx; i <= linkInfo.endIdx; ++i)
         {
-            // update the current text run
+            // Update the current text run.
             for(; currTextRun != NULL; currTextRun = currTextRun->nextTextRun())
             {
                 if(currTextRunIdx + currTextRun->getLength() > i)
@@ -440,7 +433,7 @@ void OutputControl::appendMessage(const QString &msg, OutputColor defaultMsgColo
                     currTextRunIdx += currTextRun->getLength();
             }
 
-            // update the QFontMetrics object if necessary
+            // Update the QFontMetrics object if necessary.
             if(font.bold() != currTextRun->isBold())
             {
                 font.setBold(currTextRun->isBold());
@@ -448,7 +441,7 @@ void OutputControl::appendMessage(const QString &msg, OutputColor defaultMsgColo
                 fm = new(m_pFM) QFontMetrics(font);
             }
 
-            // calculate the width of the next character
+            // Calculate the width of the next character.
             width += fm->width(line.text()[i]);
         }
 
@@ -469,7 +462,7 @@ void OutputControl::appendMessage(const QString &msg, OutputColor defaultMsgColo
 
 void OutputControl::appendLine(OutputLine &line)
 {
-    // if we're appending the first line
+    // If we're appending the first line...
     if(m_lastVisibleLineIdx < 0)
     {
         m_lastVisibleLineIdx = 0;
@@ -478,14 +471,14 @@ void OutputControl::appendLine(OutputLine &line)
         verticalScrollBar()->setPageStep(50);
     }
 
-    // calculate line wraps for this line
+    // Calculate the line wraps for this line.
     QLinkedList<int> splits;
     calculateLineWraps(line, splits, viewport()->width(), this->font());
     m_totalWrappedLines += line.getNumSplits() + 1;
 
     m_lines.append(line);
 
-    // initiate a repaint of the viewport
+    // Initiate a repaint of the viewport.
     flushOutputLines();
 }
 
@@ -493,15 +486,15 @@ void OutputControl::appendLine(OutputLine &line)
 
 void OutputControl::flushOutputLines()
 {
-    // for the very first line, there is no scrollbar, so the code
+    // For the very first line, there is no scrollbar, so the code
     // below doesn't work; in this case, we just create a paint event
-    // manually
+    // manually.
     if(m_lines.size() == 1)
     {
         viewport()->update();
     }
-    // in this case, there is more than 1 line, so setting the scrollbar
-    // value will cause a repaint
+    // In this case, there is more than 1 line, so setting the scrollbar
+    // value will cause a repaint.
     else
     {
         bool atBottom = verticalScrollBar()->maximum() == verticalScrollBar()->value();
@@ -516,10 +509,10 @@ void OutputControl::flushOutputLines()
 
 //-----------------------------------//
 
-// changes the font for the OutputControl by resetting
+// Changes the font for the OutputControl by resetting
 // the widths of the chunks in every line and creating
 // a dummy resize event to force a recalculation of all
-// line wraps
+// line wraps.
 void OutputControl::changeFont(const QFont &newFont)
 {
     setFont(newFont);
@@ -540,7 +533,7 @@ void OutputControl::changeFont(const QFont &newFont)
         QString &text = currLine.text();
         for(int j = 0, k = 0; j < text.length(); ++j, ++k)
         {
-            // update the current text run
+            // Update the current text run.
             for(; currTextRun != NULL; currTextRun = currTextRun->nextTextRun())
             {
                 if(currTextRunIdx + currTextRun->getLength() > j)
@@ -549,7 +542,7 @@ void OutputControl::changeFont(const QFont &newFont)
                     currTextRunIdx += currTextRun->getLength();
             }
 
-            // update the QFontMetrics object if necessary
+            // Update the QFontMetrics object if necessary.
             if(font.bold() != currTextRun->isBold())
             {
                 font.setBold(currTextRun->isBold());
@@ -567,13 +560,13 @@ void OutputControl::changeFont(const QFont &newFont)
             currWidth += fm->width(text[j]);
         }
 
-        // set the width of the last chunk in the line
+        // Set the width of the last chunk in the line.
         currChunk->setWidth(currWidth);
 
         fm->~QFontMetrics();
     }
 
-    // create dummy resize event
+    // Create a resize event.
     QSize oldSize(width() - 1, height());
     resizeEvent(new QResizeEvent(size(), oldSize));
 }
@@ -587,9 +580,10 @@ void OutputControl::resizeEvent(QResizeEvent *event)
         QFont font = this->font();
         int vpWidth = viewport()->width();
 
-        // 1) TEXT WRAPPING
-        //     - use word chunks and text runs to calculate all the line splits, and
-        //       then set the scrollbar value based on how many wrapped lines there are
+        // TEXT WRAPPING
+        //
+        // Use word chunks and text runs to calculate all the line splits, and
+        // then set the scrollbar value based on how many wrapped lines there are.
         QLinkedList<int> splits;
         m_totalWrappedLines = 0;
         int scrollbarValue;
@@ -602,14 +596,14 @@ void OutputControl::resizeEvent(QResizeEvent *event)
 
             if(i == m_lastVisibleLineIdx)
             {
-                // if the last visible line has been resized to have fewer
-                // wrapped lines than before (control has been widened) and
-                // it was at the last wrapped line, make it hug the new last
-                // wrapped line
+                // If the last visible line has been resized to have fewer
+                // wrapped lines than before (meaning the control has been widened)
+                // and it was at the last wrapped line, make it hug the new last
+                // wrapped line.
                 bool moveScrollbarToBottom = m_lastVisibleWrappedLine > currLine.getNumSplits();
 
-                // if the scrollbar was at the bottom before shrinking the width,
-                // then keep it there
+                // If the scrollbar was at the bottom before shrinking the width,
+                // then keep it there.
                 moveScrollbarToBottom |= oldSplitsNum < currLine.getNumSplits() && m_lastVisibleWrappedLine == oldSplitsNum;
 
                 if(moveScrollbarToBottom)
@@ -620,7 +614,7 @@ void OutputControl::resizeEvent(QResizeEvent *event)
             m_totalWrappedLines += currLine.getNumSplits() + 1;
         }
 
-        // reset the scrollbar range and scrollbar value
+        // Reset the scrollbar range and scrollbar value.
         verticalScrollBar()->setRange(1, m_totalWrappedLines);
         verticalScrollBar()->setValue(scrollbarValue);
     }
@@ -645,20 +639,20 @@ void OutputControl::calculateLineWraps(OutputLine &currLine, QLinkedList<int> &s
         int availableWidth = vpWidth - currWidth;
 
         #define WRAP_CHUNK() \
-            /* find all the splits required to make this chunk fit */ \
+            /* Find all the splits required to make this chunk fit. */ \
             int fragmentIdx = 0; \
             while(fragmentIdx < currChunk->getLength()) \
             { \
                 availableWidth = vpWidth - currWidth; \
                 \
-                /* update to the proper text run (if needed) */ \
+                /* Update to the proper text run if necessary. */ \
                 while(currTextRunIdx + currTextRun->getLength() <= currTextIdx + fragmentIdx) \
                 { \
                     currTextRunIdx += currTextRun->getLength(); \
                     currTextRun = currTextRun->nextTextRun(); \
                 } \
                 \
-                /* we only change the QFontMetrics object if necessary */ \
+                /* Change the QFontMetrics object if necessary. */ \
                 if(font.bold() != currTextRun->isBold()) \
                 { \
                     font.setBold(currTextRun->isBold()); \
@@ -666,17 +660,17 @@ void OutputControl::calculateLineWraps(OutputLine &currLine, QLinkedList<int> &s
                     fm = new(m_pFM) QFontMetrics(font); \
                 } \
                 \
-                /* determine if width of next character fits or not */ \
+                /* Determine if the width of the next character fits or not. */ \
                 int nextCharWidth = fm->width(currLine.text()[currTextIdx + fragmentIdx]); \
                 if(nextCharWidth <= availableWidth || currWidth == WRAPPED_TEXT_START_POS) \
                 { \
-                    /* it does, so add it into the width */ \
+                    /* It does, so add it into the width. */ \
                     currWidth += nextCharWidth; \
                     ++fragmentIdx; \
                 } \
                 else \
                 { \
-                    /* it doesn't, so split it */ \
+                    /* It doesn't, so split it. */ \
                     splits.append(currTextIdx + fragmentIdx); \
                     currWidth = WRAPPED_TEXT_START_POS; \
                 } \
@@ -694,12 +688,12 @@ void OutputControl::calculateLineWraps(OutputLine &currLine, QLinkedList<int> &s
                  || currChunk == firstChunk
                  || currChunk->getLength() > 24;
 
-            // case 1: chunk needs to be wrapped
+            // Case 1: Chunk needs to be wrapped.
             if(chunkNeedsWrapping)
             {
                 WRAP_CHUNK();
             }
-            // case 2: we move word chunk to the next line
+            // Case 2: Move the word chunk to the next line.
             else
             {
                 splits.append(currTextIdx);
@@ -707,7 +701,7 @@ void OutputControl::calculateLineWraps(OutputLine &currLine, QLinkedList<int> &s
                 availableWidth = vpWidth - currWidth;
                 if(currChunk->getWidth() <= availableWidth)
                 {
-                    // it fits
+                    // The chunk fits.
                     currWidth += currChunk->getWidth();
                 }
                 else
@@ -720,11 +714,11 @@ void OutputControl::calculateLineWraps(OutputLine &currLine, QLinkedList<int> &s
         currTextIdx += currChunk->getLength();
     }
 
-    // set the splits on the line
+    // Set the splits on the line.
     currLine.setSplitsAndClearList(splits);
 
-    // if this line has a timestamp, then we want to set
-    // the alternate text selection start
+    // If this line has a timestamp, then set the alternate
+    // text selection start.
     if(currLine.getAlternateSelectionIdx() > 0)
     {
         int x = TEXT_START_POS;
@@ -734,14 +728,14 @@ void OutputControl::calculateLineWraps(OutputLine &currLine, QLinkedList<int> &s
 
         while(currTextIdx < currLine.getAlternateSelectionIdx())
         {
-            // find the text run for our current text idx
+            // Find the text run for the current text idx.
             while(currTextRunIdx + currTextRun->getLength() <= currTextIdx)
             {
                 currTextRunIdx += currTextRun->getLength();
                 currTextRun = currTextRun->nextTextRun();
             }
 
-            // update font metrics object if necessary
+            // Update font metrics object if necessary.
             if(currTextRun != NULL && font.bold() != currTextRun->isBold())
             {
                 font.setBold(currTextRun->isBold());
@@ -749,23 +743,22 @@ void OutputControl::calculateLineWraps(OutputLine &currLine, QLinkedList<int> &s
                 fm = new(m_pFM) QFontMetrics(font);
             }
 
-            // if the text run fits before the alternate selection idx
+            // If the text run fits before the alternate selection idx...
             if(currTextRunIdx + currTextRun->getLength() <= currLine.getAlternateSelectionIdx())
             {
-                // then we want to find the width of all the text
-                // and add it into the x-coord
+                // ...then find the width of all the text and add it into the x-coord.
                 int len = currTextRun->getLength() - (currTextIdx - currTextRunIdx);
                 x += fm->width(currLine.text().mid(currTextIdx, len));
 
-                // move to the next text run
+                // Move to the next text run.
                 currTextRunIdx += currTextRun->getLength();
                 currTextIdx = currTextRunIdx;
                 currTextRun = currTextRun->nextTextRun();
             }
-            // if the text run doesn't fit
+            // If the text run doesn't fit...
             else
             {
-                // then we find the width up to just before alternate selection idx
+                // ...then find the width up to just before alternate selection idx.
                 int len = currLine.getAlternateSelectionIdx() - currTextIdx;
                 x += fm->width(currLine.text().mid(currTextIdx, len));
                 break;
@@ -777,8 +770,8 @@ void OutputControl::calculateLineWraps(OutputLine &currLine, QLinkedList<int> &s
     else
         currLine.setAlternateSelectionStart(TEXT_START_POS);
 
-    // now that we have the indices where the OutputLine is split,
-    // we can use them to calculate the link fragments for each link
+    // Now that we have the indices where the OutputLine is split,
+    // we can use them to calculate the link fragments for each link.
     if(currLine.hasLinks())
     {
         Link *currLink = currLine.firstLink();
@@ -791,7 +784,7 @@ void OutputControl::calculateLineWraps(OutputLine &currLine, QLinkedList<int> &s
             nextLineIdx,
             wrappedLineNum;
 
-        // if there are no line splits
+        // If there are no line splits...
         if(numSplits == 0)
         {
             x = TEXT_START_POS;
@@ -799,7 +792,7 @@ void OutputControl::calculateLineWraps(OutputLine &currLine, QLinkedList<int> &s
             nextLineIdx = currLine.text().length();
             wrappedLineNum = 0;
         }
-        // line has at least 1 split
+        // Line has at least 1 split...
         else
         {
             for(j = 0; j < numSplits; ++j)
@@ -823,7 +816,7 @@ void OutputControl::calculateLineWraps(OutputLine &currLine, QLinkedList<int> &s
                 }
             }
 
-            // the start idx is on the last line
+            // If the start idx is on the last line...
             if(j == numSplits)
             {
                 x = WRAPPED_TEXT_START_POS;
@@ -841,14 +834,14 @@ void OutputControl::calculateLineWraps(OutputLine &currLine, QLinkedList<int> &s
         currLink->destroyLinkFragments();
         while(currLink != NULL)
         {
-            // find the text run for our current text idx
+            // Find the text run for the current text idx.
             while(currTextRunIdx + currTextRun->getLength() <= currTextIdx)
             {
                 currTextRunIdx += currTextRun->getLength();
                 currTextRun = currTextRun->nextTextRun();
             }
 
-            // update font metrics object if necessary
+            // Update the font metrics object if necessary.
             if(font.bold() != currTextRun->isBold())
             {
                 font.setBold(currTextRun->isBold());
@@ -858,20 +851,19 @@ void OutputControl::calculateLineWraps(OutputLine &currLine, QLinkedList<int> &s
 
             while(currTextIdx < currLink->getStartIdx())
             {
-                // if the entire text run fits before the start index of the link
+                // If the entire text run fits before the start index of the link...
                 if(currTextRunIdx + currTextRun->getLength() <= currLink->getStartIdx())
                 {
-                    // then we want to find the width of all the text
-                    // and add it into the x-coord
+                    // ...then find the width of all the text and add it into the x-coord.
                     int len = currTextRun->getLength() - (currTextIdx - currTextRunIdx);
                     x += fm->width(currLine.text().mid(currTextIdx, len));
 
-                    // move to the next text run
+                    // Move to the next text run.
                     currTextRunIdx += currTextRun->getLength();
                     currTextIdx = currTextRunIdx;
                     currTextRun = currTextRun->nextTextRun();
 
-                    // we only change the QFontMetrics object if necessary
+                    // Change the QFontMetrics object if necessary.
                     if(currTextRun != NULL && font.bold() != currTextRun->isBold())
                     {
                         font.setBold(currTextRun->isBold());
@@ -879,42 +871,41 @@ void OutputControl::calculateLineWraps(OutputLine &currLine, QLinkedList<int> &s
                         fm = new(m_pFM) QFontMetrics(font);
                     }
                 }
-                // if the text run doesn't fit
+                // If the text run doesn't fit...
                 else
                 {
-                    // then we find the width up to just before the start idx
+                    // ...then find the width up to just before the start idx.
                     int len = currLink->getStartIdx() - currTextIdx;
                     x += fm->width(currLine.text().mid(currTextIdx, len));
                     currTextIdx = currLink->getStartIdx();
                 }
             }
 
-            // find the y-coord of the link fragment
+            // Find the y-coord of the link fragment.
             int y = wrappedLineNum * fm->lineSpacing();
 
-            // save the fragment start and end
+            // Save the fragment start & end.
             int fragmentStart = currTextIdx,
                 afterFragmentEnd = (currLink->getEndIdx() < nextLineIdx) ? currLink->getEndIdx() + 1
                                                                          : nextLineIdx;
 
-            // determine the width of the link fragment
+            // Determine the width of the link fragment.
             int width = 0;
             while(currTextIdx < afterFragmentEnd)
             {
-                // if the entire text run fits before the end index of the link
+                // If the entire text run fits before the end index of the link...
                 if(currTextRunIdx + currTextRun->getLength() <= afterFragmentEnd)
                 {
-                    // then we want to find the width of all the text
-                    // and add it into the x-coord
+                    // ...then find the width of all the text and add it into the x-coord.
                     int len = currTextRun->getLength() - (currTextIdx - currTextRunIdx);
                     width += fm->width(currLine.text().mid(currTextIdx, len));
 
-                    // move to the next text run
+                    // Move to the next text run.
                     currTextRunIdx += currTextRun->getLength();
                     currTextIdx = currTextRunIdx;
                     currTextRun = currTextRun->nextTextRun();
 
-                    // we only change the QFontMetrics object if necessary
+                    // Change the QFontMetrics object if necessary.
                     if(currTextRun != NULL && font.bold() != currTextRun->isBold())
                     {
                         font.setBold(currTextRun->isBold());
@@ -922,10 +913,10 @@ void OutputControl::calculateLineWraps(OutputLine &currLine, QLinkedList<int> &s
                         fm = new(m_pFM) QFontMetrics(font);
                     }
                 }
-                // if the text run doesn't fit...
+                // If the text run doesn't fit...
                 else
                 {
-                    // ...then we find the width up to just before the end idx
+                    // ...then find the width up to just before the end idx.
                     int len = afterFragmentEnd - currTextIdx;
                     width += fm->width(currLine.text().mid(currTextIdx, len));
                     currTextIdx = afterFragmentEnd;
@@ -939,10 +930,10 @@ void OutputControl::calculateLineWraps(OutputLine &currLine, QLinkedList<int> &s
                 prevFragment->setNextLinkFragment(newFragment);
             prevFragment = newFragment;
 
-            // if the link wraps to a new line...
+            // If the link wraps to a new line...
             if(currLink->getEndIdx() >= nextLineIdx)
             {
-                // ...then we want to set the fragment and start over on the new line
+                // ...then set the fragment and start over on the new line.
                 x = WRAPPED_TEXT_START_POS;
                 ++wrappedLineNum;
                 nextLineIdx = (wrappedLineNum == numSplits) ? currLine.text().length()
@@ -950,18 +941,18 @@ void OutputControl::calculateLineWraps(OutputLine &currLine, QLinkedList<int> &s
             }
             else
             {
-                // we've evaluated all the fragments in the link, so move
-                // onto the next link, if it exists
+                // At this point, all the fragments in the link have been evaluated, so move
+                // onto the next link, if it exists.
                 currLink = currLink->nextLink();
                 if(currLink != NULL)
                 {
                     prevFragment = NULL;
                     currLink->destroyLinkFragments();
 
-                    // if the next link is on a new line, then we want to reset all the values
+                    // If the next link is on a new line, then we want to reset all the values...
                     if(currLink->getStartIdx() >= nextLineIdx)
                     {
-                        // we start at 1 because at this point, it can't be the first wrapped line
+                        // ...then start at 1 because at this point, it can't be the first wrapped line.
                         for(j = 1; j < numSplits; ++j)
                         {
                             if(currLink->getStartIdx() < splitsArray[j])
@@ -983,7 +974,7 @@ void OutputControl::calculateLineWraps(OutputLine &currLine, QLinkedList<int> &s
                     }
                     else
                     {
-                        // otherwise, update the x value with the width of the fragment
+                        // Otherwise, update [x] with the width of the fragment.
                         x += width;
                     }
                 }
@@ -991,7 +982,7 @@ void OutputControl::calculateLineWraps(OutputLine &currLine, QLinkedList<int> &s
         }
     }
 
-    // clean up the memory for the font metrics object
+    // Destroy the QFontMetrics object.
     fm->~QFontMetrics();
 }
 
@@ -1018,74 +1009,77 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
         int currHeight = viewport()->height() - PADDING;
         int lineSpacing = fontMetrics.lineSpacing();
 
-        // these three variables help hold information about which drag
-        // position we're currently looking at
-        //    - foundFirstPos indicates whether the first drag position
-        //      has already been found within another OutputLine
-        //    - foundBothPos obviously is for when we're done with text selection
-        //    - firstPosIndex is used to store the first index found within
-        //      an OutputLine, if the two drag points are both inside the same one
+        // These three variables help hold information about which drag
+        // position we're currently looking at.
+        //
+        // [foundFirstPos] indicates whether the first drag position has already
+        // been found within another OutputLine.
+        //
+        // [foundBothPos] is for when we're done with text selection.
+        //
+        // [firstPosIndex] is used to store the first index found within an OutputLine,
+        // if the two drag points are both inside the same one.
         bool foundFirstPos = false, foundBothPos = false;
         int firstPosIndex = -1;
 
-        // these two variables are used for deciding whether a given drag position
-        // is really within a line; we are using a basic comparison of whether or not
+        // These two variables are used for deciding whether a given drag position
+        // is really within a line. We are using a basic comparison of whether or not
         // the position's y coord is greater than the OutputLine's y coord, and because
         // this can be true for every OutputLine above the correct one, we also
-        // check to make sure that we still need the position
+        // check to make sure that we still need the position.
         bool foundStartPos = false, foundEndPos = false;
 
-        // 2) TEXT SELECTION
-        //     - if the user is dragging the mouse, search all visible
-        //       OutputLines for the two mouse coordinates (drag start
-        //       and drag end) and calculate the start and end indices
-        //       for the selected text
+        // TEXT SELECTION
+        //
+        // If the user is dragging the mouse, search all visible OutputLines for the
+        // two mouse coordinates (drag start and drag end) and calculate the start
+        // and end indices for the selected text.
         for(int i = m_lastVisibleLineIdx; i >= 0 && currHeight > 0; --i)
         {
             OutputLine &currLine = m_lines[i];
             int *splitsArray = currLine.getSplitsArray();
             int numSplits = currLine.getNumSplits();
 
-            // if we're looking at the last visible line, then
+            // If we're looking at the last visible line, then
             // start at whatever wrapped line within this OutputLine
             // that the scrollbar is currently at (unless it's no longer
-            // there)
-            //  - currHeight will always be between two wrapped lines; initially,
-            //    for example, currHeight will be right before the entire
-            //    OutputLine
+            // there).
+            //
+            // [currHeight] will always be between two wrapped lines; initially, for example,
+            // currHeight will be right before the entire OutputLine.
             if(i == m_lastVisibleLineIdx && m_lastVisibleWrappedLine <= numSplits)
                 currHeight -= lineSpacing * (m_lastVisibleWrappedLine + 1);
             else
                 currHeight -= lineSpacing * (numSplits + 1);
 
-            // three cases:
-            //  1) both points are within the current OutputLine
-            //  2) only one point is within the current OutputLine
-            //  3) neither of the points are within the current OutputLine
+            // 3 cases:
+            //  1) Both points are within the current OutputLine
+            //  2) Only one point is within the current OutputLine
+            //  3) Neither of the points are within the current OutputLine
             bool dragStartWithinLine = !foundStartPos && m_dragStartPos.y() >= currHeight;
             bool dragEndWithinLine = !foundEndPos && m_dragEndPos.y() >= currHeight;
             if(dragStartWithinLine && dragEndWithinLine)
             {
-                // 1) both points are within the current OutputLine
+                // 1) Both points are within the current OutputLine
                 int initialHeight = currHeight;
                 for(int j = 0; j <= numSplits; ++j)
                 {
-                    // three cases:
-                    //   1) both points are within this wrapped line
-                    //   2) only one point is within this wrapped line
-                    //   3) neither point is within the wrapped line (do nothing)
+                    // 3 cases:
+                    //   1) Both points are within this wrapped line
+                    //   2) Only one point is within this wrapped line
+                    //   3) Neither point is within the wrapped line (do nothing)
                     currHeight += lineSpacing;
                     bool dragStartInWrappedLine = !foundStartPos && m_dragStartPos.y() < currHeight;
                     bool dragEndInWrappedLine = !foundEndPos && m_dragEndPos.y() < currHeight;
                     if(dragStartInWrappedLine && dragEndInWrappedLine)
                     {
-                        // we'll copy more code from below, but things are slightly
+                        // We'll copy more code from below, but things are slightly
                         // different here because we're looking for both points
-                        // at the same time
+                        // at the same time.
                         //
-                        // two cases:
-                        //   1) both points are between the same characters
-                        //   2) the two points are between different characters
+                        // 2 cases:
+                        //   1) Both points are between the same characters
+                        //   2) The two points are between different characters
                         int currX, currTextIdx, charWidth, halfCharWidth;
                         if(j == 0)
                         {
@@ -1098,22 +1092,22 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
                             currTextIdx = splitsArray[j - 1];
                         }
 
-                        // store information for text run
+                        // Store information for the text run.
                         TextRun *currTextRun = currLine.firstTextRun();
                         int currTextRunIdx = 0;
                         QFont font(this->font());
                         QFontMetrics *fm = new(m_pFM) QFontMetrics(font);
 
-                        // iterate through all the characters in the line
+                        // Iterate through all the characters in the line.
                         int lastTextIdx = (j < numSplits) ? splitsArray[j] - 1
                                                           : currLine.text().length() - 1;
                         for(; currTextIdx <= lastTextIdx; ++currTextIdx)
                         {
-                            // at this point, currX should be at a position between two characters,
-                            // and currTextIdx should hold the index of the second character
+                            // At this point, [currX] should be at a position between two characters,
+                            // and [currTextIdx] should hold the index of the second character.
                             //
-                            // make sure we're up-to-date on our TextRun (which is used to
-                            // ensure we are grabbing the correct width of the next character)
+                            // Make sure we're up-to-date on our TextRun (which is used to
+                            // ensure we are grabbing the correct width of the next character).
                             for(; currTextRun != NULL; currTextRun = currTextRun->nextTextRun())
                             {
                                 if(currTextRunIdx + currTextRun->getLength() > currTextIdx)
@@ -1122,7 +1116,7 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
                                     currTextRunIdx += currTextRun->getLength();
                             }
 
-                            // update the QFontMetrics object if necessary
+                            // Update the QFontMetrics object if necessary.
                             if(font.bold() != currTextRun->isBold())
                             {
                                 font.setBold(currTextRun->isBold());
@@ -1130,7 +1124,7 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
                                 fm = new(m_pFM) QFontMetrics(font);
                             }
 
-                            // calculate the width of the next character
+                            // Calculate the width of the next character.
                             charWidth = fm->width(currLine.text()[currTextIdx]);
                             halfCharWidth = charWidth >> 1;
 
@@ -1172,8 +1166,8 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
                             }
                             else
                             {
-                                // if firstPosIndex is still -1, then neither drag position
-                                // has been found, so they're both at the end of this line
+                                // If [firstPosIndex] is still -1, then neither drag position
+                                // has been found, so they're both at the end of this line.
                                 currLine.unsetSelectionRange();
                             }
                         }
@@ -1182,7 +1176,7 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
                     }
                     else if(dragStartInWrappedLine || dragEndInWrappedLine)
                     {
-                        // 2) only one point is within this wrapped line
+                        // 2) Only one point is within this wrapped line
                         QPoint &dragPos = dragStartInWrappedLine ? m_dragStartPos
                                                                  : m_dragEndPos;
                         if(dragStartInWrappedLine)
@@ -1190,12 +1184,12 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
                         else
                             foundEndPos = true;
 
-                        // now we need to find the exact characters it's between
+                        // Now we need to find the exact characters it's between.
                         //
-                        // two cases:
-                        //   1) it's between one of the characters within
+                        // 2 cases:
+                        //   1) It's between one of the characters within
                         //      the wrapped line (or before the first character)
-                        //   2) it's after the last character of the wrapped line
+                        //   2) It's after the last character of the wrapped line
                         int currX, currTextIdx, charWidth, halfCharWidth;
                         if(j == 0)
                         {
@@ -1208,27 +1202,27 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
                             currTextIdx = splitsArray[j - 1];
                         }
 
-                        // store information for text run
+                        // Store information for the text run.
                         TextRun *currTextRun = currLine.firstTextRun();
                         int currTextRunIdx = 0;
                         QFont font(this->font());
                         QFontMetrics *fm = new(m_pFM) QFontMetrics(font);
 
-                        // this boolean allows us to keep track of whether
+                        // This boolean allows us to keep track of whether
                         // we found the drag position within the line (so
-                        // we can check after the loop for the second case)
+                        // we can check after the loop for the second case).
                         bool foundPosInLoop = false;
 
-                        // iterate through all the characters in the line
+                        // Iterate through all the characters in the line.
                         int lastTextIdx = (j < numSplits) ? splitsArray[j] - 1
                                                           : currLine.text().length() - 1;
                         for(; currTextIdx <= lastTextIdx; ++currTextIdx)
                         {
-                            // at this point, currX should be at a position between two characters,
-                            // and currTextIdx should hold the index of the second character
+                            // At this point, [currX] should be at a position between two characters,
+                            // and [currTextIdx] should hold the index of the second character.
                             //
-                            // make sure we're up-to-date on our TextRun (which is used to
-                            // ensure we are grabbing the correct width of the next character)
+                            // Make sure we're up-to-date on our TextRun (which is used to
+                            // ensure we are grabbing the correct width of the next character).
                             for(; currTextRun != NULL; currTextRun = currTextRun->nextTextRun())
                             {
                                 if(currTextRunIdx + currTextRun->getLength() > currTextIdx)
@@ -1237,7 +1231,7 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
                                     currTextRunIdx += currTextRun->getLength();
                             }
 
-                            // update the QFontMetrics object if necessary
+                            // Update the QFontMetrics object if necessary.
                             if(font.bold() != currTextRun->isBold())
                             {
                                 font.setBold(currTextRun->isBold());
@@ -1245,17 +1239,17 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
                                 fm = new(m_pFM) QFontMetrics(font);
                             }
 
-                            // calculate the width of the next character
+                            // Calculate the width of the next character.
                             charWidth = fm->width(currLine.text()[currTextIdx]);
                             halfCharWidth = charWidth >> 1;
 
                             if(dragPos.x() < currX + halfCharWidth)
                             {
-                                // two cases:
-                                //   1) foundFirstPos is true, which means we have already
+                                // 2 cases:
+                                //   1) [foundFirstPos] is true, which means we have already
                                 //      found the first drag position in this OutputLine,
                                 //      which means this drag position is after the first one
-                                //   2) this is the first drag position, which means
+                                //   2) This is the first drag position, which means
                                 //      it's before the second drag position
                                 if(firstPosIndex >= currLine.getSelectionStartIdx())
                                 {
@@ -1276,7 +1270,7 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
                             }
                         }
 
-                        // 2) it's after the last character of the wrapped line
+                        // 2) It's after the last character of the wrapped line
                         if(!foundPosInLoop)
                         {
                             if(firstPosIndex >= currLine.getSelectionStartIdx())
@@ -1302,7 +1296,7 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
             }
             else if(dragStartWithinLine || dragEndWithinLine)
             {
-                // 2) only one point is within the current OutputLine
+                // 2) Only one point is within the current OutputLine
                 QPoint &dragPos = dragStartWithinLine ? m_dragStartPos
                                                       : m_dragEndPos;
                 if(dragStartWithinLine)
@@ -1313,16 +1307,16 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
                 int initialHeight = currHeight;
                 for(int j = 0; j <= numSplits; ++j)
                 {
-                    // is the dragPos within the current wrapped line?
+                    // If [dragPos] is within the current wrapped line...
                     currHeight += lineSpacing;
                     if(dragPos.y() < currHeight)
                     {
-                        // then we need to find the exact characters it's between
+                        // ...then find the exact characters it's between.
                         //
-                        // two cases:
-                        //   1) it's between one of the characters within
+                        // 2 cases:
+                        //   1) It's between one of the characters within
                         //      the wrapped line (or before the first character)
-                        //   2) it's after the last character of the wrapped line
+                        //   2) It's after the last character of the wrapped line
                         int currX, currTextIdx, charWidth, halfCharWidth;
                         if(j == 0)
                         {
@@ -1335,27 +1329,27 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
                             currTextIdx = splitsArray[j - 1];
                         }
 
-                        // store information for text run
+                        // Store information for the text run.
                         TextRun *currTextRun = currLine.firstTextRun();
                         int currTextRunIdx = 0;
                         QFont font(this->font());
                         QFontMetrics *fm = new(m_pFM) QFontMetrics(font);
 
-                        // this boolean allows us to keep track of whether
+                        // This boolean allows us to keep track of whether
                         // we found the drag position within the line (so
-                        // we can check after the loop for the second case)
+                        // we can check after the loop for the second case).
                         bool foundPosInLoop = false;
 
-                        // iterate through all the characters in the line
+                        // Iterate through all the characters in the line.
                         int lastTextIdx = (j < numSplits) ? splitsArray[j] - 1
                                                           : currLine.text().length() - 1;
                         for(; currTextIdx <= lastTextIdx; ++currTextIdx)
                         {
-                            // at this point, currX should be at a position between two characters,
-                            // and currTextIdx should hold the index of the second character
+                            // At this point, [currX] should be at a position between two characters,
+                            // and [currTextIdx] should hold the index of the second character.
                             //
-                            // make sure we're up-to-date on our TextRun (which is used to
-                            // ensure we are grabbing the correct width of the next character)
+                            // Make sure we're up-to-date on our TextRun (which is used to
+                            // ensure we are grabbing the correct width of the next character).
                             for(; currTextRun != NULL; currTextRun = currTextRun->nextTextRun())
                             {
                                 if(currTextRunIdx + currTextRun->getLength() > currTextIdx)
@@ -1364,7 +1358,7 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
                                     currTextRunIdx += currTextRun->getLength();
                             }
 
-                            // update the QFontMetrics object if necessary
+                            // Update the QFontMetrics object if necessary.
                             if(font.bold() != currTextRun->isBold())
                             {
                                 font.setBold(currTextRun->isBold());
@@ -1372,17 +1366,17 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
                                 fm = new(m_pFM) QFontMetrics(font);
                             }
 
-                            // calculate the width of the next character
+                            // Calculate the width of the next character.
                             charWidth = fm->width(currLine.text()[currTextIdx]);
                             halfCharWidth = charWidth >> 1;
 
                             if(dragPos.x() < currX + halfCharWidth)
                             {
-                                // two cases:
-                                //   1) foundFirstPos is true, which means we have already
+                                // 2 cases:
+                                //   1) [foundFirstPos] is true, which means we have already
                                 //      found the first drag position in another OutputLine,
                                 //      which means this drag position is above the first one
-                                //   2) this is the first drag position, which means
+                                //   2) This is the first drag position, which means
                                 //      it's below the second drag position
                                 if(foundFirstPos)
                                 {
@@ -1407,7 +1401,7 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
                             }
                         }
 
-                        // 2b) it's after the last character of the wrapped line
+                        // 2b) It's after the last character of the wrapped line
                         if(!foundPosInLoop)
                         {
                             if(foundFirstPos)
@@ -1434,10 +1428,11 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
             }
             else
             {
-                // 3) neither of the points are within the current OutputLine
-                //      - we're going to move on to the next OutputLine,
-                //        but if we have already found the first drag position
-                //        then we need to select the entire line
+                // 3) Neither of the points are within the current OutputLine
+                //
+                // We're going to move on to the next OutputLine, but if we have
+                // already found the first drag position then we need to select
+                // the entire line.
                 if(foundFirstPos && !foundBothPos)
                     currLine.setSelectionRange(currLine.getSelectionStartIdx(), currLine.text().length() - 1);
                 else
@@ -1445,7 +1440,7 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
             }
         }
     }
-    // if mouse is not down
+    // If mouse is not down...
     else
     {
         int lineIdx;
@@ -1455,7 +1450,7 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
         {
             if(m_hoveredLink == link)
             {
-                // nothing changed, so just exit
+                // Nothing changed, so just exit.
                 return;
             }
 
@@ -1467,7 +1462,7 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
         {
             if(m_hoveredLink == NULL)
             {
-                // nothing changed, so just exit
+                // Nothing changed, so just exit.
                 return;
             }
 
@@ -1484,7 +1479,7 @@ void OutputControl::mouseMoveEvent(QMouseEvent *event)
 
 bool OutputControl::linkHitTest(int x, int y, int &lineIdx, Link *&link)
 {
-    // find which OutputLine the cursor is within
+    // Find which OutputLine the cursor is within.
     QFontMetrics *fm = new(m_pFM) QFontMetrics(this->font());
     int currHeight = viewport()->height() - PADDING;
     int lineSpacing = fm->lineSpacing();
@@ -1493,35 +1488,34 @@ bool OutputControl::linkHitTest(int x, int y, int &lineIdx, Link *&link)
         OutputLine &currLine = m_lines[i];
         int numSplits = currLine.getNumSplits();
 
-        // determine the current height of the OutputLine
+        // Determine the current height of the OutputLine.
         if(i == m_lastVisibleLineIdx && m_lastVisibleWrappedLine <= numSplits)
             currHeight -= lineSpacing * (m_lastVisibleWrappedLine + 1);
         else
             currHeight -= lineSpacing * (numSplits + 1);
 
-        // check if the mouse position is inside the current OutputLine
+        // Check if the mouse position is inside the current OutputLine.
         if(y >= currHeight)
         {
             if(currLine.hasLinks())
             {
-                // mouseY is an offset value from the beginning
-                // of the OutputLine
+                // [mouseY] is an offset value from the beginning of the OutputLine.
                 int mouseX = x;
                 int mouseY = y - currHeight;
 
-                // iterate through each link
+                // Iterate through each link.
                 Link *currLink = currLine.firstLink();
                 while(currLink != NULL)
                 {
-                    // iterate through each fragment in the link, checking if the mouse
-                    // position is inside any of them
+                    // Iterate through each fragment in the link, checking if the mouse
+                    // position is inside any of them.
                     LinkFragment *currFragment = currLink->firstLinkFragment();
                     while(currFragment != NULL)
                     {
-                        // check y coord
+                        // Check the y coord.
                         if(currFragment->y() <= mouseY && mouseY < currFragment->y() + lineSpacing)
                         {
-                            // check x coord
+                            // Check the x coord.
                             if(currFragment->x() <= mouseX && mouseX < currFragment->x() + currFragment->getWidth())
                             {
                                 lineIdx = i;
@@ -1553,8 +1547,8 @@ void OutputControl::mouseReleaseEvent(QMouseEvent *)
     m_isMouseDown = false;
     viewport()->update();
 
-    // iterate through the visible OutputLines to find the current selection
-    // (if any), and copy the text to clipboard
+    // Iterate through the visible OutputLines to find the current selection
+    // (if any), and copy the text to clipboard.
     bool inSelection = false;
     int i = m_lastVisibleLineIdx,
         currHeight = viewport()->height() - 2 - PADDING,
@@ -1584,8 +1578,8 @@ void OutputControl::mouseReleaseEvent(QMouseEvent *)
     {
         if(i < 0) i = 0;
 
-        // iterate through all OutputLines which are selected and append
-        // them to create the total selected text
+        // Iterate through all OutputLines which are selected and append
+        // them to create the total selected text.
         QString selectedText;
         while(i <= m_lastVisibleLineIdx && m_lines[i].hasTextSelection())
         {
@@ -1595,7 +1589,7 @@ void OutputControl::mouseReleaseEvent(QMouseEvent *)
             ++i;
         }
 
-        // remove last appended newline character
+        // Remove last appended newline character.
         selectedText.remove(selectedText.length() - 1, 1);
 
         QApplication::clipboard()->setText(selectedText);
@@ -1619,23 +1613,23 @@ void OutputControl::mouseDoubleClickEvent(QMouseEvent *event)
 
 //-----------------------------------//
 
-// this algorithm is complex, so it was broken down into parts:
+// This algorithm is complex, so it was broken down into parts:
 //
 //    1) TEXT WRAPPING
-//        - calculate all the line splits and reset the scrollbar
-//        - this doesn't need to be done on every paint,
+//        - Calculate all the line splits and reset the scrollbar
+//        - This doesn't need to be done on every paint,
 //          only when the width has changed since last paint
-//        - each line split is an index of the first character
+//        - Each line split is an index of the first character
 //          on the next wrapped line
 //
 //    2) TEXT SELECTION
-//        - if the user is dragging the mouse, search all visible
+//        - If the user is dragging the mouse, search all visible
 //          OutputLines for the two mouse coordinates (drag start
 //          and drag end) and calculate the start and end indices
 //          for the selected text
 //
 //    3) TEXT DRAWING
-//        - start from the last visible OutputLine (determined in part 1)
+//        - Start from the last visible OutputLine (determined in part 1)
 //          and draw each one until we reach the top of the viewport
 //
 void OutputControl::paintEvent(QPaintEvent *)
@@ -1647,20 +1641,19 @@ void OutputControl::paintEvent(QPaintEvent *)
     int lineSpacing = painter.fontMetrics().lineSpacing(),
         ascent = painter.fontMetrics().ascent();
 
-    // draw viewport background
+    // Draw viewport background.
     //painter.fillRect(0, 0, vpWidth, vpHeight, m_colorsArr[COLOR_CHAT_BACKGROUND]);
 
     // 3) TEXT DRAWING
-    //     - start from the last visible OutputLine (determined in part 1)
+    //     - Start from the last visible OutputLine (determined in part 1)
     //       and draw each one until we reach the top of the viewport
-    //     - currHeight will always hold the value of the baseline of the line
+    //     - [currHeight] will always hold the value of the baseline of the line
     //       being drawn
     int currHeight = viewport()->height() - PADDING - painter.fontMetrics().descent();
     for(int i = m_lastVisibleLineIdx; i >= 0 && currHeight > 0; --i)
     {
         OutputLine &currLine = m_lines[i];
 
-        // initialize values
         int currWidth = TEXT_START_POS,
             currTextIdx = 0;
         TextRun *currTextRun;
@@ -1669,16 +1662,16 @@ void OutputControl::paintEvent(QPaintEvent *)
         int numSplits = currLine.getNumSplits();
         int splitIdx = 0;
 
-        // if we're drawing the last visible line, then
+        // If we're drawing the last visible line, then
         // start at whatever wrapped line within this OutputLine
-        // that the scrollbar is currently at (unless it's no longer there)
+        // that the scrollbar is currently at (unless it's no longer there).
         if(i == m_lastVisibleLineIdx && m_lastVisibleWrappedLine <= numSplits)
             currHeight -= lineSpacing * m_lastVisibleWrappedLine;
         else
             currHeight -= lineSpacing * numSplits;
         int initialHeight = currHeight;
 
-        // use text runs and line splits to draw the visible portion of text
+        // Use text runs and line splits to draw the visible portion of text.
         for(currTextRun = currLine.firstTextRun(); currTextRun != NULL; currTextRun = currTextRun->nextTextRun())
         {
             QFont font = painter.font();
@@ -1687,34 +1680,33 @@ void OutputControl::paintEvent(QPaintEvent *)
             painter.setFont(font);
             QFontMetrics fm = painter.fontMetrics();
 
-            // we have to draw long text runs (text runs that span a split index)
-            // in fragments
+            // Draw long text runs (text runs that span a split index) in fragments.
             int fragmentOffsetIdx = 0, fragmentLength;
             int currTextRunLength = currTextRun->getLength();
             while(true)
             {
                 int fragmentStartIdx = currTextIdx + fragmentOffsetIdx;
 
-                // calculate how much of the current text run to draw at this height
+                // Calculate how much of the current text run to draw at this height.
                 fragmentLength = currTextRunLength - fragmentOffsetIdx;
                 if(splitIdx < numSplits && (currTextIdx + currTextRunLength) > splitsArray[splitIdx])
                 {
                     fragmentLength = splitsArray[splitIdx] - (currTextIdx + fragmentOffsetIdx);
                 }
 
-                // five cases for text selection:
-                //   1) text selection starts inside a text fragment
+                // 5 cases for text selection:
+                //   1) Text selection starts inside a text fragment
                 //        [unselected text] [selected text]
-                //   2) text selection ends inside a text fragment
+                //   2) Text selection ends inside a text fragment
                 //        [selected text] [unselected text]
-                //   3) text selection starts and ends inside a text fragment
+                //   3) Text selection starts and ends inside a text fragment
                 //        [unselected text] [selected text] [unselected text]
-                //   4) text selection spans the entire text fragment
+                //   4) Text selection spans the entire text fragment
                 //        [selected text]
-                //   5) no text selection at all
+                //   5) No text selection at all
                 //        [unselected text]
                 //
-                // we can generalize these five cases to three fragments
+                // We can generalize these five cases to three fragments
                 // of varying length, depending on the case:
                 //      [unselected text] [selected text] [unselected text]
                 int unselectedFragment1Length = 0,
@@ -1722,12 +1714,12 @@ void OutputControl::paintEvent(QPaintEvent *)
                     unselectedFragment2Length = fragmentLength;
                 if(m_isMouseDown && currLine.hasTextSelection())
                 {
-                    // cache some variables
+                    // Cache some variables.
                     int fragmentEndIdx = fragmentStartIdx + fragmentLength - 1;
                     int textSelectionStart = currLine.getTextSelectionStart(),
                         textSelectionEnd = currLine.getTextSelectionEnd();
 
-                    // case 1
+                    // Case 1
                     if(fragmentStartIdx < textSelectionStart
                     && textSelectionStart <= fragmentEndIdx
                     && fragmentEndIdx < textSelectionEnd)
@@ -1736,7 +1728,7 @@ void OutputControl::paintEvent(QPaintEvent *)
                         selectedFragmentLength = fragmentLength - unselectedFragment1Length;
                         unselectedFragment2Length = 0;
                     }
-                    // case 2
+                    // Case 2
                     else if(textSelectionStart < fragmentStartIdx
                          && fragmentStartIdx <= textSelectionEnd
                          && textSelectionEnd < fragmentEndIdx)
@@ -1744,7 +1736,7 @@ void OutputControl::paintEvent(QPaintEvent *)
                         selectedFragmentLength = textSelectionEnd - fragmentStartIdx + 1;
                         unselectedFragment2Length = fragmentLength - selectedFragmentLength;
                     }
-                    // case 3
+                    // Case 3
                     else if(fragmentStartIdx <= textSelectionStart
                          && textSelectionEnd <= fragmentEndIdx)
                     {
@@ -1752,7 +1744,7 @@ void OutputControl::paintEvent(QPaintEvent *)
                         unselectedFragment2Length = fragmentEndIdx - textSelectionEnd;
                         selectedFragmentLength = fragmentLength - (unselectedFragment1Length + unselectedFragment2Length);
                     }
-                    // case 4
+                    // Case 4
                     else if(textSelectionStart <= fragmentStartIdx
                          && fragmentEndIdx <= textSelectionEnd)
                     {
@@ -1761,8 +1753,8 @@ void OutputControl::paintEvent(QPaintEvent *)
                     }
                 }
 
-                // we're using macros here mostly for code reuse but also to make things look
-                // a lot cleaner
+                // We're using macros here mostly for code reuse but also to make things look
+                // a lot cleaner.
                 #define DRAW_UNSELECTED_TEXT(previousLen, len) \
                     if(len > 0) \
                     { \
@@ -1797,7 +1789,7 @@ void OutputControl::paintEvent(QPaintEvent *)
                         currWidth += fragmentWidth; \
                     }
 
-                // draw the text: [unselected] [selected] [unselected]
+                // Draw the text: [unselected] [selected] [unselected]
                 int totalLength = 0;
                 DRAW_UNSELECTED_TEXT(totalLength, unselectedFragment1Length)
                 totalLength += unselectedFragment1Length;
@@ -1805,30 +1797,30 @@ void OutputControl::paintEvent(QPaintEvent *)
                 totalLength += selectedFragmentLength;
                 DRAW_UNSELECTED_TEXT(totalLength, unselectedFragment2Length)
 
-                // was there a split inside the text run?
+                // If there was a split inside the text run...
                 if(fragmentOffsetIdx + fragmentLength < currTextRunLength)
                 {
-                    // then we still need to draw the rest of it
+                    // ...then we still need to draw the rest of it.
                     ++splitIdx;
                     currWidth = WRAPPED_TEXT_START_POS;
                     currHeight += lineSpacing;
                     fragmentOffsetIdx += fragmentLength;
                 }
-                // if not...
+                // If not...
                 else
                 {
-                    // ...then move on to the next text run
+                    // ...then move on to the next text run.
                     currTextIdx += currTextRunLength;
                     break;
                 }
             }
         }
 
-        // after we've drawn the entire OutputLine, we need to check to see if one
-        // of its Links is being hovered over; if so, we have to redraw it with underline
+        // After we've drawn the entire OutputLine, we need to check to see if one
+        // of its Links is being hovered over; if so, we have to redraw it underlined.
         if(i == m_hoveredLineIdx)
         {
-            // using macros again for unselected/selected text
+            // Using macros again for unselected/selected text.
             #define DRAW_UNSELECTED_LINK_TEXT(index, len, x, y) \
                 if(len > 0) \
                 { \
@@ -1852,7 +1844,7 @@ void OutputControl::paintEvent(QPaintEvent *)
                     x += fragmentWidth; \
                 }
 
-            // draw each LinkFragment individually
+            // Draw each LinkFragment individually.
             int currTextRunIdx = 0;
             currTextIdx = m_hoveredLink->getStartIdx();
             currTextRun = currLine.firstTextRun();
@@ -1862,7 +1854,7 @@ void OutputControl::paintEvent(QPaintEvent *)
                 int afterFragmentEnd = currTextIdx + currFragment->getLength();
                 while(currTextIdx < afterFragmentEnd)
                 {
-                    // make sure the text run is up-to-date
+                    // Ensure the text run is up-to-date.
                     for(; currTextRun != NULL; currTextRun = currTextRun->nextTextRun())
                     {
                         if(currTextRunIdx + currTextRun->getLength() > currTextIdx)
@@ -1871,27 +1863,26 @@ void OutputControl::paintEvent(QPaintEvent *)
                             currTextRunIdx += currTextRun->getLength();
                     }
 
-                    // find the smaller of the two lengths, because that's
-                    // what we're going to draw
+                    // Find the smaller of the two lengths.
                     int lengthToDraw;
                     if(currFragment->getLength() < currTextRun->getLength())
                         lengthToDraw = currFragment->getLength();
                     else
                         lengthToDraw = currTextRun->getLength();
 
-                    // determine if there are any parts that are selected
+                    // Determine if there are any parts that are selected.
                     int unselectedFragment1Length = 0,
                         selectedFragmentLength = 0,
                         unselectedFragment2Length = currFragment->getLength();
                     if(m_isMouseDown && currLine.hasTextSelection())
                     {
-                        // cache some variables
+                        // Cache some variables.
                         int fragmentStartIdx = currTextIdx;
                         int fragmentEndIdx = currTextIdx + lengthToDraw - 1;
                         int textSelectionStart = currLine.getTextSelectionStart(),
                             textSelectionEnd = currLine.getTextSelectionEnd();
 
-                        // case 1
+                        // Case 1
                         if(fragmentStartIdx < textSelectionStart
                         && textSelectionStart <= fragmentEndIdx
                         && fragmentEndIdx < textSelectionEnd)
@@ -1900,7 +1891,7 @@ void OutputControl::paintEvent(QPaintEvent *)
                             selectedFragmentLength = lengthToDraw - unselectedFragment1Length;
                             unselectedFragment2Length = 0;
                         }
-                        // case 2
+                        // Case 2
                         else if(textSelectionStart < fragmentStartIdx
                              && fragmentStartIdx <= textSelectionEnd
                              && textSelectionEnd < fragmentEndIdx)
@@ -1908,7 +1899,7 @@ void OutputControl::paintEvent(QPaintEvent *)
                             selectedFragmentLength = textSelectionEnd - fragmentStartIdx + 1;
                             unselectedFragment2Length = lengthToDraw - selectedFragmentLength;
                         }
-                        // case 3
+                        // Case 3
                         else if(fragmentStartIdx <= textSelectionStart
                              && textSelectionEnd <= fragmentEndIdx)
                         {
@@ -1916,7 +1907,7 @@ void OutputControl::paintEvent(QPaintEvent *)
                             unselectedFragment2Length = fragmentEndIdx - textSelectionEnd;
                             selectedFragmentLength = lengthToDraw - (unselectedFragment1Length + unselectedFragment2Length);
                         }
-                        // case 4
+                        // Case 4
                         else if(textSelectionStart <= fragmentStartIdx
                              && fragmentEndIdx <= textSelectionEnd)
                         {
@@ -1939,7 +1930,7 @@ void OutputControl::paintEvent(QPaintEvent *)
                     currTextIdx += unselectedFragment2Length;
                 }
 
-                // move to the next fragment
+                // Move to the next fragment.
                 currFragment = currFragment->nextLinkFragment();
             }
         }
@@ -1947,7 +1938,7 @@ void OutputControl::paintEvent(QPaintEvent *)
         currHeight = initialHeight - lineSpacing;
     }
 
-    // draw border
+    // Draw border
     /*
     painter.setPen(palette().dark().color());
     painter.drawLine(          0,            0,     vpWidth,            0);
@@ -1960,13 +1951,13 @@ void OutputControl::paintEvent(QPaintEvent *)
 
 //-----------------------------------//
 
-// updates the last visible line by using the new scrollbar value
-// and current line splits
+// Updates the last visible line by using the new scrollbar value
+// and current line splits.
 void OutputControl::updateScrollbarValue(int actualValue)
 {
-    // iterate through all the lines, until currentValue
-    // is up to actualValue; then find the index for the
-    // current OutputLine, and then the wrapped line num
+    // Iterate through all the lines, until [currentValue]
+    // is up to [actualValue]; then find the index for the
+    // current OutputLine, and then the wrapped line num.
     int currentValue = verticalScrollBar()->maximum() + 1;
     for(int i = m_lines.length() - 1; i >= 0; --i)
     {
@@ -1984,4 +1975,4 @@ void OutputControl::updateScrollbarValue(int actualValue)
     }
 }
 
-} } // end namespaces
+} } // End namespaces

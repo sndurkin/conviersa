@@ -1,10 +1,5 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
 
 #include <QFile>
 #include <QTimer>
@@ -29,7 +24,7 @@ Client::Client(const QString &title)
     setupEvents();
     setupConfig();
 
-    // initialize the resize timer
+    // Initialize the resize timer.
     m_pResizeTimer = new QTimer(this);
     m_pResizeTimer->setSingleShot(true);
     connect(m_pResizeTimer, SIGNAL(timeout()), this, SLOT(updateSizeConfig()));
@@ -52,7 +47,7 @@ Client::Client(const QString &title)
     m_pDock->setTitleBarWidget(NULL);
     addDockWidget(Qt::LeftDockWidgetArea, m_pDock);
 
-    // create new irc server window on client start
+    // Create a StatusWindow on client start.
     onNewIrcServerWindow();
 }
 
@@ -70,7 +65,7 @@ void Client::closeEvent(QCloseEvent *)
 {
     disconnect(this, SLOT(updateSizeConfig()));
 
-    // write all the config to the file
+    // Write all the config to the file.
     hide();
     g_pCfgManager->writeToDefaultFile();
 
@@ -170,7 +165,7 @@ void Client::setupGeneralConfig(QMap<QString, ConfigOption> &defOptions)
 
 void Client::setupMessagesConfig(QMap<QString, ConfigOption> &defOptions)
 {
-    // regular messages
+    // Regular messages
     defOptions.insert("message.action",        ConfigOption("* %1 %2"));
     defOptions.insert("message.ctcp",          ConfigOption("[CTCP %1 (from %2)]"));
     defOptions.insert("message.connecting",    ConfigOption("* Connecting to %1 (%2)"));
@@ -194,7 +189,7 @@ void Client::setupMessagesConfig(QMap<QString, ConfigOption> &defOptions)
     defOptions.insert("message.topic",         ConfigOption("* %1 changes topic to: %2"));
     defOptions.insert("message.wallops",       ConfigOption("* WALLOPS from %1: %2"));
 
-    // numeric messages
+    // Numeric messages
     defOptions.insert("message.301",           ConfigOption("%1 is away: %2"));
     defOptions.insert("message.317",           ConfigOption("%1 has been idle %2"));
     defOptions.insert("message.330",           ConfigOption("%1 %2: %3"));
@@ -217,7 +212,7 @@ void Client::setClientSize()
 
 //-----------------------------------//
 
-// creates a blank IRC server window
+// Creates a new StatusWindow.
 void Client::onNewIrcServerWindow()
 {
     StatusWindow *pWin = new StatusWindow();
@@ -227,12 +222,12 @@ void Client::onNewIrcServerWindow()
 
 //-----------------------------------//
 
-// this function is called when the resize timer times out
-// (when it's time to update the config options holding client size)
+// This function is called when the resize timer times out
+// (when it's time to update the config options holding client size).
 void Client::updateSizeConfig()
 {
-    // we only want to overwrite the client size if it's
-    // in the normal window state (not maximized)
+    // We only want to overwrite the client size if it's
+    // in the normal window state (not maximized).
     bool maximized;
     if(!isMaximized())
     {
@@ -258,4 +253,4 @@ void Client::loadQSS()
     }
 }
 
-} } // end namespaces
+} } // End namespaces

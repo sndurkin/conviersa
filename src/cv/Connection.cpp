@@ -1,10 +1,5 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
 
 #include <QTextCodec>
 #include <QTcpSocket>
@@ -32,7 +27,7 @@ Connection::Connection()
     m_pConnectionTimer = new QTimer;
     m_pConnectionTimer->setSingleShot(true);
 
-    // connects the necessary signals to each corresponding slot
+    // Connects the necessary signals to each corresponding slot.
     QObject::connect(m_pSocket, SIGNAL(connected()), this, SLOT(onConnect()));
     QObject::connect(m_pSocket, SIGNAL(disconnected()), this, SIGNAL(disconnected()));
     QObject::connect(m_pSocket, SIGNAL(readyRead()), this, SLOT(onReadyRead()));
@@ -129,7 +124,7 @@ void Connection::onReadyRead()
         {
             if(size < 0)
             {
-                // TODO: log this
+                // TODO (seand): Log this error.
             }
             break;
         }
@@ -158,9 +153,9 @@ ThreadedConnection::~ThreadedConnection()
 {
     quit();
 
-    // have to give it some time to delete the connection
+    // Have to give it some time to delete the connection
     // and finish executing the thread; 500 ms is the MAX
-    // amount of time we are willing to wait for it
+    // amount of time we are willing to wait for it.
     wait(500);
 }
 
@@ -178,7 +173,7 @@ void ThreadedConnection::run()
     m_mutex.lock();
       m_pConnection = new Connection;
 
-      // these signals & slots are used to call into the Connection object
+      // These signals & slots are used to call into the Connection object.
       QObject::connect(this, SIGNAL(connectToHostSignal(QString,quint16)),
                        m_pConnection, SLOT(connectToHost(QString,quint16)));
       QObject::connect(this, SIGNAL(disconnectFromHostSignal()),
@@ -186,7 +181,7 @@ void ThreadedConnection::run()
       QObject::connect(this, SIGNAL(sendSignal(QString)),
                        m_pConnection, SLOT(send(QString)));
 
-      // these signals are used to pass on information from the Connection object
+      // These signals are used to pass on information from the Connection object.
       QObject::connect(m_pConnection, SIGNAL(connecting()), this, SIGNAL(connecting()));
       QObject::connect(m_pConnection, SIGNAL(connected()), this, SIGNAL(connected()));
       QObject::connect(m_pConnection, SIGNAL(connectionFailed()), this, SIGNAL(connectionFailed()));
@@ -235,4 +230,4 @@ void ThreadedConnection::send(const QString &data)
     emit sendSignal(data);
 }
 
-} // end namespace
+} // End namespace

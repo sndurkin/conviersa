@@ -1,10 +1,46 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2010 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
+//
+//
+// OutputControl is a completely custom widget which provides the following
+// functionality:
+//  - Display of chat text which is constrained by the width of the
+//    viewport (word wrapping)
+//  - Display of chat text such that new messages are ALWAYS displayed
+//    at the bottom of the viewport
+//  - Text selection by clicking and dragging the mouse
+//  - Optional timestamping of each message added to the display
+//
+// OutputLine holds all the information necessary to correctly render an
+// individual message within the OutputControl (and therefore, the OutputControl
+// owns a list of them). It contains the text, and lists of WordChunks, TextRuns,
+// and Links.
+//
+// WordChunk holds the width for a string of consecutive characters in an OutputLine
+// which share the same wrapping behavior, depending on the ChunkType:
+//  - Word: characters wrap together except when the word is too long to fit by
+//    itself on a line
+//  - Whitespace: characters wrap separately
+//  - Hyperlink: characters wrap separately
+//
+// TextRun holds the information for a string of consecutive characters in an OutputLine
+// which share the same styles (background and foreground colors, bold, underline, and
+// reverse).
+//
+// Link holds the information for a string of consecutive characters in an OutputLine
+// which act similar to a hyperlink within a webpage; the OutputControl will fire events
+// when the user interacts with a Link using the mouse.
+//
+// LinkFragment is a substring of consecutive characters within a Link which is displayed
+// on a single line within the OutputControl. If the text for a Link cannot fit all on
+// one line, it will be broken into LinkFragments.
+//
+// Events:
+//
+// OutputEvent is used for when the "output" event is fired; it allows callbacks to add
+// Links to the OutputLine before it's displayed in the OutputControl.
+//
+// DoubleClickLinkEvent is used for when the "doubleClickLink" event is fired.
 
 #pragma once
 
@@ -39,9 +75,6 @@ struct LinkInfo {
 
 //-----------------------------------//
 
-// event that is used for the "output" event; allows
-// callbacks to add actionable links before the line
-// is displayed in the control
 class OutputEvent : public Event
 {
     QString         m_text;
@@ -53,14 +86,14 @@ public:
     { }
     ~OutputEvent() { }
 
-    // accessors
-    QString getText() { return m_text; }
-    const QList<LinkInfo> &getLinkInfoList() { return m_linkInfoList; }
+    // Accessors
+    QString getText() const { return m_text; }
+    const QList<LinkInfo> &getLinkInfoList() const { return m_linkInfoList; }
 
-    // modifiers
+    // Modifiers
     void addLinkInfo(int startIdx, int endIdx)
     {
-        // do bounds checking on indices
+        // Do bounds checking on indices.
         if(startIdx > endIdx || startIdx < 0 || endIdx >= m_text.length())
             return;
 
@@ -68,8 +101,8 @@ public:
         linkInfo.startIdx = startIdx;
         linkInfo.endIdx = endIdx;
 
-        // a new LinkInfo will get added ONLY
-        // if it doesn't conflict with any other links
+        // A new LinkInfo object will get added ONLY
+        // if it doesn't overlap with any other links.
         if(!m_linkInfoList.isEmpty())
         {
             QList<LinkInfo>::iterator iter = m_linkInfoList.begin();
@@ -89,7 +122,6 @@ public:
 
 //-----------------------------------//
 
-// event that is used for the "doubleClickedLink" event
 class DoubleClickLinkEvent : public Event
 {
     QString         m_text;
@@ -99,8 +131,7 @@ public:
       : m_text(text)
     { }
 
-    // accessors
-    QString getText() { return m_text; }
+    QString getText() const { return m_text; }
 };
 
 //-----------------------------------//
@@ -153,18 +184,15 @@ enum OutputColor {
 
 //-----------------------------------//
 
-// section of consecutive characters
-// that all share the same style and color
 class TextRun
 {
-    // used like a linked list
+    // Used like a singly-linked list.
     TextRun *   m_nextTextRun;
     int         m_length;
 
-    // m_textInfo (16 bits)
-    //  - holds the information about the
-    //    foreground color, background color,
-    //    and if there is bold or underline
+    // This variable holds the information about the
+    // foreground color, background color, and if there
+    // is bold or underline. Currently, 16 bits are used.
     // ----------------------------------------
     // | |||||| |||||| | | |
     // F      E      D C B A
@@ -189,7 +217,7 @@ public:
           m_textInfo(tr.m_textInfo)
     { }
 
-    // accessors
+    // Accessors
     int getLength() const { return m_length; }
     TextRun *nextTextRun() const { return m_nextTextRun; }
     bool isUnderline() const { return (m_textInfo & 0x1); }
@@ -199,7 +227,7 @@ public:
     qint8 getBgColor() const { return (m_textInfo >> 9); }
     bool hasBgColor() const { return ((m_textInfo >> 9) > 0); }
 
-    // modifiers
+    // Modifiers
     void setNextTextRun(TextRun *run) { m_nextTextRun = run; }
     void incrementLength() { ++m_length; }
     void flipUnderline() { m_textInfo ^= 0x1; }
@@ -227,7 +255,7 @@ enum ChunkType
 
 class WordChunk
 {
-    // used like a linked list
+    // Used like a singly-linked list.
     WordChunk * m_nextChunk;
     int         m_length;
 
@@ -241,13 +269,13 @@ public:
           m_chunkType(chunkType)
     { }
 
-    // accessors
+    // Accessors
     int getLength() const { return m_length; }
     int getWidth() const { return m_width; }
     WordChunk *nextChunk() const { return m_nextChunk; }
     ChunkType getChunkType() const { return m_chunkType; }
 
-    // modifiers
+    // Modifiers
     void setNextChunk(WordChunk *nextChunk) { m_nextChunk = nextChunk; }
     void incrementLength() { ++m_length; }
     void setWidth(int width) { m_width = width; }
@@ -274,14 +302,14 @@ public:
           m_nextLinkFragment(NULL)
     { }
 
-    // accessors
+    // Accessors
     int x() const { return m_x; }
     int y() const { return m_y; }
     int getWidth() const { return m_width; }
     int getLength() const { return m_length; }
     LinkFragment *nextLinkFragment() { return m_nextLinkFragment; }
 
-    // modifiers
+    // Modifiers
     void setNextLinkFragment(LinkFragment *nextLinkFragment) { m_nextLinkFragment = nextLinkFragment; }
 };
 
@@ -293,6 +321,7 @@ class Link
                     m_endIdx,
                     m_width;
 
+    // Used like a singly-linked list.
     Link *          m_nextLink;
     LinkFragment *  m_firstLinkFragment;
 
@@ -305,14 +334,14 @@ public:
           m_firstLinkFragment(NULL)
     { }
 
-    // accessors
+    // Accessors
     int getStartIdx() { return m_startIdx; }
     int getEndIdx() { return m_endIdx; }
     int getWidth() { return m_width; }
     Link *nextLink() { return m_nextLink; }
     LinkFragment *firstLinkFragment() { return m_firstLinkFragment; }
 
-    // modifiers
+    // Modifiers
     void setNextLink(Link *nextLink) { m_nextLink = nextLink; }
     void setFirstLinkFragment(LinkFragment *firstLinkFragment) { m_firstLinkFragment = firstLinkFragment; }
     void destroyLinkFragments()
@@ -338,21 +367,21 @@ class OutputLine
     TextRun *   m_firstTextRun;
     Link *      m_firstLink;
 
-    // these variables hold information about where the
-    // alternate text selection starts (if there are
-    // timestamps and the user selects text while holding down
-    // ctrl, then text selection will start after the
-    // timestamp)
+    // These variables hold information about where the
+    // alternate text selection starts. If there is a timestamp
+    // on this OutputLine and the user selects text while holding
+    // down the Ctrl key, then text selection will not include
+    // the timestamp but will start after it.
     int         m_alternateSelectionIdx;
     int         m_alternateSelectionStart;
 
-    // this is to manage line wraps inside a word chunk
+    // These variables are used to manage line wraps inside a word chunk.
     int *       m_splits;
     int         m_numSplits;
 
 public:
 
-    // this is to manage text selection
+    // Used to manage text selection.
     int         m_selStartIdx;
     int         m_selEndIdx;
 
@@ -363,7 +392,7 @@ public:
           m_numSplits(0)
     { }
 
-    // accessors
+    // Accessors
     QString &text() { return m_text; }
     WordChunk *firstChunk() const { return m_firstChunk; }
     TextRun *firstTextRun() const { return m_firstTextRun; }
@@ -379,7 +408,7 @@ public:
     int getNumSplits() const { return m_numSplits; }
     int *getSplitsArray() const { return m_splits; }
 
-    // modifiers
+    // Modifiers
     void append(const QString &text) { m_text.append(text); }
     void append(const QChar &ch) { m_text.append(ch); }
     void setFirstTextRun(TextRun *firstTextRun) { m_firstTextRun = firstTextRun; }
@@ -426,37 +455,38 @@ class OutputControl : public QAbstractScrollArea
     QPoint              m_dragStartPos;
     QPoint              m_dragEndPos;
 
-    // these two variables are used to pinpoint the current link
-    // being hovered over by the mouse cursor
+    // These two variables are used to pinpoint the current link
+    // being hovered over by the mouse cursor.
     int                 m_hoveredLineIdx;
     Link *              m_hoveredLink;
 
-    // color reference array; see OutputColor enum
+    // Color reference array; see the OutputColor enum.
     QColor              m_colorsArr[COLOR_NUM];
 
-    // variables used instance-wide; they are used as reusable
-    // blocks of memory so we don't have to call new/delete within
-    // large loops
+    // These variables are used as reusable blocks of memory
+    // so we don't have to repeatedly call new/delete within
+    // large loops. Instead, we allocate a block and use
+    // placement new.
     char                m_fmBlock[sizeof(QFontMetrics)];
     char                m_evtBlock[sizeof(OutputEvent)];
     void *              m_pFM;
     void *              m_pEvt;
 
 public:
-    static const int        PADDING = 3;
-    static const int        TEXT_START_POS = PADDING;
-    static const int        WRAPPED_TEXT_START_POS = 25;
+    static const int    PADDING = 3;
+    static const int    TEXT_START_POS = PADDING;
+    static const int    WRAPPED_TEXT_START_POS = 25;
 
-    // this array holds all the config property keys for each
-    // built-in color
-    static QString          COLOR_TO_CONFIG_MAP[COLOR_NUM];
+    // This array holds all the config property keys for each
+    // built-in color.
+    static QString      COLOR_TO_CONFIG_MAP[COLOR_NUM];
 
     OutputControl(QWidget *parent = NULL);
     ~OutputControl();
     void appendMessage(const QString &msg, OutputColor defaultMsgColor);
     void changeFont(const QFont &font);
 
-    // event handlers
+    // Event callbacks
     void onConfigChanged(Event *pEvent);
 
     static void setupColorConfig(QMap<QString, ConfigOption> &defOptions);
@@ -479,4 +509,4 @@ public slots:
     void updateScrollbarValue(int value);
 };
 
-} } // end namespaces
+} } // End namespaces

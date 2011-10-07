@@ -1,10 +1,5 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
 
 #pragma once
 
@@ -40,10 +35,8 @@ ServerConnectionPanel::ServerConnectionPanel(QWidget *parent)
 
 //-----------------------------------//
 
-// if all fields are valid:
-//   connect to the server
-// otherwise:
-//   set the focus to the first invalid field
+// If all fields are valid, then this conects to the server.
+// Otherwise, it sets the focus to the first invalid field.
 void ServerConnectionPanel::validateAndConnect()
 {
     // reset all the stylesheets
@@ -84,11 +77,10 @@ void ServerConnectionPanel::validateAndConnect()
         return;
     }
 
-    // emit the signal so that the window can connect
-    // to the server
+    // Emit the signal so that the window can connect to the server.
     emit connect(m_pServerInput->text(), port, m_pNameInput->text(), m_pNickInput->text(), m_pAltNickInput->text());
 
-    // save the name, nick, and alternate nick in the config
+    // Save the name, nick, and alternate nick in the config.
     g_pCfgManager->setOptionValue("server.name", m_pNameInput->text(), false);
     g_pCfgManager->setOptionValue("server.nick", m_pNickInput->text(), false);
     g_pCfgManager->setOptionValue("server.altNick", m_pAltNickInput->text(), false);
@@ -212,5 +204,5 @@ void ServerConnectionPanel::createForm()
     QObject::connect(m_pCloseButton, SIGNAL(clicked()), this, SLOT(onCloseClicked()));
 }
 
-} } // end namespaces
+} } // End namespaces
 

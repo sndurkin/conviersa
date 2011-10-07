@@ -1,10 +1,8 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
+//
+//
+// ChannelTopicDelegate is a specialized class used within ChannelListWindow.
 
 #pragma once
 
@@ -30,4 +28,4 @@ public:
     void setFont(const QFont &font) { m_font = font; }
 };
 
-} } // end namespaces
+} } // End namespaces

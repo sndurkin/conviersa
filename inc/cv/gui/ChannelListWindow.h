@@ -1,10 +1,9 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
+//
+//
+// ChannelListWindow is a Window that provides a user interface
+// for fetching and filtering the list of channels on a server.
 
 #pragma once
 
@@ -32,17 +31,13 @@ class SearchBar;
 class CLineEdit;
 class ChannelTopicDelegate;
 
-/**
- * Document what, why and how.
- */
-
 class ChannelListWindow : public Window
 {
     Q_OBJECT
 
     Session *               m_pSession;
 
-    // main layout
+    // Main layout is vbox.
     QVBoxLayout *           m_pVLayout;
 
     QTreeView *             m_pView;
@@ -50,8 +45,8 @@ class ChannelListWindow : public Window
     ChannelTopicDelegate *  m_pDelegate;
     bool                    m_populatingList;
 
-    // upper section that contains the downloading groupbox,
-    // filtering groupbox, save list button and channels label
+    // Upper section that contains the downloading groupbox,
+    // filtering groupbox, save list button and channels label.
     QWidget *       m_pControlsSection;
 
     QGroupBox *     m_pDownloadingGroup;
@@ -111,4 +106,4 @@ public slots:
     void saveList();
 };
 
-} } // end namespaces
+} } // End namespaces

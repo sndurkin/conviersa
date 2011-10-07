@@ -1,10 +1,15 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
+//
+//
+// ConfigManager manages all the configuration settings used by the client.
+// It allows creating a config file with default options or, if one already
+// exists, then reading existing options into memory. It owns a map of ConfigOptions,
+// which hold the value and type of an individual option. Config options are
+// stored in text files as JSON.
+//
+// ConfigOption stores both the value and the type of a config property. It
+// doesn't need to store the name because they are stored in a map by name.
 
 #pragma once
 
@@ -39,9 +44,6 @@ enum ConfigType {
 
 //-----------------------------------//
 
-// this class stores both the value and the type of
-// a ConfigOption; it doesn't store the name because
-// they are stored in a map by name
 struct ConfigOption
 {
     QVariant    value;
@@ -89,7 +91,7 @@ class ConfigManager
     QHash<QString, QMap<QString, ConfigOption> > m_files;
     QString m_defaultFilename;
 
-    // comments start the line with '#'
+    // Comments start the line with '#'.
     QRegExp m_commentRegex;
     QRegExp m_newlineRegex;
 
@@ -102,25 +104,25 @@ public:
     bool setOptionValue(const QString &filename, const QString &optName, const QVariant &optValue, bool fireEvent);
     bool isValueValid(const QVariant &value, ConfigType type);
 
-    // calls setupConfigFile() with the default filename
+    // Calls setupConfigFile() with the default filename.
     bool setupDefaultConfigFile(QMap<QString, ConfigOption> &options)
     {
         return setupConfigFile(m_defaultFilename, options);
     }
 
-    // calls writeToFile() with the default filename
+    // Calls writeToFile() with the default filename.
     bool writeToDefaultFile()
     {
         return writeToFile(m_defaultFilename);
     }
 
-    // fetches the value of the key in the default file
+    // Fetches the value of the key in the default file.
     inline QVariant getOptionValue(const QString &optName)
     {
         return getOptionValue(m_defaultFilename, optName);
     }
 
-    // sets the option's value to optValue in the default file
+    // Sets the option's value to [optValue] in the default file.
     inline bool setOptionValue(const QString &optName, const QVariant &optValue, bool fireEvent)
     {
         return setOptionValue(m_defaultFilename, optName, optValue, fireEvent);
@@ -129,4 +131,4 @@ public:
 
 extern ConfigManager *g_pCfgManager;
 
-} // end namespace
+} // End namespace

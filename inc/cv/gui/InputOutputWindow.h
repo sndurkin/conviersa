@@ -1,10 +1,9 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
+//
+//
+// InputOutputWindow is a Window which provides input and output controls,
+// and is the base class for StatusWindow, ChannelWindow, and QueryWindow.
 
 #pragma once
 
@@ -61,7 +60,7 @@ public:
 
     void giveFocus();
 
-    // event handlers
+    // Event callbacks
     void onInput(Event *pEvent);
     void onNoticeMessage(Event *pEvent);
 
@@ -75,13 +74,13 @@ protected:
     bool eventFilter(QObject *obj, QEvent *event);
     QString getInputText() { return m_pInput->toPlainText(); }
 
-    // handles the printing/sending of the PRIVMSG message
+    // Intended to handle the printing/sending of the PRIVMSG message.
     virtual void handleSay(const QString &msg) = 0;
 
-    // handles the printing/sending of the PRIVMSG ACTION message
+    // Intended to handle the printing/sending of the PRIVMSG ACTION message.
     virtual void handleAction(const QString &msg) = 0;
 
     virtual void handleTab() = 0;
 };
 
-} } // end namespaces
+} } // End namespaces

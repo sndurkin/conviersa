@@ -1,10 +1,22 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
+//
+//
+// Session maintains the connection to an IRC server, passes data
+// to and from a ThreadedConnection instance, and stores IRC-specific
+// information about the connected user and the server. It utilizes the
+// EventManager to pass data to all monitoring Windows.
+//
+// Events:
+//
+// ConnectionEvent is used for the "connecting", "connected", "disconnected",
+// and "connectFailed" events.
+//
+// DataEvent is used for the "receivedData" event, which is fired whenever the
+// Session receives any data from the server.
+//
+// MessageEvent is used for all the events that end in "Message", which are fired
+// for successfully parsing received data into a Message object.
 
 #pragma once
 
@@ -23,7 +35,7 @@ class ConnectionEvent : public Event
     QString *   m_pHost;
     quint16     m_port;
 
-    // only relevant for the connectFailed event
+    // Only relevant for the "connectFailed" event.
     QAbstractSocket::SocketError m_error;
 
 public:
@@ -72,46 +84,47 @@ public:
 
 //-----------------------------------//
 
-// this class provides the entire interface to an IRC server
 class Session : public QObject, public QSharedData
 {
     Q_OBJECT
 
 private:
-    // the actual connection to the server
+    // The actual connection to the server.
     ThreadedConnection *   m_pConn;
 
-    // stores the user's nickname
+    // User's nickname.
     QString             m_nick;
 
-    // stores the name of the host that we are connected to
+    // Name of the host that we are connected to.
     QString             m_host;
 
-    // stores the port number of the server we're connected to
+    // Port number of the server we're connected to.
     int                 m_port;
 
-    // stores the user's name (used for USER message)
+    // User's name (used for USER message).
     QString             m_name;
 
-    // format: <mode1><prefix1><mode2><prefix2>[<mode3><prefix3>] ...
-    // default value: o@v+
+    // Prefix rules as dictated by the server.
+    //
+    // Format: <mode1><prefix1><mode2><prefix2>[<mode3><prefix3>] ...
+    // Default value: o@v+
     QString             m_prefixRules;
 
-    // this comes from the 005 numeric, CHANMODES, which specifies
+    // This comes from the 005 numeric, CHANMODES, which specifies
     // which channel modes the server supports, and which ones take
-    // a parameter and which don't
+    // a parameter and which don't.
     //
-    // format: typeA,typeB,typeC,typeD
+    // Format: typeA,typeB,typeC,typeD
     QString             m_chanModes;
 
-    // this comes from the 005 numeric, MODES, which dictates
+    // This comes from the 005 numeric, MODES, which dictates
     // the maximum number of modes with parameters that may be set with
-    // one message
+    // one message.
     int                 m_modeNum;
 
-    // this acts as a more persistent buffer for receiving data from
+    // This acts as a more persistent buffer for receiving data from
     // the Connection object, so that it can be separated by '\n' and
-    // then parsed
+    // then parsed.
     QString             m_prevData;
 
 public:
@@ -123,7 +136,7 @@ public:
     void disconnectFromServer();
     bool isConnected() { return m_pConn->isConnected(); }
 
-    // public functions for sending messages
+    // Exposed functions for sending messages.
     void sendData(const QString &data);
     void onSendData(Event *pEvt);
     void sendPrivmsg(const QString &target, const QString &msg);
@@ -152,8 +165,8 @@ signals:
     void connectToHost(QString, quint16);
 
 public slots:
-    // these are connected to the Connection class and are called when
-    // Connection emits them
+    // These are connected to the Connection object and are called when
+    // Connection emits them.
     void onConnecting();
     void onConnect();
     void onFailedConnect();
@@ -161,4 +174,4 @@ public slots:
     void onReceiveData(const QString &data);
 };
 
-} // end namespace
+} // End namespace

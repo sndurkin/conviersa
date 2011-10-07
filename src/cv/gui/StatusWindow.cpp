@@ -1,10 +1,5 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
 
 #include <QAbstractSocket>
 #include <QDateTime>
@@ -72,9 +67,8 @@ StatusWindow::~StatusWindow()
 
 //-----------------------------------//
 
-// returns a pointer to the OutputWindow if it exists
-// 	(and is a child of this status window)
-// returns NULL otherwise
+// Returns a pointer to the OutputWindow if it exists and is
+// a child of this StatusWindow, NULL otherwise.
 OutputWindow *StatusWindow::getChildIrcWindow(const QString &name)
 {
     for(int i = 0; i < m_chanList.size(); ++i)
@@ -90,8 +84,8 @@ OutputWindow *StatusWindow::getChildIrcWindow(const QString &name)
 
 //-----------------------------------//
 
-// returns a list of all IrcChanWindows that are currently
-// being managed in the server
+// Returns a list of all ChannelWindows that are currently
+// being managed in the server.
 QList<ChannelWindow *> StatusWindow::getChannels()
 {
     return m_chanList;
@@ -99,8 +93,8 @@ QList<ChannelWindow *> StatusWindow::getChannels()
 
 //-----------------------------------//
 
-// returns a list of all IrcPrivWindows that are currently
-// being managed in the server
+// Returns a list of all QueryWindows that are currently
+// being managed in the server.
 QList<QueryWindow *> StatusWindow::getPrivateMessages()
 {
     return m_privList;
@@ -108,7 +102,7 @@ QList<QueryWindow *> StatusWindow::getPrivateMessages()
 
 //-----------------------------------//
 
-// adds a channel to the list
+// Adds a channel to the list.
 void StatusWindow::addChannelWindow(ChannelWindow *pChanWin)
 {
     if(m_pManager)
@@ -120,7 +114,7 @@ void StatusWindow::addChannelWindow(ChannelWindow *pChanWin)
 
 //-----------------------------------//
 
-// removes a channel from the list
+// Removes a channel from the list.
 void StatusWindow::removeChannelWindow(ChannelWindow *pChanWin)
 {
     m_chanList.removeOne(pChanWin);
@@ -128,7 +122,7 @@ void StatusWindow::removeChannelWindow(ChannelWindow *pChanWin)
 
 //-----------------------------------//
 
-// adds a PM window to the list
+// Adds a PM window to the list.
 void StatusWindow::addQueryWindow(QueryWindow *pQueryWin, bool giveFocus)
 {
     if(m_pManager)
@@ -140,7 +134,7 @@ void StatusWindow::addQueryWindow(QueryWindow *pQueryWin, bool giveFocus)
 
 //-----------------------------------//
 
-// removes a PM window from the list
+// Removes a PM window from the list.
 void StatusWindow::removeQueryWindow(QueryWindow *pPrivWin)
 {
     m_privList.removeOne(pPrivWin);
@@ -155,7 +149,7 @@ void StatusWindow::connectToServer(QString server, int port, QString name, QStri
 
 //-----------------------------------//
 
-// handles the printing/sending of the PRIVMSG message
+// Handles the printing/sending of the PRIVMSG message.
 void StatusWindow::handleSay(const QString &text)
 {
     printError("Cannot send to status window");
@@ -163,7 +157,7 @@ void StatusWindow::handleSay(const QString &text)
 
 //-----------------------------------//
 
-// handles the printing/sending of the PRIVMSG ACTION message
+// Handles the printing/sending of the PRIVMSG ACTION message.
 void StatusWindow::handleAction(const QString &text)
 {
     printError("Cannot send to status window");
@@ -179,10 +173,10 @@ void StatusWindow::handleTab()
 
 //-----------------------------------//
 
-// handles child widget events
+// Handles child widget events.
 bool StatusWindow::eventFilter(QObject *obj, QEvent *event)
 {
-    // just for monitoring when it's closed
+    // Just for monitoring when it's closed.
     if(obj == m_pChanListWin && event->type() == QEvent::Close)
         m_pChanListWin = NULL;
 
@@ -201,7 +195,7 @@ void StatusWindow::handle321Numeric(const Message &)
         QString title = QString("Channel List - %1").arg(getWindowName());
         m_pChanListWin->setTitle(title);
 
-        // todo: fix and put inside my own event system
+        // TODO (seand): Fix and put inside my own event system.
         m_pChanListWin->installEventFilter(this);
     }
     else
@@ -256,7 +250,7 @@ void StatusWindow::handle353Numeric(const Message &msg)
     // msg.m_params[3]: names, separated by spaces
     ChannelWindow *pChanWin = DCAST(ChannelWindow, getChildIrcWindow(msg.m_params[2]));
 
-    // RPL_NAMREPLY was sent as a result of a NAMES command
+    // RPL_NAMREPLY was sent as a result of a NAMES command.
     if(pChanWin == NULL)
     {
         printOutput(getNumericText(msg), MESSAGE_IRC_NUMERIC);
@@ -271,7 +265,7 @@ void StatusWindow::handle366Numeric(const Message &msg)
     // msg.m_params[1]: channel
     // msg.m_params[2]: "End of NAMES list"
     //
-    // RPL_ENDOFNAMES was sent as a result of a NAMES command
+    // RPL_ENDOFNAMES was sent as a result of a NAMES command.
     if(!childIrcWindowExists(msg.m_params[1]))
         printOutput(getNumericText(msg), MESSAGE_IRC_NUMERIC);
 }
@@ -332,11 +326,11 @@ void StatusWindow::onServerConnect(Event *pEvent)
     ConnectionEvent *pConnEvent = DCAST(ConnectionEvent, pEvent);
     QString host = pConnEvent->getHost();
 
-    // get the recent servers list
+    // Get the recent servers list.
     QVariantList serverList = g_pCfgManager->getOptionValue("recent.servers").toList();
     for(int i = 0; i < serverList.size(); ++i)
     {
-        // if the server is already in the list, remove it
+        // If the server is already in the list, remove it.
         if(serverList[i].toString().compare(host, Qt::CaseInsensitive) == 0)
         {
             serverList.removeAt(i);
@@ -344,12 +338,12 @@ void StatusWindow::onServerConnect(Event *pEvent)
         }
     }
 
-    // prepend the server
+    // Prepend the server.
     serverList.prepend(host);
     if(serverList.size() > 10)
         serverList.removeLast();
 
-    // update the recent servers list
+    // Update the recent servers list.
     g_pCfgManager->setOptionValue("recent.servers", serverList, false);
 }
 
@@ -372,7 +366,7 @@ void StatusWindow::onNumericMessage(Event *pEvent)
     {
         case 1:
         {
-            // change name of the window to the name of the network
+            // Change the name of the window to the name of the network.
             QString networkName = getNetworkNameFrom001(msg);
             setTitle(networkName);
             setWindowName(networkName);
@@ -455,7 +449,7 @@ void StatusWindow::onNumericMessage(Event *pEvent)
                 printOutput(getNumericText(msg), MESSAGE_IRC_NUMERIC);
             break;
         }
-        // states when topic was last set
+        // States when topic was last set.
         case 333:
         {
             // msg.m_params[0]: my nick
@@ -500,7 +494,7 @@ void StatusWindow::onNumericMessage(Event *pEvent)
         }
         default:
         {
-            // the following are not meant to be handled,
+            // The following are not meant to be handled,
             // but only printed:
             // 	003
             // 	004
@@ -539,7 +533,7 @@ void StatusWindow::onJoinMessage(Event *pEvent)
     QString nickJoined = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
     if(m_pSession->isMyNick(nickJoined) && !childIrcWindowExists(msg.m_params[0]))
     {
-        // create the channel and post the message to it
+        // Create the channel and post the message to it.
         ChannelWindow *pChanWin = new ChannelWindow(m_pSession, m_pSharedServerConnPanel, msg.m_params[0]);
         addChannelWindow(pChanWin);
         QString textToPrint = GET_STRING("message.join.self").arg(msg.m_params[0]);
@@ -554,7 +548,7 @@ void StatusWindow::onModeMessage(Event *pEvent)
     Message msg = DCAST(MessageEvent, pEvent)->getMessage();
     if(!childIrcWindowExists(msg.m_params[0]))  // user mode
     {
-        // ignore first parameter
+        // Ignore the first parameter.
         QString modes = msg.m_params[1];
         for(int i = 2; i < msg.m_paramsNum; ++i)
             modes += ' ' + msg.m_params[i];
@@ -589,11 +583,11 @@ void StatusWindow::onPongMessage(Event *pEvent)
 {
     Message msg = DCAST(MessageEvent, pEvent)->getMessage();
 
-    // the prefix is used to determine the server that
-    // sends the PONG rather than the first parameter,
-    // because it will always have the server in it
+    // The prefix is used to determine the server that
+    // sends the PONG (instead of using the first parameter),
+    // because it will always have the server in it.
     //
-    // example:
+    // Example:
     //	PING hi :there
     //	:irc.server.net PONG there :hi
     QString textToPrint = GET_STRING("message.pong")
@@ -658,13 +652,13 @@ void StatusWindow::onPrivmsgMessage(Event *pEvent)
         return;
     }
 
-    // if the target is me, then it's a PM from someone
+    // If the target is me, it's a PM from someone.
     if(m_pSession->isMyNick(msg.m_params[0]) && !childIrcWindowExists(fromNick))
     {
         QueryWindow *pQueryWin = new QueryWindow(m_pSession, m_pSharedServerConnPanel, fromNick);
         addQueryWindow(pQueryWin, false);
 
-        // delegate to newly created query window
+        // Delegate to the newly created QueryWindow.
         pQueryWin->onPrivmsgMessage(pEvent);
     }
 }
@@ -694,9 +688,8 @@ void StatusWindow::onQuitMessage(Event *pEvent)
         }
     }
 
-    // will print a quit message to the private message window
-    // if we get a QUIT message, which will only be if we're in
-    // a channel with the person
+    // Will print a quit message to the PM window if we get a QUIT message,
+    // which will only be if we're in a channel with the person.
     for(int i = 0; i < m_privList.size(); ++i)
     {
         if(user.compare(m_privList[i]->getTargetNick(), Qt::CaseInsensitive) == 0)
@@ -723,9 +716,9 @@ void StatusWindow::onWallopsMessage(Event *pEvent)
 void StatusWindow::onUnknownMessage(Event *pEvent)
 {
     Message msg = DCAST(MessageEvent, pEvent)->getMessage();
-    // print the whole raw line
+    // Print the whole raw line.
     //printOutput(data);
-    // todo: decide what to do here
+    // TODO (seand): Decide what to do here.
 }
 
 //-----------------------------------//
@@ -741,4 +734,4 @@ void StatusWindow::setupServerConfig(QMap<QString, ConfigOption> &defOptions)
     defOptions.insert("recent.servers", ConfigOption(serverList, CONFIG_TYPE_LIST));
 }
 
-} } // end namespaces
+} } // End namespaces

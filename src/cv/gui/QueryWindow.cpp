@@ -1,10 +1,5 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
 
 #include <QWebView>
 #include <QMutex>
@@ -55,7 +50,7 @@ QueryWindow::~QueryWindow()
 
 //-----------------------------------//
 
-// changes the nickname of the person we're chatting with
+// Changes the nickname of the person we're chatting with.
 void QueryWindow::setTargetNick(const QString &nick)
 {
     m_targetNick = nick;
@@ -65,8 +60,8 @@ void QueryWindow::setTargetNick(const QString &nick)
 
 //-----------------------------------//
 
-// returns the target nick that we're chatting with
-// (same as Window::getWindowName() & Window::getTitle())
+// Returns the target nick that we're chatting with
+// (same as Window::getWindowName() & Window::getTitle()).
 QString QueryWindow::getTargetNick()
 {
     return m_targetNick;
@@ -97,9 +92,9 @@ void QueryWindow::onNickMessage(Event *pEvent)
 {
     Message msg = DCAST(MessageEvent, pEvent)->getMessage();
 
-    // will print a nick change message to the PM window
+    // Will print a nick change message to the PM window
     // if we get a NICK message, which will only be if we're in
-    // a channel with the person (or if the nick being changed is ours)
+    // a channel with the person (or if the nick being changed is ours).
     QString oldNick = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
     QString textToPrint = GET_STRING("message.nick")
                           .arg(oldNick)
@@ -110,8 +105,8 @@ void QueryWindow::onNickMessage(Event *pEvent)
     }
     else
     {
-        // if the target nick has changed and there isn't another query with that name
-        // already open, then we can safely change the this query's target nick
+        // If the target nick has changed and there isn't another query with that name
+        // already open, then we can safely change the target's nick.
         bool queryWindowExists = DCAST(StatusWindow, m_pManager->getParentWindow(this))->childIrcWindowExists(msg.m_params[0]);
         if(isTargetNick(oldNick) && !queryWindowExists)
         {
@@ -126,9 +121,7 @@ void QueryWindow::onNickMessage(Event *pEvent)
 void QueryWindow::onNoticeMessage(Event *pEvent)
 {
     if(m_pManager->isWindowFocused(this))
-    {
         InputOutputWindow::onNoticeMessage(pEvent);
-    }
 }
 
 //-----------------------------------//
@@ -148,15 +141,13 @@ void QueryWindow::onPrivmsgMessage(Event *pEvent)
             CtcpRequestType requestType = getCtcpRequestType(msg);
             if(requestType != RequestTypeInvalid)
             {
-                // ACTION is /me, so handle according to that
+                // ACTION is /me, so handle according to that.
                 if(requestType == RequestTypeAction)
                 {
                     QString action = msg.m_params[1];
 
-                    // action = "\1ACTION <action>\1"
-                    // first 8 characters and last 1 character need to be excluded
-                    // so we'll take the mid, starting at index 8 and going until every
-                    // character but the last is included
+                    // Action is in the format of "\1ACTION <action>\1", so
+                    // the first 8 and last 1 characters will be excluded.
                     msgType = MESSAGE_IRC_ACTION;
                     QString msgText = action.mid(8, action.size()-9);
                     shouldHighlight = containsNick(msgText);
@@ -212,7 +203,7 @@ void QueryWindow::onDoubleClickLink(Event *pEvent)
 
 //-----------------------------------//
 
-// handles the printing/sending of the PRIVMSG message
+// Handles the printing/sending of the PRIVMSG message.
 void QueryWindow::handleSay(const QString &text)
 {
     QString textToPrint = GET_STRING("message.say")
@@ -224,7 +215,7 @@ void QueryWindow::handleSay(const QString &text)
 
 //-----------------------------------//
 
-// handles the printing/sending of the PRIVMSG ACTION message
+// Handles the printing/sending of the PRIVMSG ACTION message.
 void QueryWindow::handleAction(const QString &text)
 {
     QString textToPrint = GET_STRING("message.action")
@@ -250,4 +241,4 @@ void QueryWindow::closeEvent(QCloseEvent *event)
     return Window::closeEvent(event);
 }
 
-} } // end namespaces
+} } // End namespaces

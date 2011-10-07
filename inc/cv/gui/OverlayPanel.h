@@ -1,10 +1,13 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
+//
+//
+// OverlayPanel is a widget that provides the following functionality:
+//  - Popping or sliding in from any edge of its parent widget
+//  - An open button which appears when the widget is in a Closed state
+//  - Primary alignment to an edge of its parent, as well as secondary
+//    alignment intended to anchor it to an adjacent edge
+//  - Drop shadows of variable width on any side of the widget
 
 #pragma once
 
@@ -27,23 +30,23 @@ class OverlayPanel : public QWidget
     Q_OBJECT
 
 private:
-    // maintains whether the OverlayPanel has been properly
-    // initialized and therefore ready for use
+    // Maintains whether the OverlayPanel has been properly
+    // initialized and therefore ready for use.
     bool                    m_isInitialized;
 
-    // holds the current state of the panel (open or closed)
+    // Holds the current state of the panel (open or closed).
     OverlayState            m_state;
 
-    // holds the alignment of the panel (and its open button, if applicable)
+    // Holds the alignment of the panel (and its open button, if applicable).
     Qt::AlignmentFlag       m_alignment;
 
-    // holds the secondary alignment of the OverlayPanel; the
+    // Holds the secondary alignment of the OverlayPanel; the
     // panel can be aligned to one or both of the sides, with
     // offset values available (how far to set the edges of the
-    // panel, in pixels)
+    // panel, in pixels).
     //
-    // if both offsets are specified, then any width (or height, depending
-    // on the secondary alignment) for the panel is ignored
+    // If both offsets are specified, then any width (or height, depending
+    // on the secondary alignment) for the panel is ignored.
     Qt::Alignment           m_secondaryAlignment;
     int                     m_firstOffset,
                             m_secondOffset;
@@ -51,25 +54,25 @@ private:
     int                     m_dropShadowWidth;
     Qt::Alignment           m_dropShadowSides;
 
-    // the duration of the animations, in msec
+    // The duration of the animations, in milliseconds.
     int                     m_duration;
 
-    // the objects that perform the animations for the panel
+    // The objects that perform the animations for the panel.
     QPropertyAnimation *    m_pSlideOpenAnimation,
                        *    m_pSlideClosedAnimation;
 
-    // these properties are used for an optional set of buttons
+    // These properties are used for an optional set of buttons
     // for opening the panel; the panel can be split across
-    // multiple widgets (to conserve memory)
+    // multiple widgets (to conserve memory).
     //
-    // the panel is shared and can only be inside one widget at a time,
-    // but an open button is placed inside each widget; m_pcurrOpenButton
+    // The panel is shared and can only be inside one widget at a time,
+    // but an open button is placed inside each widget; [m_pcurrOpenButton]
     // points to the button that's currently sharing the same parent
-    // as the OverlayPanel
+    // as the OverlayPanel.
     //
-    // the alignment indicates which side of the OverlayPanel
+    // The alignment indicates which side of the OverlayPanel
     // to align to, and the offset indicates (in pixels) how
-    // far inside that edge the button is positioned
+    // far inside that edge the button is positioned.
     QPushButton *           m_pCurrOpenButton;
     Qt::AlignmentFlag       m_buttonAlignment;
     int                     m_buttonOffset;
@@ -85,7 +88,7 @@ public:
     void realignPanel(QPushButton *pOpenButton = NULL);
     QPushButton *addOpenButton(QWidget *pParent, const QString &btnText, int w, int h);
 
-    // open/close functions for panel
+    // Various open/close functions.
     void open(bool animate = true);
     void close(bool animate = true);
     void toggle(bool animate = true);
@@ -116,4 +119,4 @@ protected:
     void paintEvent(QPaintEvent *);
 };
 
-} } // end namespaces
+} } // End namespaces

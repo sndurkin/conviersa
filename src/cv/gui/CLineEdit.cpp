@@ -1,10 +1,5 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
 
 #include <QFocusEvent>
 #include <QMouseEvent>
@@ -21,7 +16,7 @@ CLineEdit::CLineEdit(const QString &textToPrint, QWidget *pParent/* = NULL*/)
 
 //-----------------------------------//
 
-// returns the ideal size for the line edit
+// Returns the ideal size for the line edit.
 QSize CLineEdit::sizeHint() const
 {
     return QSize(150, 20);
@@ -29,49 +24,42 @@ QSize CLineEdit::sizeHint() const
 
 //-----------------------------------//
 
-// imitate firefox search bar behavior
-void CLineEdit::mousePressEvent(QMouseEvent *event)
+// Imitates firefox search bar behavior.
+void CLineEdit::mousePressEvent(QMouseEvent *pEvent)
 {
     if(text().size() == selectedText().size())
-    {
         deselect();
-    }
 
-    QLineEdit::mousePressEvent(event);
+    QLineEdit::mousePressEvent(pEvent);
 }
 
 //-----------------------------------//
 
-void CLineEdit::mouseReleaseEvent(QMouseEvent *event)
+void CLineEdit::mouseReleaseEvent(QMouseEvent *pEvent)
 {
     if(m_selectAll && !hasSelectedText())
-    {
         selectAll();
-    }
     else
-    {
-        QLineEdit::mouseReleaseEvent(event);
-    }
+        QLineEdit::mouseReleaseEvent(pEvent);
 
     m_selectAll = false;
 }
 
 //-----------------------------------//
 
-// when the line edit gets focus
-void CLineEdit::focusInEvent(QFocusEvent *event)
+// Called when the line edit gets focus.
+void CLineEdit::focusInEvent(QFocusEvent *pEvent)
 {
     if(!hasSelectedText())
-    {
         m_selectAll = true;
-    }
+
     m_printText = false;
-    QLineEdit::focusInEvent(event);
+    QLineEdit::focusInEvent(pEvent);
 }
 
 //-----------------------------------//
 
-// when the line edit loses focus
+// Called when the line edit loses focus.
 void CLineEdit::focusOutEvent(QFocusEvent *event)
 {
     m_printText = true;
@@ -91,8 +79,8 @@ void CLineEdit::focusOutEvent(QFocusEvent *event)
 
         if(i == strText.size())
         {
-            // every character in the search bar is
-            // whitespace, so clear it out
+            // Every character in the search bar is
+            // whitespace, so clear it out.
             clear();
         }
     }
@@ -102,7 +90,7 @@ void CLineEdit::focusOutEvent(QFocusEvent *event)
 
 //-----------------------------------//
 
-// called when the line edit needs to be repainted
+// Called when the line edit needs to be repainted.
 void CLineEdit::paintEvent(QPaintEvent *event)
 {
     QLineEdit::paintEvent(event);
@@ -116,4 +104,4 @@ void CLineEdit::paintEvent(QPaintEvent *event)
     }
 }
 
-} } // end namespaces
+} } // End namespaces

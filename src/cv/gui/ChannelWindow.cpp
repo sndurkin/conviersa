@@ -1,10 +1,5 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
 
 #include <QAction>
 #include <QListWidget>
@@ -128,13 +123,11 @@ void ChannelWindow::onColorConfigChanged(Event *pEvent)
 
 //-----------------------------------//
 
-// adds the user to the channel's userlist in the proper place
+// Adds the user to the channel's userlist in the proper place.
+// [user] holds the nickname, and can include any number of prefixes,
+// as well as the user and host.
 //
-// user holds the nickname, and can include any number
-// of prefixes, as well as the user and host
-//
-// returns true if the user was added,
-// returns false otherwise
+// Returns true if the user was added, false otherwise.
 bool ChannelWindow::addUser(const QString &user)
 {
     ChannelUser *pNewUser = new ChannelUser(m_pSession, user);
@@ -149,10 +142,8 @@ bool ChannelWindow::addUser(const QString &user)
 
 //-----------------------------------//
 
-// removes the user from the channel's userlist
-//
-// returns true if the user was removed,
-// returns false otherwise
+// Removes the user from the channel's userlist. Returns true if
+// the user was removed, false otherwise.
 bool ChannelWindow::removeUser(const QString &user)
 {
     for(int i = 0; i < m_users.size(); ++i)
@@ -170,8 +161,8 @@ bool ChannelWindow::removeUser(const QString &user)
 
 //-----------------------------------//
 
-// changes the user's nickname from oldNick to newNick, unless
-// the user is not in the channel
+// Changes the user's nickname from [oldNick] to [newNick], unless
+// the user is not in the channel.
 void ChannelWindow::changeUserNick(const QString &oldNick, const QString &newNick)
 {
     ChannelUser *pNewUser = findUser(oldNick);
@@ -195,8 +186,8 @@ void ChannelWindow::changeUserNick(const QString &oldNick, const QString &newNic
 
 //-----------------------------------//
 
-// adds the specified prefix to the user, and updates the user list display
-// (if necessary)
+// Adds the specified prefix to the user, and updates the user list display
+// (if necessary).
 void ChannelWindow::addPrefixToUser(const QString &user, const QChar &prefixToAdd)
 {
     ChannelUser *pUser = findUser(user);
@@ -210,8 +201,8 @@ void ChannelWindow::addPrefixToUser(const QString &user, const QChar &prefixToAd
 
 //-----------------------------------//
 
-// removes the specified prefix from the user, and updates the user list
-// display (if necessary) - assuming the user has the given prefix
+// Removes the specified prefix from the user, and updates the user list
+// display (if necessary) - assuming the user has the given prefix.
 void ChannelWindow::removePrefixFromUser(const QString &user, const QChar &prefixToRemove)
 {
     ChannelUser *pUser = findUser(user);
@@ -281,7 +272,7 @@ void ChannelWindow::onNumericMessage(Event *pEvent)
             // msg.m_params[2]: channel
             // msg.m_params[3]: names, separated by spaces
             //
-            // RPL_NAMREPLY was sent as a result of a JOIN command
+            // RPL_NAMREPLY was sent as a result of a JOIN command.
             if(!m_inChannel)
             {
                 int numSections = msg.m_params[3].count(' ') + 1;
@@ -296,7 +287,7 @@ void ChannelWindow::onNumericMessage(Event *pEvent)
             // msg.m_params[1]: channel
             // msg.m_params[2]: "End of NAMES list"
             //
-            // RPL_ENDOFNAMES was sent as a result of a JOIN command
+            // RPL_ENDOFNAMES was sent as a result of a JOIN command.
             if(!m_inChannel)
                 joinChannel();
             break;
@@ -372,7 +363,7 @@ void ChannelWindow::onModeMessage(Event *pEvent)
     Message msg = DCAST(MessageEvent, pEvent)->getMessage();
     if(isChannelName(msg.m_params[0]))
     {
-        // ignore first parameter
+        // Ignore the first parameter.
         QString modeParams = msg.m_params[1];
         for(int i = 2; i < msg.m_paramsNum; ++i)
             modeParams += ' ' + msg.m_params[i];
@@ -402,7 +393,7 @@ void ChannelWindow::onModeMessage(Event *pEvent)
                     case ModeTypeB:
                     case ModeTypeC:
                     {
-                        // if there's no params left then continue
+                        // If there's no params left, continue.
                         if(paramsIndex >= msg.m_paramsNum)
                             break;
 
@@ -466,7 +457,7 @@ void ChannelWindow::onPartMessage(Event *pEvent)
     {
         QString textToPrint;
 
-        // if the PART message is of you leaving the channel
+        // If the PART message is for my nick, then call leaveChannel().
         if(m_pSession->isMyNick(parseMsgPrefix(msg.m_prefix, MsgPrefixName)))
         {
             leaveChannel();
@@ -483,7 +474,7 @@ void ChannelWindow::onPartMessage(Event *pEvent)
                           .arg(msg.m_params[0]);
         }
 
-        // if there's a part message
+        // If there's a reason in the PART message, append it before it gets displayed.
         bool hasReason = (msg.m_paramsNum > 1 && !msg.m_params[1].isEmpty());
         if(hasReason)
             textToPrint += GET_STRING("message.reason")
@@ -510,15 +501,13 @@ void ChannelWindow::onPrivmsgMessage(Event *pEvent)
         CtcpRequestType requestType = getCtcpRequestType(msg);
         if(requestType != RequestTypeInvalid)
         {
-            // ACTION is /me, so handle according to that
+            // ACTION is /me, so handle according to that.
             if(requestType == RequestTypeAction)
             {
                 QString action = msg.m_params[1];
 
-                // action = "\1ACTION <action>\1"
-                // first 8 characters and last 1 character need to be excluded
-                // so we'll take the mid, starting at index 8 and going until every
-                // character but the last is included
+                // [action] at this point looks like this: "\1ACTION <action>\1",
+                // so we want to exclude the first 8 and last 1 characters.
                 msgType = MESSAGE_IRC_ACTION;
                 QString msgText = action.mid(8, action.size()-9);
                 shouldHighlight = containsNick(msgText);
@@ -597,7 +586,8 @@ void ChannelWindow::onOutput(Event *pEvent)
 void ChannelWindow::onDoubleClickLink(Event *pEvent)
 {
     DoubleClickLinkEvent *pDblClickLinkEvt = DCAST(DoubleClickLinkEvent, pEvent);
-    // check to see if there is a QueryWindow already open for this nick
+
+    // Check to see if there is a QueryWindow already open for this nick.
     Window *pParentWin = m_pManager->getWindowFromItem(m_pManager->getItemFromWindow(this)->parent());
     StatusWindow *pStatusWin = DCAST(StatusWindow, pParentWin);
 
@@ -615,9 +605,9 @@ void ChannelWindow::onDoubleClickLink(Event *pEvent)
 
 //-----------------------------------//
 
-// adds a message to the "in-limbo" queue, where messages are
+// Adds a message to the "in-limbo" queue, where messages are
 // stored before the channel has been officially "joined" (when
-// the userlist has been received)
+// the userlist has been received).
 void ChannelWindow::enqueueMessage(const QString &msg, OutputMessageType msgType)
 {
     QueuedOutputMessage qom;
@@ -628,8 +618,8 @@ void ChannelWindow::enqueueMessage(const QString &msg, OutputMessageType msgType
 
 //-----------------------------------//
 
-// "joins" the channel by flushing all messages received since creating
-// the channel (but before the list of users was received)
+// "Joins" the channel by flushing all messages received since creating
+// the channel (but before the list of users was received).
 void ChannelWindow::joinChannel()
 {
     m_inChannel = true;
@@ -642,7 +632,7 @@ void ChannelWindow::joinChannel()
 
 //-----------------------------------//
 
-// removes all the users from memory
+// Removes all the users from memory.
 void ChannelWindow::leaveChannel()
 {
     m_inChannel = false;
@@ -655,7 +645,7 @@ void ChannelWindow::leaveChannel()
 
 //-----------------------------------//
 
-// handles the printing/sending of the PRIVMSG message
+// Handles the printing/sending of the PRIVMSG message.
 void ChannelWindow::handleSay(const QString &text)
 {
     QString textToPrint = GET_STRING("message.say")
@@ -667,7 +657,7 @@ void ChannelWindow::handleSay(const QString &text)
 
 //-----------------------------------//
 
-// handles the printing/sending of the PRIVMSG ACTION message
+// Handles the printing/sending of the PRIVMSG ACTION message.
 void ChannelWindow::handleAction(const QString &text)
 {
     QString textToPrint = GET_STRING("message.action")
@@ -687,12 +677,12 @@ void ChannelWindow::handleTab()
         int idx, lastIdx;
         idx = lastIdx = m_pInput->textCursor().position();
 
-        // find the beginning of the word that the user is
-        // trying to tab-complete
+        // Find the beginning of the word that the user is
+        // trying to tab-complete.
         while(--idx >= 0 && text[idx] != ' ');
         ++idx;
 
-        // now capture the parts
+        // Now capture the parts.
         m_preAutocompleteStr = text.mid(0, idx);
         QString word = text.mid(idx, lastIdx - idx);
         m_postAutocompleteStr = text.mid(lastIdx);
@@ -700,7 +690,7 @@ void ChannelWindow::handleTab()
         if(word.isEmpty())
             return;
 
-        // find all autocomplete matches
+        // Find all autocomplete matches.
         for(int i = 0; i < m_users.size(); ++i)
             if(m_users[i]->getNickname().startsWith(word, Qt::CaseInsensitive))
                 m_autocompleteMatches.push_back(m_users[i]);
@@ -714,7 +704,7 @@ void ChannelWindow::handleTab()
         m_matchesIdx %= m_autocompleteMatches.size();
     }
 
-    // set the text and cursor
+    // Set the text and cursor.
     if(m_matchesIdx >= 0)
     {
         m_pInput->setPlainText(m_preAutocompleteStr
@@ -730,7 +720,7 @@ void ChannelWindow::handleTab()
 
 //-----------------------------------//
 
-// handles child widget events
+// Handles child widget events.
 bool ChannelWindow::eventFilter(QObject *obj, QEvent *event)
 {
     if(obj == m_pInput)
@@ -766,8 +756,8 @@ void ChannelWindow::closeEvent(QCloseEvent *event)
 
 //-----------------------------------//
 
-// adds a ChannelUser to both the list in memory and the
-// list view which is seen by the user
+// Adds a ChannelUser to both the list in memory and the
+// list view which is seen by the user.
 bool ChannelWindow::addUser(ChannelUser *pNewUser)
 {
     QListWidgetItem *pListItem = new QListWidgetItem(pNewUser->getProperNickname());
@@ -791,7 +781,7 @@ bool ChannelWindow::addUser(ChannelUser *pNewUser)
             }
             else if(compareVal == 0)
             {
-                // already in the list
+                // The user is already in the list.
                 return false;
             }
         }
@@ -804,8 +794,8 @@ bool ChannelWindow::addUser(ChannelUser *pNewUser)
 
 //-----------------------------------//
 
-// removes a ChannelUser from both the list in memory and the
-// list view which is seen by the user
+// Removes a ChannelUser from both the list in memory and the
+// list view which is seen by the user.
 void ChannelWindow::removeUser(ChannelUser *pUser)
 {
     for(int i = 0; i < m_users.size(); ++i)
@@ -821,11 +811,11 @@ void ChannelWindow::removeUser(ChannelUser *pUser)
 
 //-----------------------------------//
 
-// finds the user within the channel, based on nickname
-// (regardless if there are prefixes or a user/host in it)
+// Finds the user within the channel, based on nickname
+// (regardless if there are prefixes or a user/host in it).
 //
-// returns a pointer to the Channeluser if found in the channel,
-// returns NULL otherwise
+// Returns a pointer to the Channeluser if found in the channel,
+// NULL otherwise.
 ChannelUser *ChannelWindow::findUser(const QString &user)
 {
     ChannelUser ircChanUser(m_pSession, user);
@@ -851,4 +841,4 @@ void ChannelWindow::onUserDoubleClicked(QListWidgetItem *pItem)
         }
 }
 
-} } // end namespaces
+} } // End namespaces

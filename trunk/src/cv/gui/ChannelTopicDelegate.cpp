@@ -1,10 +1,5 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
 
 #include <QTreeView>
 #include <QStandardItemModel>
@@ -24,7 +19,7 @@ ChannelTopicDelegate::ChannelTopicDelegate(QObject *parent/* = NULL*/)
 
 void ChannelTopicDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
-    // highlight the item
+    // Highlight the item.
     if(option.state & QStyle::State_Selected)
     {
         QPalette pal = option.palette;
@@ -61,4 +56,4 @@ QSize ChannelTopicDelegate::sizeHint(const QStyleOptionViewItem &option, const Q
     return size;
 }
 
-} } // end namespaces
+} } // End namespaces

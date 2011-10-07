@@ -1,10 +1,12 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
+//
+//
+// ServerConnectionPanel is an OverlayPanel which provides a user interface
+// for connecting to an IRC server. It is shared between all OutputWindows
+// for a particular server (StatusWindow, DebugWindow, and any ChannelWindows
+// and QueryWindows); when it is open on one Window, the others display an
+// open button.
 
 #pragma once
 
@@ -20,8 +22,7 @@ class ServerConnectionPanel : public OverlayPanel, public QSharedData
 {
     Q_OBJECT
 
-    // all the form widgets used to connect
-    // to the server
+    // All the form widgets used to connect to the server.
     QPushButton *       m_pConnectButton;
     QPushButton *       m_pCloseButton;
 
@@ -56,4 +57,4 @@ protected:
     void createForm();
 };
 
-} } // end namespaces
+} } // End namespaces

@@ -1,10 +1,10 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
+//
+//
+// OutputWindow is a Window which owns an OutputControl and contains
+// a Session, so it is the base class from which all IRC windows with
+// output derive.
 
 #pragma once
 
@@ -51,28 +51,18 @@ enum OutputMessageType {
 
     MESSAGE_IRC_NUMERIC,
 
-    // general client types
+    // General client types
     MESSAGE_INFO,
     MESSAGE_ERROR,
     MESSAGE_DEBUG,
 
-    // custom type
+    // Custom type
     MESSAGE_CUSTOM
 
 };
 
 //-----------------------------------//
 
-// IRC window hierarchy (+ indicates an abstract class)
-//
-// + Window
-//   - ChannelListWindow
-//   + OutputWindow
-//     - DebugWindow
-//     + InputOutputWindow
-//       - StatusWindow
-//       - ChannelWindow
-//       - QueryWindow
 class OutputWindow : public Window
 {
     Q_OBJECT
@@ -86,18 +76,19 @@ protected:
 
     Session *               m_pSession;
 
-    // this variable holds the most important level
+    // This variable holds the most important level
     // of output alert for a window not in focus; this is
     // used to determine what color to make an OutputWindow's
     // item in the WindowManager when it receives text
-    // and isn't in focus
+    // and isn't in focus.
     int                     m_outputAlertLevel;
 
     QTextCodec *            m_pCodec;
 
-    // custom scroll bar for searching within an IRC window;
-    // lines on which items are found will be draw inside
-    // the slider area (proportional to the size of the slider area)
+    // Custom scrollbar used for searching within an OutputWindow;
+    // lines on which items are found will be drawn inside
+    // the slider area (proportional to the entire height of the
+    // OutputControl's text.
     OutputWindowScrollBar * m_pScrollBar;
 
     static QString          s_invalidNickPrefix;
@@ -108,7 +99,7 @@ public:
                  const QSize &size = QSize(500, 300));
     ~OutputWindow();
 
-    // printing functions
+    // Printing functions
     void printOutput(const QString &text,
                      OutputMessageType msgType,
                      OutputColor overrideMsgColor = COLOR_NONE,
@@ -123,11 +114,11 @@ public:
     virtual void onDoubleClickLink(Event *pEvent) = 0;
 
 protected:
-    // imitates Google Chrome's search, with lines drawn in the scrollbar
-    // and keywords highlighted in the document
+    // Imitates Google Chrome's search, with lines drawn in the scrollbar
+    // and keywords highlighted in the document.
     //void search(const QString &textToFind);
 };
 
 //-----------------------------------//
 
-} } // end namespaces
+} } // End namespaces

@@ -1,10 +1,5 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
 
 #pragma once
 
@@ -14,7 +9,7 @@ namespace cv { namespace gui {
 
 class Window;
 
-// Window types
+// Window types.
 enum
 {
     TYPE_WINDOW,
@@ -24,11 +19,11 @@ enum
 };
 
 
-// for management by the WindowManager class
+// For management by the WindowManager class.
 struct win_info_t
 {
     QTreeWidgetItem *   m_pTreeItem;
     Window *            m_pWindow;
 };
 
-} } // end namespaces
+} } // End namespaces

@@ -1,10 +1,5 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
 
 #include <QPaintEvent>
 #include <QPainter>
@@ -31,7 +26,7 @@ SearchBar::SearchBar(QWidget *pParent/* = NULL*/)
 
 //-----------------------------------//
 
-// updates the progress within the search bar
+// Updates the progress within the search bar.
 void SearchBar::updateProgress(double newProgress)
 {
     m_searchProgress = newProgress;
@@ -40,7 +35,7 @@ void SearchBar::updateProgress(double newProgress)
 
 //-----------------------------------//
 
-// clears the progress within the search bar
+// Clears the progress within the search bar.
 void SearchBar::clearProgress()
 {
     m_searchProgress = 0.0;
@@ -49,17 +44,18 @@ void SearchBar::clearProgress()
 
 //-----------------------------------//
 
-// called when the search bar needs to be repainted
+// Called when the search bar needs to be repainted.
 void SearchBar::paintEvent(QPaintEvent *event)
 {
     CLineEdit::paintEvent(event);
     if(m_searchProgress > 0.0)
     {
         QPainter painter(this);
-        // calculate the rect to draw and then draw it
+
+        // Calculate the rect to draw and then draw it.
         QRectF currRect(QPointF(1,1), QPointF((width()-1) * m_searchProgress, height()-1));
         painter.fillRect(currRect, *m_pBrush);
     }
 }
 
-} } // end namespaces
+} } // End namespaces

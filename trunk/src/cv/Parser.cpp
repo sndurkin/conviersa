@@ -1,10 +1,5 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
 
 #include <QtGui>
 #include "cv/qext.h"
@@ -12,38 +7,38 @@
 
 namespace cv {
 
-// parses the data into a structure that holds all information
-// necessary to print the message
+// Parses the data into a structure that holds all information
+// necessary to print the message.
 Message parseData(const QString &data)
 {
     Message msg;
 
-    // make an index for the sections, start at 0
+    // Make an index for the sections, start at 0.
     int sectionIndex = 0;
 
-    // isolate the prefix, if there is one
+    // Isolate the prefix, if there is one.
     if(data[0] == ':')
     {
-        // get the prefix, remove the ':' from it
+        // Get the prefix, remove the ':' from it.
         msg.m_prefix = data.section(' ', 0, 0, QString::SectionSkipEmpty);
         if(msg.m_prefix[0] == ':')
         {
             msg.m_prefix.remove(0, 1);
         }
 
-        // make the index start at section 1
+        // Make the index start at section 1.
         ++sectionIndex;
     }
 
-    // get the command
+    // Get the command.
     QString command = data.section(' ', sectionIndex, sectionIndex, QString::SectionSkipEmpty);
     ++sectionIndex;
 
-    // now decide which one it is
+    // Decide which one it is.
     msg.m_command = command.toInt(&msg.m_isNumeric);
     if(!msg.m_isNumeric)
     {
-        // the command isn't numeric, so we still have to search for it
+        // The command isn't numeric, so we still have to search for it.
         if(command.compare("ERROR", Qt::CaseInsensitive) == 0)
         {
             msg.m_command = IRC_COMMAND_ERROR;
@@ -106,27 +101,27 @@ Message parseData(const QString &data)
         }
     }
 
-    // get the parameters
+    // Get the parameters.
     int paramsIndex = 0;
     while(true)
     {
-        // we want to divide it into parameters until we find one that starts with ':'
-        // or until we find one that ends with '\r\n' (and then make that the last parameter)
+        // We want to divide it into parameters until we find one that starts with ':'
+        // or until we find one that ends with '\r\n' (and then make that the last parameter).
         msg.m_params += data.section(' ', sectionIndex, sectionIndex, QString::SectionSkipEmpty);
         if((msg.m_params[paramsIndex])[0] == ':')
         {
-            // we have to get the rest of the string, and trim it (take out the "\r\n"),
-            // so that the last parameter is like all the others
+            // We have to get the rest of the string, and trim it (take out the "\r\n"),
+            // so that the last parameter is like all the others.
             msg.m_params[paramsIndex] = data.section(' ', sectionIndex, -1, QString::SectionSkipEmpty).trimmed();
 
-            // then remove the preceding colon
+            // Then remove the preceding colon.
             msg.m_params[paramsIndex].remove(0, 1);
 
             break;
         }
         else if(msg.m_params[paramsIndex].indexOf('\n') >= 0)
         {
-            // we just have to trim it
+            // In this case, we just have to trim it.
             msg.m_params[paramsIndex] = msg.m_params[paramsIndex].trimmed();
 
             break;
@@ -174,8 +169,7 @@ QString getIdleTextFrom317(const Message &msg)
 
     QString idleText = "";
 
-    // get the number of idle seconds first, convert
-    // to h, m, s format
+    // Get the number of idle seconds first, convert to h, m, s format.
     bool conversionOk;
     uint numSecs = msg.m_params[2].toInt(&conversionOk);
     if(conversionOk)
@@ -240,12 +234,12 @@ QString getIdleTextFrom317(const Message &msg)
             }
         }
 
-        // remove trailing space
+        // Remove the trailing space.
         idleText.remove(idleText.size()-1, 1);
 
-        // right now this will only support 5 parameters
-        // (1 extra for the signon time), but i can easily
-        // add support for more later
+        // Right now this will only support 5 parameters
+        // (1 extra for the signon time), but support for more
+        // can be easily added later.
         if(msg.m_paramsNum > 4)
         {
             idleText += QString(", signed on %1 %2")
@@ -259,9 +253,9 @@ QString getIdleTextFrom317(const Message &msg)
 
 //-----------------------------------//
 
-// returns the completely stripped version of the text,
+// Returns the completely stripped version of the text,
 // so it doesn't contain any bold, underline, color, or other
-// control codes
+// control codes.
 QString stripCodes(const QString &text)
 {
     QString strippedText;
@@ -275,20 +269,18 @@ QString stripCodes(const QString &text)
             case 22:    // reverse
             case 31:    // underline
             {
-                // these aren't added
                 break;
             }
             case 3:	// color
             {
-                // follows mIRC's method for coloring, where the
+                // Follows mIRC's method for coloring, where the
                 // foreground color comes first (up to two digits),
                 // and the optional background color comes last (up
-                // to two digits) and they are separated by a single comma
+                // to two digits) and they are separated by a single comma.
                 //
-                // ex: '\3'05,02
+                // Example: '\3'05,02
                 //
-                // max length of color specification is 5
-                // (four numbers and one comma)
+                // Max length of color specification is 5 (4 numbers and 1 comma).
                 ++i;
                 for(int j = 0; j < 2; ++j, ++i)
                 {
@@ -335,11 +327,10 @@ QString stripCodes(const QString &text)
 
 //-----------------------------------//
 
-// returns the color corresponding to the 1- or 2-digit
-// number in the format "#XXXXXX" so it can be used
-// in HTML
+// Returns the color corresponding to the 1- or 2-digit
+// number in the format "#XXXXXX" so it can be used in HTML.
 //
-// if the number passed is invalid, it returns an empty string
+// If the number passed is invalid, it returns an empty string.
 QString getHtmlColor(int number)
 {
     switch(number)
@@ -417,7 +408,7 @@ QString getHtmlColor(int number)
 
 //-----------------------------------//
 
-// returns the type of the channel mode
+// Returns the type of the channel mode.
 ChanModeType getChanModeType(const QString &chanModes, const QChar &letter)
 {
     if(chanModes.section(',', 0, 0).contains(letter))
@@ -434,17 +425,17 @@ ChanModeType getChanModeType(const QString &chanModes, const QChar &letter)
 
 //-----------------------------------//
 
-// checks for the PREFIX section in a 005 numeric, and if
-// it exists, it parses it and returns it
+// Checks for the PREFIX section in a 005 numeric, and if
+// it exists, it parses it and returns it.
 QString getPrefixRules(const QString &param)
 {
     QString prefixRules = "o@v+";
 
-    // examples:
+    // Examples:
     //	PREFIX=(qaohv)~&@%+
     //	PREFIX=(ov)@+
     //
-    // we have two indices for param:
+    // We have two indices for param:
     //	i starts after (
     //	j starts after )
     int i = param.indexOf('(') + 1;
@@ -455,7 +446,7 @@ QString getPrefixRules(const QString &param)
     if(j <= 0)
         return prefixRules;
 
-    // iterate over the parameter
+    // Iterate over the parameter.
     prefixRules.clear();
     int paramSize = param.size();
     for(; param[i] != ')' && j < paramSize; ++i, ++j)
@@ -464,7 +455,7 @@ QString getPrefixRules(const QString &param)
         prefixRules += param[j];
     }
 
-    // examples of prefixRules:
+    // Examples of prefixRules:
     //	q~a&o@h%v+
     //	o@v+
     return prefixRules;
@@ -472,10 +463,10 @@ QString getPrefixRules(const QString &param)
 
 //-----------------------------------//
 
-// returns the specific CtcpRequestType of the message
+// Returns the specific CtcpRequestType of the message.
 CtcpRequestType getCtcpRequestType(const Message &msg)
 {
-    // it has to be a private message
+    // It has to be a private message.
     if(msg.m_isNumeric || msg.m_command != IRC_COMMAND_PRIVMSG)
     {
         return RequestTypeInvalid;
@@ -487,7 +478,7 @@ CtcpRequestType getCtcpRequestType(const Message &msg)
         return RequestTypeInvalid;
     }
 
-    // identify the command
+    // Identify the specific command.
     if(text.startsWith("\1action ", Qt::CaseInsensitive))
     {
         return RequestTypeAction;
@@ -510,28 +501,27 @@ CtcpRequestType getCtcpRequestType(const Message &msg)
 
 //-----------------------------------//
 
-// forms the text that can be printed to the output for all numeric commands
+// Forms the text that can be printed to the output for all numeric commands.
 QString getNumericText(const Message &msg)
 {
     QString text;
 
-    // ignore the first parameter, which is the user's name
+    // Ignore the first parameter, which is the user's name.
     for(int i = 1; i < msg.m_paramsNum; ++i)
     {
         text += msg.m_params[i];
         text += ' ';
     }
 
-    // return the text
     return text;
 }
 
 //-----------------------------------//
 
-// used to parse the msg prefix to get a specific part
+// Prases the msg prefix to get a specified [part].
 QString parseMsgPrefix(const QString &prefix, MsgPrefixPart part)
 {
-    // format of prefix: <servername> | <nick> [ '!' <user> ] [ '@' <host> ]
+    // Prefix format: <servername> | <nick> [ '!' <user> ] [ '@' <host> ]
     if(part == MsgPrefixName)
     {
         return prefix.section('!', 0, 0);
@@ -548,7 +538,7 @@ QString parseMsgPrefix(const QString &prefix, MsgPrefixPart part)
         {
             return userAndHost.section('@', 0, 0);
         }
-        else    // part = MsgPrefixHost
+        else    // [part] == MsgPrefixHost
         {
             return userAndHost.section('@', 1);
         }
@@ -557,9 +547,9 @@ QString parseMsgPrefix(const QString &prefix, MsgPrefixPart part)
 
 //-----------------------------------//
 
-// returns the date based on the string representation
-// of unix time; if the string passed is not a valid number or
-// is not in unix time, returns an empty string
+// Returns the date based on the string representation
+// of unix time. If the string passed is not a valid number or
+// is not in unix time, it returns an empty string.
 QString getDate(QString strUnixTime)
 {
     bool conversionOk;
@@ -576,9 +566,9 @@ QString getDate(QString strUnixTime)
 
 //-----------------------------------//
 
-// returns the time based on the string representation
-// of unix time; if the string passed is not a valid number or
-// is not in unix time, returns an empty string
+// Returns the time based on the string representation
+// of unix time. If the string passed is not a valid number or
+// is not in unix time, it returns an empty string.
 QString getTime(QString strUnixTime)
 {
     bool conversionOk;
@@ -595,10 +585,9 @@ QString getTime(QString strUnixTime)
 
 //-----------------------------------//
 
-// used to differentiate between a channel and a nickname
+// Used to differentiate between a channel and a nickname.
 //
-// returns true if the str is a valid name for a channel,
-// returns false otherwise
+// Returns true if [str] is a valid name for a channel, false otherwise.
 bool isChannel(const QString &str)
 {
     switch(str[0].toAscii())
@@ -613,4 +602,4 @@ bool isChannel(const QString &str)
     }
 }
 
-} // end namespace
+} // End namespace

@@ -1,10 +1,5 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
 
 #include <QObject>
 #include "cv/EventManager.h"
@@ -13,7 +8,7 @@ namespace cv {
 
 EventManager::~EventManager()
 {
-    // check instance events
+    // Check the instance events.
     QHash<QString, QHash<uintptr_t, EventInfo> >::iterator iIter = m_instanceEvents.begin();
     QString instanceEventStr;
     while(iIter != m_instanceEvents.end())
@@ -29,7 +24,7 @@ EventManager::~EventManager()
         qDebug("[EM::~EM] Instance events still hooked: %s", instanceEventStr.toLatin1().constData());
     }
 
-    // check string events
+    // Check the string events.
     QHash<QString, QHash<QString, EventInfo> >::iterator sIter = m_stringEvents.begin();
     QString stringEventStr;
     while(sIter != m_stringEvents.end())
@@ -70,11 +65,11 @@ void EventManager::createEvent(const QString &evtName, EventType type/* = INSTAN
 
 //-----------------------------------//
 
-// attaches a [callback] function to the global [type] event [evtName]
+// Attaches a [callback] function to the global [type] event [evtName].
 void EventManager::hookGlobalEvent(const QString &evtName, EventType type, EventCallback callback)
 {
-    // global events are represented in the hashes of their respective types
-    // by a 0 for the pointer type and an empty string for the string type
+    // Global events are represented in the hashes of their respective types
+    // by a 0 for the pointer type and an empty string for the string type.
     if(type == INSTANCE_EVENT)
         hookEvent(evtName, (void *) 0, callback);
     else if(type == STRING_EVENT)
@@ -83,7 +78,7 @@ void EventManager::hookGlobalEvent(const QString &evtName, EventType type, Event
 
 //-----------------------------------//
 
-// attaches a [callback] function to the event [evtName] for the instance [pEvtInstance]
+// Attaches a [callback] function to the event [evtName] for the instance [pEvtInstance].
 void EventManager::hookEvent(const QString &evtName, void *pEvtInstance, EventCallback callback)
 {
     QHash<uintptr_t, EventInfo> *pEventsHash = getInstancesHash(evtName);
@@ -94,7 +89,7 @@ void EventManager::hookEvent(const QString &evtName, void *pEvtInstance, EventCa
 
 //-----------------------------------//
 
-// attaches a [callback] function to the event [evtName] for the string [evtString]
+// Attaches a [callback] function to the event [evtName] for the string [evtString].
 void EventManager::hookEvent(const QString &evtName, const QString &evtString, EventCallback callback)
 {
     QHash<QString, EventInfo> *pEventsHash = getStringsHash(evtName);
@@ -112,7 +107,7 @@ void EventManager::fireEvent(const QString &evtName, void *pEvtInstance, Event *
 
     fireEvent(pEventsHash, (uintptr_t) pEvtInstance, pEvent);
 
-    // fire global event
+    // Fire the global event.
     fireEvent(pEventsHash, (uintptr_t) 0, pEvent);
 }
 
@@ -125,7 +120,7 @@ void EventManager::fireEvent(const QString &evtName, const QString &evtString, E
 
     fireEvent(pEventsHash, evtString, pEvent);
 
-    // fire global event
+    // Fire the global event.
     fireEvent(pEventsHash, QObject::tr(""), pEvent);
 }
 
@@ -187,7 +182,7 @@ void EventManager::unhookAllEvents(const QString &evtString)
 
 CallbackReturnType EventManager::execPluginCallbacks(Event *, HookType)
 {
-    // TODO: fill in
+    // TODO (seand): Implement.
     return EVENT_CONTINUE;
 }
 
@@ -211,4 +206,4 @@ QHash<QString, EventInfo> *EventManager::getStringsHash(const QString &evtName)
     return NULL;
 }
 
-} // end namespace
+} // End namespace

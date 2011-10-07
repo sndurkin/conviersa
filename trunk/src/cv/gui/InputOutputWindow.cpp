@@ -1,10 +1,5 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
 
 #include <QApplication>
 #include <QPushButton>
@@ -86,19 +81,19 @@ void InputOutputWindow::giveFocus()
 
 //-----------------------------------//
 
-// handles the input for the window
+// Handles the input for the window.
 void InputOutputWindow::onInput(Event *pEvent)
 {
-    // todo: change when colors are added
+    // TODO (seand): Change this when colors are added.
     InputEvent *inputEvt = DCAST(InputEvent, pEvent);
     QString text = inputEvt->getInput();
 
-    // TODO: make the '/' changeable??
+    // TODO (seand): Should we make the '/' configurable?
     //
-    // handle commands that do not require sending the server data
+    // Handle commands that do not require sending the server data.
     //
-    // current format: /server <host> [port]
-    // todo: fix channel leaving
+    // Current format: /server <host> [port]
+    // TODO (seand): Fix channel leaving.
     if(text.startsWith("/server ", Qt::CaseInsensitive))
     {
         QString host = text.section(' ', 1, 1, QString::SectionSkipEmpty);
@@ -116,7 +111,7 @@ void InputOutputWindow::onInput(Event *pEvent)
     {
         text.remove(0, 5);
 
-        // two parameters: <optName> <optValue>
+        // 2 parameters: <optName> <optValue>
         QString optName = text.section(' ', 0, 0, QString::SectionSkipEmpty),
                 optValue = text.section(' ', 1, -1);
         if(optName.length() > 0 && optValue.length() > 0)
@@ -148,7 +143,7 @@ void InputOutputWindow::onInput(Event *pEvent)
     }
     else if(text.compare("/debug", Qt::CaseInsensitive) == 0)
     {
-        // check for a DebugWindow, otherwise open a new one
+        // Check for a DebugWindow, otherwise create a new one.
         Window *pParentWin = m_pManager->getParentWindow(this);
         if(pParentWin == NULL)
             pParentWin = this;
@@ -156,7 +151,7 @@ void InputOutputWindow::onInput(Event *pEvent)
         DebugWindow *pDebugWin = new DebugWindow(m_pSession);
         m_pManager->addWindow(pDebugWin, m_pManager->getItemFromWindow(pParentWin), true);
     }
-    else    // commands that interact with the server
+    else    // Commands that interact with the server.
     {
         if(!m_pSession->isConnected())
         {
@@ -164,7 +159,7 @@ void InputOutputWindow::onInput(Event *pEvent)
             return;
         }
 
-        // regular say command
+        // Regular say command.
         if(!text.startsWith('/') || text.startsWith("/say ", Qt::CaseInsensitive))
         {
             if(text.startsWith('/'))
@@ -200,7 +195,7 @@ void InputOutputWindow::onInput(Event *pEvent)
                         if(channelsToJoin[i][0] != '#')
                             channelsToJoin[i].prepend('#');
 
-                    // send the message
+                    // Send the message.
                     QString textToSend = "JOIN " + channelsToJoin.join(",");
                     if(params.size() > 1)
                         textToSend += " " + params[1];
@@ -224,7 +219,7 @@ void InputOutputWindow::onNoticeMessage(Event *pEvent)
     QString source;
     if(!msg.m_prefix.isEmpty())
         source = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
-    // if m_prefix is empty, it is from the host
+    // If m_prefix is empty, it is from the host.
     else
         source = m_pSession->getHost();
 
@@ -236,7 +231,7 @@ void InputOutputWindow::onNoticeMessage(Event *pEvent)
 
 //-----------------------------------//
 
-// moves the input cursor to the end of the line
+// Moves the input cursor to the end of the line.
 void InputOutputWindow::moveCursorEnd()
 {
     QTextCursor cursor = m_pInput->textCursor();
@@ -246,7 +241,7 @@ void InputOutputWindow::moveCursorEnd()
 
 //-----------------------------------//
 
-// handles child widget events
+// Handles child widget events.
 bool InputOutputWindow::eventFilter(QObject *obj, QEvent *event)
 {
     if(obj == m_pInput)
@@ -256,8 +251,8 @@ bool InputOutputWindow::eventFilter(QObject *obj, QEvent *event)
             QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
             if(keyEvent->key() == Qt::Key_Tab)
             {
-                // get the text from m_pInput and pass it off
-                // to each specific IRC Window to handle
+                // Get the text from [m_pInput] and pass it off
+                // to each specific IRC Window to handle.
                 handleTab();
                 return true;
             }
@@ -313,4 +308,4 @@ done:
     return OutputWindow::eventFilter(obj, event);
 }
 
-} } // end namespaces
+} } // End namespaces

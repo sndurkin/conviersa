@@ -1,10 +1,9 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
+//
+// DebugWindow is a Window that provides a display for all underlying
+// messages sent to and from the IRC server. It displays the raw message
+// to aid in debugging.
 
 #pragma once
 
@@ -29,4 +28,4 @@ public:
     void onDoubleClickLink(Event *pEvt);
 };
 
-} } // end namespaces
+} } // End namespaces

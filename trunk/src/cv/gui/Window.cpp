@@ -1,10 +1,5 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
 
 #include <QTreeWidgetItem>
 #include "cv/gui/Window.h"
@@ -20,7 +15,7 @@ Window::Window(const QString &title/* = tr("Untitled")*/,
       m_defSize(size),
       m_pManager(NULL)
 {
-    // all its children are immediately deleted when it's closed
+    // All its children are immediately deleted when it's closed.
     setAttribute(Qt::WA_DeleteOnClose);
 
     setWindowTitle(title);
@@ -37,8 +32,7 @@ QSize Window::sizeHint() const
 
 //-----------------------------------//
 
-// returns the title of the window, whether it's
-// in a container or on the desktop
+// Returns the title of the window, whether it's in a container or on the desktop.
 QString Window::getTitle() const
 {
     return windowTitle();
@@ -46,8 +40,7 @@ QString Window::getTitle() const
 
 //-----------------------------------//
 
-// sets the title of the window, whether it's
-// in a container or on the desktop
+// Sets the title of the window, whether it's in a container or on the desktop.
 void Window::setTitle(const QString &title)
 {
     if(hasContainer())
@@ -60,7 +53,7 @@ void Window::setTitle(const QString &title)
 
 //-----------------------------------//
 
-// the name returned is the short name displayed in the WindowManager
+// Returns the the short name displayed in the WindowManager.
 QString Window::getWindowName()
 {
     if(m_pManager)
@@ -77,7 +70,7 @@ QString Window::getWindowName()
 
 //-----------------------------------//
 
-// sets the short name of the window (displayed in the WM)
+// Sets the short name of the window (displayed in the WindowManager).
 void Window::setWindowName(const QString &name)
 {
     if(m_pManager)
@@ -93,7 +86,7 @@ void Window::setWindowName(const QString &name)
 //-----------------------------------//
 
 //
-// Overridden event functions
+// Overridden event functions.
 //
 void Window::closeEvent(QCloseEvent *event)
 {
@@ -103,14 +96,14 @@ void Window::closeEvent(QCloseEvent *event)
         // if(res == EVENT_CONTINUE)
         // {
         //
-            // close the child windows first
+            // Close the child windows.
             QList<Window *> cList = m_pManager->getChildWindows(this);
 
-            // iterate over the children and delete their respective Windows
+            // Iterate over the children and delete their respective Windows.
             int size = cList.size();
             for(int i = 0; i < size; ++i)
             {
-                // we do not use close(), because that will cause a close event to be fired
+                // We do not use close(), because that will cause a close event to be fired.
                 m_pManager->removeWindow(cList[i]);
                 if(cList[i]->hasContainer())
                 {
@@ -120,7 +113,7 @@ void Window::closeEvent(QCloseEvent *event)
                 delete cList[i];
             }
 
-            // have the window manager close it
+            // Have the WindowManager close the Window.
             m_pManager->removeWindow(this);
         // }
         //
@@ -129,7 +122,7 @@ void Window::closeEvent(QCloseEvent *event)
         //	event->ignore();
     }
 
-    // deletes the window
+    // Delete the window.
     event->accept();
 }
 
@@ -140,5 +133,5 @@ void Window::resizeEvent(QResizeEvent *event)
     m_defSize = event->size();
 }
 
-} } // end namespaces
+} } // End namespaces
 

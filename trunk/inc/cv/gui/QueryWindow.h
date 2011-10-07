@@ -1,10 +1,9 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
+//
+//
+// QueryWindow is a Window which owns input and output controls, and provides
+// a user interface for privately chatting with another user on an IRC server.
 
 #pragma once
 
@@ -34,7 +33,7 @@ public:
     QString getTargetNick();
     bool isTargetNick(const QString &nick) { return (m_targetNick.compare(nick, Qt::CaseSensitive) == 0); }
 
-    // events
+    // Event callbacks
     void onNumericMessage(Event *pEvent);
     void onNickMessage(Event *pEvent);
     void onNoticeMessage(Event *pEvent);
@@ -51,9 +50,9 @@ protected:
     void closeEvent(QCloseEvent *event);
 
 signals:
-    // signifies that the window is closing - this is only
-    // used by StatusWindow
+    // Signifies that the window is closing. This is only
+    // used by StatusWindow.
     void privWindowClosing(QueryWindow *pWin);
 };
 
-} } // end namespaces
+} } // End namespaces

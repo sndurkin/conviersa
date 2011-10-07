@@ -1,10 +1,14 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
+//
+//
+// Connection is a class that uses a QTcpSocket to connect to a
+// server, and then uses the signals and slots system to broadcast
+// events and data that has been received. The connectToHost() function
+// is a blocking call.
+//
+// ThreadedConnection wraps a Connection instance in its own thread
+// so that it can provide the same functionality via non-blocking functions.
 
 #pragma once
 
@@ -43,8 +47,8 @@ public slots:
     void disconnectFromHost();
     void send(const QString &data);
 
-    // these are connected to the socket and are called whenever
-    // the socket emits the corresponding signal
+    // These are connected to the socket and are called whenever
+    // the socket emits the corresponding signal.
     void onConnect();
     void onConnectionTimeout();
     void onReadyRead();
@@ -76,17 +80,17 @@ protected:
     void run();
 
 signals:
-    // these are emitted from the ThreadedConnection class
+    // These are emitted from the ThreadedConnection class.
     void connecting();
     void connected();
     void disconnected();
     void connectionFailed();
     void dataReceived(const QString &data);
 
-    // signals to call into the alternate thread
+    // Signals to call into the alternate thread.
     void connectToHostSignal(const QString &host, quint16 port);
     void disconnectFromHostSignal();
     void sendSignal(const QString &data);
 };
 
-} // end namespace
+} // End namespace

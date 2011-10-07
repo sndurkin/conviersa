@@ -1,10 +1,5 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
 
 #include "cv/gui/OutputWindowScrollBar.h"
 #include <QMouseEvent>
@@ -35,8 +30,7 @@ int OutputWindowScrollBar::getSliderHeight()
 
 //-----------------------------------//
 
-// adds a line to be painted, located at sliderVal,
-// and repaints with the new line
+// Adds a line to be painted, located at sliderVal, and repaints with the new line.
 void OutputWindowScrollBar::addLine(qreal posRatio)
 {
     QStyleOptionSlider opt;
@@ -46,17 +40,17 @@ void OutputWindowScrollBar::addLine(qreal posRatio)
 
     int posY = (int) (posRatio * gr.height()) + gr.y();
 
-    // now create the line and add it
+    // Create the line and add it.
     QLineF line(0, posY, gr.width(), posY);
     m_searchLines.append(line);
 
-    // calls paintEvent()
+    // Repaint the scrollbar.
     update();
 }
 
 //-----------------------------------//
 
-// clears all the lines, and repaints
+// Clears all the lines, and repaints.
 void OutputWindowScrollBar::clearLines()
 {
     m_searchLines.clear();
@@ -69,7 +63,7 @@ void OutputWindowScrollBar::mousePressEvent(QMouseEvent *event)
 {
     if(!m_defaultBehavior && event->button() == Qt::LeftButton)
     {
-        // took all this from QScrollBar.cpp
+        // Copied from QScrollBar.cpp.
         QStyleOptionSlider opt;
         initStyleOption(&opt);
         QRect gr = style()->subControlRect(QStyle::CC_ScrollBar, &opt,
@@ -91,13 +85,13 @@ void OutputWindowScrollBar::mousePressEvent(QMouseEvent *event)
         }
         else
         {
-            // default action
+            // Default action
             QScrollBar::mousePressEvent(event);
         }
     }
     else
     {
-        // default action
+        // Default action
         QScrollBar::mousePressEvent(event);
     }
 }
@@ -106,10 +100,10 @@ void OutputWindowScrollBar::mousePressEvent(QMouseEvent *event)
 
 void OutputWindowScrollBar::paintEvent(QPaintEvent *event)
 {
-    // paint the default scrollbar first
+    // Paint the default scrollbar.
     QScrollBar::paintEvent(event);
 
-    // now paint all search lines
+    // Paint all search lines.
     QPainter painter(this);
     QColor color("red");
     painter.setPen(color);
@@ -127,12 +121,12 @@ void OutputWindowScrollBar::paintEvent(QPaintEvent *event)
 
 //-----------------------------------//
 
-// ensures that the area holding the scrollbar moves it so that
-// the bottom of the viewport doesn't move
+// Ensures that the area holding the scrollbar moves it so that
+// the bottom of the viewport doesn't move.
 void OutputWindowScrollBar::updateScrollBar(int min, int max)
 {
     setSliderPosition(max - (m_currMax - value()));
     m_currMax = max;
 }
 
-} } // end namespaces
+} } // End namespaces

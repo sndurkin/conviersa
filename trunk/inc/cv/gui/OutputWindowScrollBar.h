@@ -1,10 +1,11 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
+//
+//
+// OutputWindowScrollBar is a QScrollBar which provides the capability
+// to draw lines within itself; it is intended to be used in conjunction
+// with a search feature in the OutputControl, but it's still in the
+// experimental phase and not yet completed.
 
 #pragma once
 
@@ -19,11 +20,11 @@ class OutputWindowScrollBar : public QScrollBar
 
     int             m_currMax;
 
-    // stores whether or not the scrollbar has default
-    // scrolling functionality
+    // Dictates whether or not the scrollbar has default
+    // scrolling functionality.
     bool            m_defaultBehavior;
 
-    // stores the list of lines to be painted
+    // The list of lines to be painted.
     QList<QLineF>   m_searchLines;
 
 public:
@@ -43,4 +44,4 @@ public slots:
     void updateScrollBar(int min, int max);
 };
 
-} } // end namespaces
+} } // End namespaces

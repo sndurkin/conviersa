@@ -1,10 +1,5 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
 
 #include <QPushButton>
 #include <QPainter>
@@ -48,7 +43,7 @@ OverlayPanel::OverlayPanel(QWidget *parent)
 
 //-----------------------------------//
 
-// sets the duration for the OverlayPanel
+// Sets the duration for the OverlayPanel.
 void OverlayPanel::setDuration(int duration)
 {
     if(!m_isInitialized)
@@ -57,6 +52,7 @@ void OverlayPanel::setDuration(int duration)
 
 //-----------------------------------//
 
+// Sets the drop shadow width and alignment.
 void OverlayPanel::setDropShadowConfig(int dropShadowWidth, Qt::Alignment dropShadowSides/* = (Qt::AlignBottom | Qt::AlignRight)*/)
 {
     if(!m_isInitialized)
@@ -68,7 +64,7 @@ void OverlayPanel::setDropShadowConfig(int dropShadowWidth, Qt::Alignment dropSh
 
 //-----------------------------------//
 
-// sets the button alignment and offset
+// Sets the button alignment and offset.
 void OverlayPanel::setButtonConfig(Qt::AlignmentFlag btnAlignment, int btnOffset)
 {
     if(!m_isInitialized)
@@ -80,7 +76,7 @@ void OverlayPanel::setButtonConfig(Qt::AlignmentFlag btnAlignment, int btnOffset
 
 //-----------------------------------//
 
-// adds an open button for the OverlayPanel
+// Adds an open button for the OverlayPanel.
 QPushButton *OverlayPanel::addOpenButton(QWidget *pParent, const QString &btnText, int w, int h)
 {
     if(m_isInitialized)
@@ -130,8 +126,8 @@ QPushButton *OverlayPanel::addOpenButton(QWidget *pParent, const QString &btnTex
         m_pSignalMapper->setMapping(pOpenButton, pOpenButton);
         QObject::connect(m_pSignalMapper, SIGNAL(mapped(QWidget*)), this, SLOT(onOpenClicked(QWidget*)));
 
-        // if this open button shares the same parent as the panel,
-        // then create the animation for it
+        // If this open button shares the same parent as the panel,
+        // then create the animation for it.
         if(pParent == parentWidget())
         {
             m_pCurrOpenButton = pOpenButton;
@@ -158,7 +154,7 @@ QPushButton *OverlayPanel::addOpenButton(QWidget *pParent, const QString &btnTex
 
 //-----------------------------------//
 
-// sets the alignment for the OverlayPanel
+// Sets the alignment for the OverlayPanel.
 void OverlayPanel::setAlignment(Qt::AlignmentFlag alignment)
 {
     if(!m_isInitialized)
@@ -167,7 +163,7 @@ void OverlayPanel::setAlignment(Qt::AlignmentFlag alignment)
 
 //-----------------------------------//
 
-// sets the secondary alignment for the OverlayPanel
+// Sets the secondary alignment for the OverlayPanel.
 void OverlayPanel::setSecondaryAlignment(Qt::Alignment alignment, int firstOffset, int secondOffset)
 {
     if(!m_isInitialized)
@@ -180,7 +176,7 @@ void OverlayPanel::setSecondaryAlignment(Qt::Alignment alignment, int firstOffse
 
 //-----------------------------------//
 
-// sets the initial state of the OverlayPanel
+// Sets the initial state of the OverlayPanel.
 void OverlayPanel::setInitialState(OverlayState state)
 {
     if(!m_isInitialized)
@@ -189,8 +185,8 @@ void OverlayPanel::setInitialState(OverlayState state)
 
 //-----------------------------------//
 
-// initializes everything so that the OverlayPanel can be used; assumes
-// that the panel's current x and y are for the OPEN state
+// Initializes everything so that the OverlayPanel can be used; assumes
+// that the panel's current x and y are for the OPEN state.
 void OverlayPanel::initialize()
 {
     m_isInitialized = true;
@@ -218,7 +214,7 @@ void OverlayPanel::open(bool animate/* = true*/)
 {
     if(m_state != OPEN && m_isInitialized)
     {
-        // hide the open button, if it exists
+        // Hide the open button, if it exists.
         if(m_pCurrOpenButton != NULL)
         {
             int btnClosedX, btnClosedY;
@@ -286,7 +282,7 @@ void OverlayPanel::close(bool animate/* = true*/)
             m_pSlideClosedAnimation->setStartValue(openRect);
             m_pSlideClosedAnimation->setEndValue(closedRect);
 
-            // reset the animation for the open button
+            // Reset the animation for the open button.
             if(m_pCurrOpenButton != NULL)
             {
                 int btnShownX, btnShownY, btnHiddenX, btnHiddenY;
@@ -332,24 +328,23 @@ void OverlayPanel::toggle(bool animate/* = true*/)
 
 void OverlayPanel::onOpenClicked(QWidget *pButton)
 {
-    // if the button clicked is not inside the same widget
-    // as the panel
+    // If the button clicked is not inside the same widget
+    // as the panel...
     if(parent() != pButton->parentWidget())
     {
-        // make sure the panel is closed (so the button
-        // will be shown)
+        // Make sure the panel is closed (so the button will be shown).
         close(false);
 
-        // reparent the panel to this button's parent
+        // Reparent the panel to this button's parent.
         setParent(pButton->parentWidget());
         show();
 
-        // set the current open button
+        // Set the current open button.
         m_pCurrOpenButton = dynamic_cast<QPushButton *>(pButton);
         realignPanel(m_pCurrOpenButton);
     }
 
-    // open the panel
+    // Open the panel.
     open();
 }
 
@@ -363,11 +358,11 @@ void OverlayPanel::onPanelClosed()
 
 //-----------------------------------//
 
-// realigns the OverlayPanel to the parent widget
+// Realigns the OverlayPanel to the parent widget.
 void OverlayPanel::realignPanel(QPushButton *pOpenButton/* = NULL*/)
 {
-    // update the position for the panel (and, if applicable, the open button)
-    // according to the alignment rules
+    // Update the position for the panel (and, if applicable, the open button)
+    // according to the alignment rules.
     int panelX = x(), panelY = y(), panelW = width(), panelH = height();
     if(m_alignment == Qt::AlignTop || m_alignment == Qt::AlignBottom)
     {
@@ -378,16 +373,16 @@ void OverlayPanel::realignPanel(QPushButton *pOpenButton/* = NULL*/)
 
         if(m_secondaryAlignment & Qt::AlignLeft)
         {
-            // set the x of the panel
+            // Set the x coord of the panel.
             panelX = m_firstOffset;
 
-            // also set the width of the panel
+            // Also set the width of the panel.
             if(m_secondaryAlignment & Qt::AlignRight)
                 panelW = pOpenButton->parentWidget()->width() - (m_firstOffset + m_secondOffset);
         }
         else if(m_secondaryAlignment & Qt::AlignRight)
         {
-            // set the x of the panel
+            // Set the x coord of the panel.
             panelX = pOpenButton->parentWidget()->width() - (width() + m_firstOffset);
         }
     }
@@ -400,24 +395,23 @@ void OverlayPanel::realignPanel(QPushButton *pOpenButton/* = NULL*/)
 
         if(m_secondaryAlignment & Qt::AlignTop)
         {
-            // set the y of the panel
+            // Set the y coord of the panel.
             panelY = m_firstOffset;
 
-            // also set the height of the panel
+            // Also set the height of the panel.
             if(m_secondaryAlignment & Qt::AlignBottom)
                 panelH = pOpenButton->parentWidget()->height() - (m_firstOffset + m_secondOffset);
         }
         else if(m_secondaryAlignment & Qt::AlignBottom)
         {
-            // set the y of the panel
+            // Set the y coord of the panel.
             panelY = pOpenButton->parentWidget()->height() - (height() + m_firstOffset);
         }
     }
 
     if(pOpenButton != NULL)
     {
-        // move and resize the panel if shares the same parent as
-        // the button
+        // Move and resize the panel if it shares the same parent as the button.
         if(m_pCurrOpenButton == pOpenButton)
         {
             move(panelX, panelY);
@@ -430,7 +424,7 @@ void OverlayPanel::realignPanel(QPushButton *pOpenButton/* = NULL*/)
 
 //-----------------------------------//
 
-// find the offsets for the button, and move it
+// Finds the offsets for the button, and realigns it.
 void OverlayPanel::realignButton(QPushButton *pOpenButton, int x, int y)
 {
     if(pOpenButton != NULL)
@@ -467,7 +461,7 @@ void OverlayPanel::realignButton(QPushButton *pOpenButton, int x, int y)
 
 //-----------------------------------//
 
-// retrieve button position for when it's open
+// Retrieves the button position for when it's open.
 void OverlayPanel::getCurrButtonShownPosition(int &x, int &y)
 {
     x = m_pCurrOpenButton->x();
@@ -488,7 +482,7 @@ void OverlayPanel::getCurrButtonShownPosition(int &x, int &y)
 
 //-----------------------------------//
 
-// retrieve button position for when it's closed
+// Retrieves button position for when it's closed.
 void OverlayPanel::getCurrButtonHiddenPosition(int &x, int &y)
 {
     x = m_pCurrOpenButton->x();
@@ -534,7 +528,7 @@ void OverlayPanel::paintEvent(QPaintEvent *)
          shadowOnRight = m_dropShadowSides & Qt::AlignRight,
          shadowOnBottom = m_dropShadowSides & Qt::AlignBottom;
 
-    // draw drop shadow first (if there is one)
+    // Draw the drop shadow first (if there is one).
     if(m_dropShadowWidth > 0)
     {
         QPainter painter(this);
@@ -543,7 +537,7 @@ void OverlayPanel::paintEvent(QPaintEvent *)
         painter.setPen(pen);
         painter.setRenderHint(QPainter::Antialiasing);
 
-        // initialize the variables which will be used to draw the lines
+        // Initialize the variables which will be used to draw the lines.
         int tbLeftX = -m_dropShadowWidth;
         if(!leftAligned)
         {
@@ -591,8 +585,8 @@ void OverlayPanel::paintEvent(QPaintEvent *)
             QPen newPen(newColor);
             painter.setPen(newPen);
 
-            // these variables are dependent on the loop iteration,
-            // but are built off the 4 variables defined above
+            // These variables are dependent on the loop iteration,
+            // but are built off the 4 variables defined above.
             int rightEdge = width() - i,
                 bottomEdge = height() - i,
                 tbLineLeftX = tbLeftX + i,
@@ -604,7 +598,7 @@ void OverlayPanel::paintEvent(QPaintEvent *)
                 lrArcTopY = lrLineTopY - HALF_SHADOW_RADIUS,
                 lrArcBottomY = lrLineBottomY - HALF_SHADOW_RADIUS;
 
-            // draw top line
+            // Draw the top line.
             if(shadowOnTop)
             {
                 painter.drawLine(tbLineLeftX + 0, i, tbLineRightX - 0, i);
@@ -612,7 +606,7 @@ void OverlayPanel::paintEvent(QPaintEvent *)
                 painter.drawLine(tbLineLeftX + 2, i, tbLineRightX - 2, i);
             }
 
-            // draw top-left arc
+            // Draw the top-left arc.
             if((shadowOnLeft || shadowOnTop) && !leftAligned && !topAligned)
             {
                 painter.drawArc(tbArcLeftX,     lrArcTopY,     SHADOW_RADIUS, SHADOW_RADIUS, TL_ARC_START, TL_ARC_RANGE);
@@ -620,7 +614,7 @@ void OverlayPanel::paintEvent(QPaintEvent *)
                 painter.drawArc(tbArcLeftX + 1, lrArcTopY,     SHADOW_RADIUS, SHADOW_RADIUS, TL_ARC_START, TL_ARC_RANGE);
             }
 
-            // draw left line
+            // Draw the left line.
             if(shadowOnLeft)
             {
                 painter.drawLine(i, lrLineTopY + 0, i, lrLineBottomY - 0);
@@ -628,7 +622,7 @@ void OverlayPanel::paintEvent(QPaintEvent *)
                 painter.drawLine(i, lrLineTopY + 2, i, lrLineBottomY - 2);
             }
 
-            // draw top-right arc
+            // Draw the top-right arc.
             if((shadowOnTop || shadowOnRight) && !topAligned && !rightAligned)
             {
                 painter.drawArc(tbArcRightX,     lrArcTopY,     SHADOW_RADIUS, SHADOW_RADIUS, TR_ARC_START, TR_ARC_RANGE);
@@ -636,7 +630,7 @@ void OverlayPanel::paintEvent(QPaintEvent *)
                 painter.drawArc(tbArcRightX - 1, lrArcTopY,     SHADOW_RADIUS, SHADOW_RADIUS, TR_ARC_START, TR_ARC_RANGE);
             }
 
-            // draw right line
+            // Draw the right line.
             if(shadowOnRight)
             {
                 painter.drawLine(rightEdge, lrLineTopY + 0, rightEdge, lrLineBottomY - 0);
@@ -644,7 +638,7 @@ void OverlayPanel::paintEvent(QPaintEvent *)
                 painter.drawLine(rightEdge, lrLineTopY + 2, rightEdge, lrLineBottomY - 2);
             }
 
-            // draw bottom-left arc
+            // Draw the bottom-left arc.
             if((shadowOnLeft || shadowOnBottom) && !leftAligned && !bottomAligned)
             {
                 painter.drawArc(tbArcLeftX,     lrArcBottomY,     SHADOW_RADIUS, SHADOW_RADIUS, BL_ARC_START, BL_ARC_RANGE);
@@ -652,7 +646,7 @@ void OverlayPanel::paintEvent(QPaintEvent *)
                 painter.drawArc(tbArcLeftX + 1, lrArcBottomY,     SHADOW_RADIUS, SHADOW_RADIUS, BL_ARC_START, BL_ARC_RANGE);
             }
 
-            // draw bottom line
+            // Draw the bottom line.
             if(shadowOnBottom)
             {
                 painter.drawLine(tbLineLeftX + 0, bottomEdge, tbLineRightX - 0, bottomEdge);
@@ -660,7 +654,7 @@ void OverlayPanel::paintEvent(QPaintEvent *)
                 painter.drawLine(tbLineLeftX + 2, bottomEdge, tbLineRightX - 2, bottomEdge);
             }
 
-            // draw bottom-right arc
+            // Draw the bottom-right arc.
             if((shadowOnRight || shadowOnBottom) && !rightAligned && !bottomAligned)
             {
                 painter.drawArc(tbArcRightX,     lrArcBottomY,     SHADOW_RADIUS, SHADOW_RADIUS, BR_ARC_START, BR_ARC_RANGE);
@@ -670,8 +664,8 @@ void OverlayPanel::paintEvent(QPaintEvent *)
         }
     }
 
-    // now draw the widget; this code is needed to correctly
-    // draw it with the stylesheet rules applied
+    // Draw the widget; this code is needed to correctly draw it with the
+    // stylesheet rules applied.
     QStyleOption opt;
     opt.init(this);
     if(m_dropShadowWidth > 0)
@@ -686,4 +680,4 @@ void OverlayPanel::paintEvent(QPaintEvent *)
     style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
 }
 
-} } // end namespaces
+} } // End namespaces

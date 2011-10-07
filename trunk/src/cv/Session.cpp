@@ -1,10 +1,5 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
 
 #include <QCoreApplication>
 #include <QDebug>
@@ -73,11 +68,11 @@ void Session::connectToServer(const QString &host, int port, const QString &name
     m_host = host;
     m_port = port;
 
-    // this defaults the server's prefix rules (for users in a channel)
+    // This defaults the server's prefix rules (for users in a channel)
     // to @ for +o (oper), and + for +v (voice); this is just in case
-    // a server does not send explicit prefix rules to the Session
+    // a server does not send explicit prefix rules to the client.
     //
-    // for more info see the definition in Session.h
+    // For more info see the definition in Session.h.
     m_prefixRules = "o@v+";
 
     m_pConn->connectToHost(host, port);
@@ -102,7 +97,7 @@ void Session::sendData(const QString &data)
 
 //-----------------------------------//
 
-// default functionality for the sendData event; it just sends the data
+// Default functionality for the sendData event; it just sends the data.
 void Session::onSendData(Event *pEvt)
 {
     m_pConn->send(DCAST(DataEvent, pEvt)->getData() + "\r\n");
@@ -124,12 +119,12 @@ void Session::sendAction(const QString &target, const QString &msg)
 
 //-----------------------------------//
 
-// sets the prefix rules supported by the server
+// Sets the prefix rules supported by the server.
 void Session::setPrefixRules(const QString &prefixRules)
 {
     m_prefixRules = prefixRules;
 
-    // stick these modes in with the type B channel modes
+    // Stick these modes in with the type B channel modes.
     if(!m_chanModes.isEmpty())
     {
         int index = m_chanModes.indexOf(',');
@@ -143,14 +138,14 @@ void Session::setPrefixRules(const QString &prefixRules)
 
 //-----------------------------------//
 
-// sets the channel modes supported by the server
+// Sets the channel modes supported by the server.
 void Session::setChanModes(const QString &chanModes)
 {
     m_chanModes = chanModes;
 
-    // stick these modes in with the type B channel modes
+    // Stick these modes in with the type B channel modes.
     //
-    // we do it in both functions to ensure the right ones are added
+    // It's done in both functions to ensure the right ones are added.
     int index = m_chanModes.indexOf(',');
     if(index >= 0)
     {
@@ -161,12 +156,12 @@ void Session::setChanModes(const QString &chanModes)
 
 //-----------------------------------//
 
-// compares two prefix characters in a nickname as per
-// the server's specification
+// Compares two prefix characters in a nickname as per the server's specification.
 //
-// returns -1 if prefix1 is less in value than prefix2
-// returns 0 if prefix1 is equal to prefix2
-// returns 1 if prefix1 is greater in value than prefix2
+// Returns:
+//  -1 if prefix1 is less in value than prefix2
+//  0 if prefix1 is equal to prefix2
+//  1 if prefix1 is greater in value than prefix2
 int Session::compareNickPrefixes(const QChar &prefix1, const QChar &prefix2)
 {
     if(prefix1 == prefix2)
@@ -186,20 +181,18 @@ int Session::compareNickPrefixes(const QChar &prefix1, const QChar &prefix2)
 
 //-----------------------------------//
 
-// returns the corresponding prefix rule to the character
-// provided by match
-//
-// match can either be a nick prefix or the corresponding mode
+// Returns the corresponding prefix rule to the character provided by [match].
+// It can either be a nick prefix or the corresponding mode.
 QChar Session::getPrefixRule(const QChar &match)
 {
     for(int i = 0; i < m_prefixRules.size(); ++i)
     {
         if(m_prefixRules[i] == match)
         {
-            // if it's even, the corresponding letter is at i+1
+            // If it's even, the corresponding letter is at i+1.
             if(i % 2 == 0)
                 return m_prefixRules[i+1];
-            // otherwise, the corresponding letter is at i-1
+            // Otherwise, the corresponding letter is at i-1.
             else
                 return m_prefixRules[i-1];
         }
@@ -210,13 +203,12 @@ QChar Session::getPrefixRule(const QChar &match)
 
 //-----------------------------------//
 
-// returns true if the character is a set prefix for the server,
-// returns false otherwise
+// Returns true if the character is a set prefix for the server, false otherwise.
 //
-// example prefixes: @, %, +
+// Example prefixes: @, %, +
 bool Session::isNickPrefix(const QChar &prefix)
 {
-    // the first prefix begins at index 1
+    // The first prefix begins at index 1.
     for(int i = 1; i < m_prefixRules.size(); i += 2)
     {
         if(m_prefixRules[i] == prefix)
@@ -228,9 +220,9 @@ bool Session::isNickPrefix(const QChar &prefix)
 
 //-----------------------------------//
 
-// handles the preliminary processing for all messages;
+// Handles the preliminary processing for all messages;
 // this will fire events for specific message types, and store
-// some information as a result of others (like numerics)
+// some information as a result of others (like numerics).
 void Session::processMessage(const Message &msg)
 {
     Event *pEvent = new MessageEvent(msg);
@@ -240,13 +232,11 @@ void Session::processMessage(const Message &msg)
         {
             case 1:
             {
-                // check to make sure nickname hasn't changed; some or all servers apparently don't
+                // Check to make sure nickname hasn't changed; some or all servers apparently don't
                 // send you a NICK message when your nickname conflicts with another user upon
-                // first entering the server, and you try to change it
+                // first entering the server, and you try to change it.
                 if(!isMyNick(msg.m_params[0]))
-                {
                     setNick(msg.m_params[0]);
-                }
 
                 break;
             }
@@ -265,9 +255,8 @@ void Session::processMessage(const Message &msg)
             }
             case 5:
             {
-                // we only go to the second-to-last parameter,
-                // because the last parameter holds "are supported
-                // by this server"
+                // We only go to the second-to-last parameter, because the
+                // last parameter holds "are supported by this server".
                 for(int i = 1; i < msg.m_paramsNum-1; ++i)
                 {
                     if(msg.m_params[i].startsWith("PREFIX=", Qt::CaseInsensitive))
@@ -276,9 +265,9 @@ void Session::processMessage(const Message &msg)
                     }
                     else if(msg.m_params[i].compare("NAMESX", Qt::CaseInsensitive) == 0)
                     {
-                        // lets the server know we support multiple nick prefixes
+                        // Lets the server know we support multiple nick prefixes.
                         //
-                        // todo: UHNAMES?
+                        // TODO (seand): Implement UHNAMES?
                         sendData("PROTOCTL NAMESX");
                     }
                     else if(msg.m_params[i].startsWith("CHANMODES=", Qt::CaseInsensitive))
@@ -397,11 +386,10 @@ void Session::onConnecting()
 
 void Session::onConnect()
 {
-    // todo: use options
+    // TODO (seand): Use config options.
     sendData(QString("NICK %1").arg(m_nick));
     sendData(QString("USER %1 tolmoon \"%2\" :%3").arg(m_nick).arg(m_host).arg(m_name));
 
-    // todo: find out what to do with Event *
     ConnectionEvent *pEvt = new ConnectionEvent(m_host, m_port);
     g_pEvtManager->fireEvent("connected", this, pEvt);
     delete pEvt;
@@ -420,7 +408,6 @@ void Session::onFailedConnect()
 
 void Session::onDisconnect()
 {
-    // todo: find out what to do with Event *
     ConnectionEvent *pEvt = new ConnectionEvent(m_host, m_port);
     g_pEvtManager->fireEvent("disconnected", this, pEvt);
     delete pEvt;
@@ -432,12 +419,11 @@ void Session::onReceiveData(const QString &data)
 {
     m_prevData += data;
 
-    // check for a message within the data buffer, to ensure only
-    // whole messages are handled
+    // Check for a message within the data buffer, to ensure only whole messages are handled.
     int numChars;
     while((numChars = m_prevData.indexOf('\n') + 1) > 0)
     {
-        // retrieves the entire message up to and including the terminating '\n' character
+        // Retrieve the entire message up to and including the terminating '\n' character.
         QString msgData = m_prevData.left(numChars);
         m_prevData.remove(0, numChars);
 
@@ -450,4 +436,4 @@ void Session::onReceiveData(const QString &data)
     }
 }
 
-} // end namespace
+} // End namespace

@@ -1,10 +1,38 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
+//
+//
+// EventManager is used to achieve a system for one class to notify
+// unrelated classes of events and provide information about them;
+// it helps minimize decoupling across the project.
+//
+// The implementation is fairly straightforward:
+//
+//   EventManager
+//    |
+//    --> events (uniquely identified by name)
+//         |
+//         --> pointers to instances
+//         |    |
+//         |    --> callbacks
+//         |
+//         --> strings
+//              |
+//              --> callbacks
+//
+// A simpler implementation would just involve events (identified by name)
+// and their callbacks. There is a second abstraction (event types) for more
+// functionality:
+//  1) pointers to instances are used because some events only make sense in
+//     the context of an instance; for example, a Session instance can fire
+//     a "connected" event, which indicates the client is connected to a specific
+//     server
+//  2) strings are currently only used for the "configChanged" event, which is fired
+//     whenever any config option is changed; the string holds the config option
+//     that was modified
+//
+// More information:
+// http://code.google.com/p/conviersa/wiki/Event_System
 
 #pragma once
 
@@ -15,8 +43,8 @@
 
 #define DCAST(eventType, var) dynamic_cast<eventType *>(var)
 
-// if [var] is NULL, then it prints a message using qDebug() and
-// returns from the current scope
+// If [var] is NULL, then it prints a message using qDebug() and
+// returns from the current scope.
 #define EM_DEBUG_CHECK(var, func, evtName, evtType, reason) \
     if(var == NULL) \
     { \
@@ -79,43 +107,9 @@ struct EventInfo
 
 //-----------------------------------//
 
-// This class is used to achieve a system for one class
-// to notify unrelated classes of events and provide information
-// about them; it helps minimize decoupling across the project.
-//
-// The implementation is fairly straightforward:
-//   EventManager
-//    |
-//    --> events (uniquely identified by name)
-//         |
-//         --> pointers to instances
-//         |    |
-//         |    --> callbacks
-//         |
-//         --> strings
-//              |
-//              --> callbacks
-//
-// A simpler implementation would just involve events (identified by name)
-// and their callbacks. There is a second level (event types) for more functionality:
-//  1) pointers to instances are used because some events only make sense in
-//     the context of an instance; for example, a Session instance can fire
-//     a "connected" event, which indicates the client is connected to a specific
-//     server
-//  2) strings are currently only used for the "configChanged" event, which is fired
-//     whenever any config option is changed; the string holds the config option
-//     that was modified
-//
-// More information:
-// http://code.google.com/p/conviersa/wiki/Event_System
-//
-//
-// TODO
-//  - make thread-safe, with maybe some sort of reference counting
 class EventManager
 {
-    // separate hashes are used for each event type; global events
-    // will be
+    // Separate hashes are used for each event type.
     QHash<QString, QHash<uintptr_t, EventInfo> >    m_instanceEvents;
     QHash<QString, QHash<QString, EventInfo> >      m_stringEvents;
 
@@ -150,14 +144,14 @@ protected:
             pEvtInfo = getEventInfo(pEventsHash, evtTypeId);
         }
 
-        // if we're currently firing the event, then add the callback
-        // to a temp list which will get added after the entire list
-        // of callbacks has been iterated
+        // If we're currently firing the event, then add the callback
+        // to a temporary list which will get added after the entire list
+        // of callbacks has been iterated.
         if(pEvtInfo->firingEvent)
             pEvtInfo->callbacksToAdd.append(callback);
         else
-            // new callbacks get prepended, because it acts kinda like a stack;
-            // we call the most recently attached callbacks first
+            // New callbacks get prepended so that the most recently attached
+            // callbacks get executed first.
             pEvtInfo->callbacks.prepend(callback);
     }
 
@@ -166,17 +160,17 @@ protected:
     {
         EventInfo *pEvtInfo = getEventInfo(pEventsHash, evtTypeId);
         if(pEvtInfo == NULL)
-            // there are currently no callbacks hooked into this event, so exit normally
+            // There are currently no callbacks hooked into this event, so exit normally.
             return;
 
-        // actually fire the event
+        // Fire the event.
         pEvtInfo->firingEvent = true;
 
         CallbackReturnType returnType = execPluginCallbacks(pEvent, PRE_HOOK);
 
         if(returnType == EVENT_CONTINUE)
         {
-            // default functionality callbacks
+            // Callbacks which provide default functionality.
             QList<EventCallback>::iterator callbackIter = pEvtInfo->callbacks.begin();
             while(callbackIter != pEvtInfo->callbacks.end())
             {
@@ -187,16 +181,16 @@ protected:
 
         execPluginCallbacks(pEvent, POST_HOOK);
 
-        // prepend all the callbacks that were added with hookEvent() calls
-        // while it was firing
+        // Prepend all the callbacks that were added with hookEvent() calls
+        // while it was firing.
         pEvtInfo->firingEvent = false;
         while(!pEvtInfo->callbacksToAdd.isEmpty())
         {
             pEvtInfo->callbacks.prepend(pEvtInfo->callbacksToAdd.takeFirst());
         }
 
-        // remove all the callbacks that were added with unhookEvent() calls
-        // while it was firing
+        // Remove all the callbacks that were added with unhookEvent() calls
+        // while it was firing.
         while(!pEvtInfo->callbacksToRemove.isEmpty())
         {
             EventCallback callback = pEvtInfo->callbacksToRemove.takeFirst();
@@ -205,7 +199,7 @@ protected:
                 pEvtInfo->callbacks.removeAt(callbackIdx);
         }
 
-        // if it's empty, then we can go ahead and remove the type id's entry
+        // If it's empty, then we can go ahead and remove the type id's entry.
         if(pEvtInfo->callbacks.isEmpty())
             pEventsHash->remove(evtTypeId);
     }
@@ -216,9 +210,9 @@ protected:
         EventInfo *pEvtInfo = getEventInfo(pEventsHash, evtTypeId);
         EM_DEBUG_CHECK(pEvtInfo, "unhook", evtName.toLatin1().constData(), "an", "wasn't being hooked")
 
-        // if we're currently firing the event, then add the callback
-        // to a temp list which will get removed after the event is
-        // done being fired
+        // If we're currently firing the event, then add the callback
+        // to a temporary list which will get removed after the event is
+        // done being fired.
         if(pEvtInfo->firingEvent)
         {
             pEvtInfo->callbacksToRemove.append(callback);
@@ -230,7 +224,7 @@ protected:
                 pEvtInfo->callbacks.removeAt(callbackIdx);
         }
 
-        // if it's empty, then we can go ahead and remove the instance's entry
+        // If it's empty, then we can go ahead and remove the instance's entry.
         if(pEvtInfo->callbacks.isEmpty())
             pEventsHash->remove(evtTypeId);
     }
@@ -248,10 +242,10 @@ protected:
     QHash<uintptr_t, EventInfo> *getInstancesHash(const QString &evtName);
     QHash<QString, EventInfo> *getStringsHash(const QString &evtName);
 
-    // TODO: implement with plugin API
+    // TODO (seand): Implement with the plugin API.
     CallbackReturnType execPluginCallbacks(Event *pEvent, HookType type);
 };
 
 extern EventManager *g_pEvtManager;
 
-} // end namespace
+} // End namespace

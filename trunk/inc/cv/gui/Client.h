@@ -1,10 +1,9 @@
-/************************************************************************
-*
-* The MIT License
-*
-* Copyright (c) 2007-2009 Conviersa Project
-*
-************************************************************************/
+// Copyright (c) 2011 Conviersa Project. Use of this source code
+// is governed by the MIT License.
+//
+//
+// Client is the main class of Conviersa. It is the main window of the client,
+// and constructs the EventManager and ConfigManager, and owns the WindowManager.
 
 #pragma once
 
@@ -26,10 +25,6 @@ namespace gui {
 class WindowManager;
 class WindowContainer;
 
-/**
- * Main class of the IRC client. This manages the menus, toolbars and
- * docked main widgets. It holds a Window Container and also a Window Manager
- */
 class Client : public QMainWindow
 {
     Q_OBJECT
@@ -41,10 +36,10 @@ private:
     QMenu *             m_pFileMenu;
     QDockWidget *       m_pDock;
 
-    // this timer is used to find the last resize event
-    // in a set of resize events that occur in quick succession
-    // (like when dragging the frame to resize the window),
-    // so that we can find the updated client size
+    // This timer is used to find the last resize event
+    // in a set of resize events that occur in quick succession -
+    // like when dragging the frame to resize the window - so
+    // that we can find the updated client size.
     QTimer *            m_pResizeTimer;
 
 public:
@@ -73,4 +68,4 @@ public slots:
     void loadQSS();
 };
 
-} } // end namespaces
+} } // End namespaces

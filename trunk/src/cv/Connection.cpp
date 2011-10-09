@@ -75,7 +75,7 @@ void Connection::send(const QString &data)
     if(!isConnected())
         return;
 
-    m_pSocket->write(data.toAscii());
+    m_pSocket->write(data.toUtf8());
 }
 
 //-----------------------------------//
@@ -117,7 +117,7 @@ void Connection::onReadyRead()
         if(size > 0)
         {
             buffer[size] = '\0';
-            QString data(buffer);
+            QString data = QString::fromUtf8(buffer);
             emit dataReceived(data);
         }
         else

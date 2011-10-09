@@ -34,6 +34,8 @@
 namespace cv {
 
 enum ConfigType {
+    CONFIG_TYPE_UNKNOWN = 0,
+
     CONFIG_TYPE_INTEGER,
     CONFIG_TYPE_STRING,
     CONFIG_TYPE_BOOLEAN,
@@ -53,6 +55,27 @@ struct ConfigOption
         : value(v),
           type(t)
     { }
+
+    // Converts the underlying value to the correct type, in case
+    // it's currently being stored as a string; this can happen
+    // if the value gets changed directly in the config file, or
+    // by the user using the input box.
+    void ensureTypeIsCorrect()
+    {
+        switch(type)
+        {
+            case CONFIG_TYPE_INTEGER:
+            {
+                value.convert(QVariant::Int);
+                break;
+            }
+            case CONFIG_TYPE_BOOLEAN:
+            {
+                if(value.convert(QVariant::Bool));
+                break;
+            }
+        }
+    }
 };
 
 //-----------------------------------//
@@ -101,6 +124,7 @@ public:
     bool setupConfigFile(const QString &filename, QMap<QString, ConfigOption> &options);
     bool writeToFile(const QString &filename);
     QVariant getOptionValue(const QString &filename, const QString &optName);
+    ConfigType getOptionType(const QString &filename, const QString &optName);
     bool setOptionValue(const QString &filename, const QString &optName, const QVariant &optValue, bool fireEvent);
     bool isValueValid(const QVariant &value, ConfigType type);
 
@@ -116,10 +140,16 @@ public:
         return writeToFile(m_defaultFilename);
     }
 
-    // Fetches the value of the key in the default file.
+    // Returns the value of the key in the default file.
     inline QVariant getOptionValue(const QString &optName)
     {
         return getOptionValue(m_defaultFilename, optName);
+    }
+
+    // Returns the type of the key in the default file.
+    inline ConfigType getOptionType(const QString &optName)
+    {
+        return getOptionType(m_defaultFilename, optName);
     }
 
     // Sets the option's value to [optValue] in the default file.

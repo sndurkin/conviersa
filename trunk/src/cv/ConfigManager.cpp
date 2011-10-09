@@ -52,9 +52,13 @@ bool ConfigManager::setupConfigFile(const QString &filename, QMap<QString, Confi
             {
                 // ...find the option with the same key in the cfg from the file;
                 // if it exists AND its value is valid, replace it.
-                QVariantMap::iterator option = cfgMap.find(i.key());
-                if(option != cfgMap.end() && isValueValid(option.value(), i->type))
-                    options.insert(i.key(), option.value());
+                QVariantMap::iterator optionFromFile = cfgMap.find(i.key());
+                ConfigOption &opt = i.value();
+                if(optionFromFile != cfgMap.end() && isValueValid(optionFromFile.value(), opt.type))
+                {
+                    opt.value = optionFromFile.value();
+                    opt.ensureTypeIsCorrect();
+                }
             }
         }
     }
@@ -135,6 +139,28 @@ QVariant ConfigManager::getOptionValue(const QString &filename, const QString &o
 
 //-----------------------------------//
 
+// Returns the config type for the provided key.
+ConfigType ConfigManager::getOptionType(const QString &filename, const QString &optName)
+{
+    QHash<QString, QMap<QString, ConfigOption> >::iterator i = m_files.find(filename);
+    if(i != m_files.end())
+    {
+        QMap<QString, ConfigOption>::iterator j = i.value().find(optName);
+        if(j != i.value().end())
+            return j->type;
+        else
+            qDebug("[CM::getOptionType] Config option %s (in file %s) does not exist",
+                   optName.toLatin1().constData(),
+                   filename.toLatin1().constData());
+    }
+    else
+        qDebug("[CM::getOptionType] Config file %s not found", filename.toLatin1().constData());
+
+    return CONFIG_TYPE_UNKNOWN;
+}
+
+//-----------------------------------//
+
 // Sets the provided option's value to [optValue].
 bool ConfigManager::setOptionValue(
         const QString &filename,
@@ -149,13 +175,15 @@ bool ConfigManager::setOptionValue(
         if(j != i.value().end())
         {
             // If the new value is valid...
-            if(isValueValid(optValue, j->type))
+            ConfigOption &opt = j.value();
+            if(isValueValid(optValue, opt.type))
             {
                 // ...then set the new value and fire the "configChanged" event.
-                j->value = optValue;
+                opt.value = optValue;
+                opt.ensureTypeIsCorrect();
                 if(fireEvent)
                 {
-                    ConfigEvent *pEvent = new ConfigEvent(filename, optName, j->value, j->type);
+                    ConfigEvent *pEvent = new ConfigEvent(filename, optName, opt.value, opt.type);
                     g_pEvtManager->fireEvent("configChanged", optName, pEvent);
                     delete pEvent;
                 }
@@ -181,12 +209,18 @@ bool ConfigManager::setOptionValue(
 // Returns true if the [value] can be converted to the given [type], false otherwise.
 bool ConfigManager::isValueValid(const QVariant &value, ConfigType type)
 {
-    bool ok;
     switch(type)
     {
         case CONFIG_TYPE_INTEGER:
         {
+            bool ok;
             value.toInt(&ok);
+            return ok;
+        }
+        case CONFIG_TYPE_BOOLEAN:
+        {
+            bool ok;
+            value.toBool();
             return ok;
         }
         case CONFIG_TYPE_COLOR:

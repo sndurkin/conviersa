@@ -67,6 +67,7 @@ public:
     void onDoubleClickLink(Event *pEvent);
 
     static void setupServerConfig(QMap<QString, ConfigOption> &defOptions);
+    static void setupIRCConfig(QMap<QString, ConfigOption> &defOptions);
 
 protected:
     void handleSay(const QString &text);

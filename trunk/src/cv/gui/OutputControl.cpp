@@ -1564,6 +1564,8 @@ void OutputControl::mouseReleaseEvent(QMouseEvent *)
             currHeight -= lineSpacing * numSplits;
 
         if(currLine.hasTextSelection() && !inSelection)
+
+
         {
             inSelection = true;
         }

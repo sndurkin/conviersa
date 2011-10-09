@@ -668,23 +668,30 @@ void StatusWindow::onPrivmsgMessage(Event *pEvent)
 void StatusWindow::onQuitMessage(Event *pEvent)
 {
     Message msg = DCAST(MessageEvent, pEvent)->getMessage();
-    QString user = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
-    QString textToPrint = GET_STRING("message.quit")
-                            .arg(user)
-                            .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixUserAndHost));
-
+    QString nick = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
+    QString userAndHost = parseMsgPrefix(msg.m_prefix, MsgPrefixUserAndHost);
     bool hasReason = (msg.m_paramsNum > 0 && !msg.m_params[0].isEmpty());
-    if(hasReason)
-        textToPrint += GET_STRING("message.reason")
-                        .arg(msg.m_params[0])
-                        .arg(QString::fromUtf8("\xF"));
 
     for(int i = 0; i < m_chanList.size(); ++i)
     {
-        if(m_chanList[i]->hasUser(user))
+        ChannelWindow *pChannelWin = m_chanList[i];
+        if(pChannelWin->hasUser(nick))
         {
-            m_chanList[i]->removeUser(user);
-            m_chanList[i]->printOutput(textToPrint, MESSAGE_IRC_QUIT);
+            QString nickToDisplay = nick;
+            if(GET_BOOL("irc.channel.properNickInChat"))
+                nickToDisplay = pChannelWin->fetchProperNickname(nick);
+
+            // Construct the message to display in this ChannelWindow.
+            QString textToPrint = GET_STRING("message.quit")
+                                    .arg(nickToDisplay)
+                                    .arg(userAndHost);
+            if(hasReason)
+                textToPrint += GET_STRING("message.reason")
+                                .arg(msg.m_params[0])
+                                .arg(QString::fromUtf8("\xF"));
+
+            pChannelWin->removeUser(nick);
+            pChannelWin->printOutput(textToPrint, MESSAGE_IRC_QUIT);
         }
     }
 
@@ -692,8 +699,17 @@ void StatusWindow::onQuitMessage(Event *pEvent)
     // which will only be if we're in a channel with the person.
     for(int i = 0; i < m_privList.size(); ++i)
     {
-        if(user.compare(m_privList[i]->getTargetNick(), Qt::CaseInsensitive) == 0)
+        if(nick.compare(m_privList[i]->getTargetNick(), Qt::CaseInsensitive) == 0)
         {
+            // Construct the message to display in the QueryWindow.
+            QString textToPrint = GET_STRING("message.quit")
+                                    .arg(nick)
+                                    .arg(userAndHost);
+            if(hasReason)
+                textToPrint += GET_STRING("message.reason")
+                                .arg(msg.m_params[0])
+                                .arg(QString::fromUtf8("\xF"));
+
             m_privList[i]->printOutput(textToPrint, MESSAGE_IRC_QUIT);
             break;
         }
@@ -732,6 +748,13 @@ void StatusWindow::setupServerConfig(QMap<QString, ConfigOption> &defOptions)
 {
     QVariantList serverList;
     defOptions.insert("recent.servers", ConfigOption(serverList, CONFIG_TYPE_LIST));
+}
+
+//-----------------------------------//
+
+void StatusWindow::setupIRCConfig(QMap<QString, ConfigOption> &defOptions)
+{
+    defOptions.insert("irc.channel.properNickInChat", ConfigOption(false, CONFIG_TYPE_BOOLEAN));
 }
 
 } } // End namespaces

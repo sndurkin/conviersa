@@ -127,6 +127,7 @@ void Client::setupConfig()
     setupServerConfig(defOptions);
     setupGeneralConfig(defOptions);
     setupMessagesConfig(defOptions);
+    StatusWindow::setupIRCConfig(defOptions);
 
     g_pCfgManager->setupDefaultConfigFile(defOptions);
 }

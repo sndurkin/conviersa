@@ -115,7 +115,20 @@ void InputOutputWindow::onInput(Event *pEvent)
         QString optName = text.section(' ', 0, 0, QString::SectionSkipEmpty),
                 optValue = text.section(' ', 1, -1);
         if(optName.length() > 0 && optValue.length() > 0)
-            g_pCfgManager->setOptionValue(optName, optValue, true);
+            if(g_pCfgManager->setOptionValue(optName, optValue, true))
+            {
+                printOutput(QString("Changed option \"%1\" to \"%2\"")
+                              .arg(optName)
+                              .arg(g_pCfgManager->getOptionValue(optName).toString()),
+                            MESSAGE_INFO);
+            }
+            else
+            {
+                printOutput(QString("Failed to change option \"%1\" to \"%2\"")
+                              .arg(optName)
+                              .arg(optValue),
+                            MESSAGE_INFO);
+            }
     }
     else if(text.startsWith("/font ", Qt::CaseInsensitive))
     {
@@ -235,7 +248,7 @@ void InputOutputWindow::onNoticeMessage(Event *pEvent)
 void InputOutputWindow::moveCursorEnd()
 {
     QTextCursor cursor = m_pInput->textCursor();
-    cursor.setPosition(QTextCursor::EndOfBlock);
+    cursor.movePosition(QTextCursor::EndOfBlock);
     m_pInput->setTextCursor(cursor);
 }
 

@@ -216,6 +216,19 @@ void ChannelWindow::removePrefixFromUser(const QString &user, const QChar &prefi
 
 //-----------------------------------//
 
+// Provided the [nick], returns the "proper" nickname (which has the
+// most powerful prefix prepended to it). If there is no prefix or
+// the ChannelUser cannot be found, it returns [nick].
+QString ChannelWindow::fetchProperNickname(const QString &nick)
+{
+    ChannelUser *pUser = findUser(nick);
+    if(pUser != NULL)
+        return pUser->getProperNickname();
+    return nick;
+}
+
+//-----------------------------------//
+
 void ChannelWindow::onNumericMessage(Event *pEvent)
 {
     Message msg = DCAST(MessageEvent, pEvent)->getMessage();
@@ -467,9 +480,14 @@ void ChannelWindow::onPartMessage(Event *pEvent)
         }
         else
         {
-            removeUser(parseMsgPrefix(msg.m_prefix, MsgPrefixName));
+            // Get the nickname to display.
+            QString nick = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
+            removeUser(nick);
+            if(GET_BOOL("irc.channel.properNickInChat"))
+                nick = fetchProperNickname(nick);
+
             textToPrint = GET_STRING("message.part")
-                          .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixName))
+                          .arg(nick)
                           .arg(parseMsgPrefix(msg.m_prefix, MsgPrefixUserAndHost))
                           .arg(msg.m_params[0]);
         }
@@ -493,7 +511,11 @@ void ChannelWindow::onPrivmsgMessage(Event *pEvent)
 
     if(isChannelName(msg.m_params[0]))
     {
-        QString fromNick = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
+        // Get the nickname to display.
+        QString nick = parseMsgPrefix(msg.m_prefix, MsgPrefixName);
+        if(GET_BOOL("irc.channel.properNickInChat"))
+            nick = fetchProperNickname(nick);
+
         QString textToPrint;
         bool shouldHighlight;
         OutputMessageType msgType;
@@ -512,7 +534,7 @@ void ChannelWindow::onPrivmsgMessage(Event *pEvent)
                 QString msgText = action.mid(8, action.size()-9);
                 shouldHighlight = containsNick(msgText);
                 textToPrint = GET_STRING("message.action")
-                                .arg(fromNick)
+                                .arg(nick)
                                 .arg(msgText);
             }
         }
@@ -521,7 +543,7 @@ void ChannelWindow::onPrivmsgMessage(Event *pEvent)
             msgType = MESSAGE_IRC_SAY;
             shouldHighlight = containsNick(msg.m_params[1]);
             textToPrint = GET_STRING("message.say")
-                            .arg(fromNick)
+                            .arg(nick)
                             .arg(msg.m_params[1]);
         }
 /*
@@ -648,8 +670,14 @@ void ChannelWindow::leaveChannel()
 // Handles the printing/sending of the PRIVMSG message.
 void ChannelWindow::handleSay(const QString &text)
 {
+    // Get the nickname to display.
+    QString myNick = m_pSession->getNick();
+    if(GET_BOOL("irc.channel.properNickInChat"))
+        myNick = fetchProperNickname(myNick);
+
+    // Print and send the message.
     QString textToPrint = GET_STRING("message.say")
-                          .arg(m_pSession->getNick())
+                          .arg(myNick)
                           .arg(text);
     printOutput(textToPrint, MESSAGE_IRC_SAY_SELF);
     m_pSession->sendPrivmsg(getWindowName(), text);
@@ -660,8 +688,14 @@ void ChannelWindow::handleSay(const QString &text)
 // Handles the printing/sending of the PRIVMSG ACTION message.
 void ChannelWindow::handleAction(const QString &text)
 {
+    // Get the nickname to display.
+    QString myNick = m_pSession->getNick();
+    if(GET_BOOL("irc.channel.properNickInChat"))
+        myNick = fetchProperNickname(myNick);
+
+    // Print and send the message.
     QString textToPrint = GET_STRING("message.action")
-                          .arg(m_pSession->getNick())
+                          .arg(myNick)
                           .arg(text);
     printOutput(textToPrint, MESSAGE_IRC_ACTION_SELF);
     m_pSession->sendAction(getWindowName(), text);

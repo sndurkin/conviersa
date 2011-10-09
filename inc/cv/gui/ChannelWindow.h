@@ -79,6 +79,7 @@ public:
     void changeUserNick(const QString &oldNick, const QString &newNick);
     void addPrefixToUser(const QString &user, const QChar &prefixToAdd);
     void removePrefixFromUser(const QString &user, const QChar &prefixToRemove);
+    QString fetchProperNickname(const QString &user);
 
     // Returns the number of users currently in the channel.
     int getUserCount() { return m_users.size(); }

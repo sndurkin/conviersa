@@ -6,7 +6,8 @@ Settings/Config
   -> need a search box which searches the titles and descriptions of each setting in the window
 
 Output Control
-- add alternative mode for selecting text where it doesn't immediately copy the text and it stays select after releasing the mouse
+- enhance text selection algorithm to support selecting RTL text
+- add alternative mode for selecting text where it doesn't immediately copy the text and it stays selected after releasing the mouse
 - need an option for turning text wrapping off, for DebugWindow (will just use a horizontal scrollbar)
 - add a WHOIS panel that pops up from the bottom of the OutputControl
 - add links for hyperlinks and channels, and add double-click functionality for them

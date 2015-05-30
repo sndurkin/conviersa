@@ -1,0 +1,25 @@
+### The Old System ###
+<font size='3'>Previously, Qt signals/slots was used to achieve a basic event system, which conceptually looks something like this:</font>
+
+> ![http://imgur.com/GYgvE.png](http://imgur.com/GYgvE.png)
+
+<font size='3'>The problem with this is that there isn't enough control over the chain of functions called, because there are no return values and no way to impose restrictions.</font>
+<br>
+<br>
+<h3>The Problem</h3>
+<font size='3'>Features this event system needs to support:<br>
+<ul><li>a way to provide default functionality in response to an event<br>
+</li><li>a way for plugins to override or modify that default functionality<br>
+</font>
+<font size='3'>Fulfilling those general goals isn't that difficult, but problems arise when we get into specifics. For example, every <code>Session</code> object (represents a connection to an IRC server) fires events for messages it receives. The relevant <code>Window</code> instances have hooked the events they need to provide default functionality, such as displaying chat and other messages. The problem is that if, for example, there is an "onPrivmsgMessage" event and possibly several <code>Session</code> instances, there needs to be a way to map specific instances to callbacks.</font>
+<br>
+<br>
+<h3>The Solution</h3>
+<font size='3'>The new event system conceptually looks like this:</font></li></ul>
+
+<blockquote><img src='http://imgur.com/4WjwR.png' /></blockquote>
+
+<font size='3'>With the system outlined above, the client can add an event with default handling on a per-instance level (i.e. a specific instance of <code>Session</code> fires the "onPrivmsgMessage" event, and two <code>ChannelWindow</code>s and a <code>QueryWindow</code> can hook the event (under that <code>Session</code>) to handle it.</font>
+<br>
+<br>
+<font size='3'>This event system also supports global plugin callbacks, which means a plugin can hook the "onPrivmsgMessage" event regardless of which <code>Session</code> instance fires it, modifying the default functionality provided in the core client. For example, if a plugin wanted to add auto channel re-join capability to the client, it could hook the "onKickMessage" event globally, and in the callback function it would automatically send a JOIN message back to the server, to try to rejoin the channel.</font>
